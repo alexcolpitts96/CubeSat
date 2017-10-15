@@ -21,7 +21,7 @@ processing_gain = 10*log10(p^2);
 data_rate = 256E3; % bit/s
 
 orbit_time = 92; % minutes
-overhead_time = [10 20]; % minutes
+overhead_time = [13 20]; % minutes
 dark_time = orbit_time - overhead_time; % minutes
 orbit_per_day = 15.5;
 
@@ -39,7 +39,7 @@ max_image_size = pn_BPD;
 
 % displaying results
 disp(sprintf("\nImage Size: %d (Bits)", image_bits))
-disp(sprintf("\nMax Image Size (10 Minutes): %d (Bits)", max_image_size(1)))
+disp(sprintf("\nMax Image Size (13 Minutes): %d (Bits)", max_image_size(1)))
 disp(sprintf("\nMax Image Size (20 Minutes): %d (Bits)", max_image_size(2)))
-disp(sprintf("\n10 Minutes Works?: %d", (max_image_size(1)>image_bits)))
+disp(sprintf("\n13 Minutes Works?: %d", (max_image_size(1)>image_bits)))
 disp(sprintf("\n20 Minutes Works?: %d", (max_image_size(2)>image_bits)))
