@@ -1,14 +1,14 @@
 % Calculating Maximum Data Transfer Per Day
-% Date: October 15, 2017
+% Date: October 19, 2017
 % Author: Alex Colpitts
 
 clear
 clc
 
 % If a camera is used with the following properties
-image_width = 780;
-image_height = 440;
-image_pixels = image_width * image_height;
+image_width = [640 1920];
+image_height = [480 1080];
+image_pixels = image_width .* image_height;
 pixel_size = 24; % 24 bit color images
 image_bits = image_pixels * pixel_size;
 
@@ -18,10 +18,11 @@ processing_gain = 10*log10(p^2);
 
 % Making the assumption that a RFM22B Tx/Rx Chip is used for this
 % calculation.
-data_rate = 256E3; % bit/s
+% data_rate = 1E6; % bit/s
+data_rate = 300E3;
 
 orbit_time = 92; % minutes
-overhead_time = [13 20]; % minutes
+overhead_time = 10; % minutes
 dark_time = orbit_time - overhead_time; % minutes
 orbit_per_day = 15.5;
 
@@ -39,7 +40,6 @@ max_image_size = pn_BPD;
 
 % displaying results
 disp(sprintf("\nImage Size: %d (Bits)", image_bits))
-disp(sprintf("\nMax Image Size (13 Minutes): %d (Bits)", max_image_size(1)))
-disp(sprintf("\nMax Image Size (20 Minutes): %d (Bits)", max_image_size(2)))
-disp(sprintf("\n13 Minutes Works?: %d", (max_image_size(1)>image_bits)))
-disp(sprintf("\n20 Minutes Works?: %d", (max_image_size(2)>image_bits)))
+disp(sprintf("\nMax Image Size (10 Minutes): %d (Bits)", max_image_size))
+disp(sprintf("\nMinimum Works?: %d", (max_image_size>image_bits(1))))
+disp(sprintf("Ideal Works?: %d", (max_image_size>image_bits(2))))
