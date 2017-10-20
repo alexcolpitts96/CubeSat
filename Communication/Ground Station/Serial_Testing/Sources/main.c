@@ -39,9 +39,14 @@
  */
 
 #include "fsl_device_registers.h"
+#include "stdio.h"
+#include "math.h"
+#include "string.h"
 
-// initialize the UART system
+// initialize the UART system, 9600 baud, no parity, 1 stop bit, no flow control
 void UART0_Init(){
+	// calculate baud rate register value using ((21000*1000)/(baud_rate * 16))
+
 	// clock enables
 	SIM_SCGC4 |= SIM_SCGC4_UART0_MASK; // UART0 clock enabled
 	SIM_SCGC5 |= SIM_SCGC5_PORTB_MASK; // GPIO Port B, used by UART0
@@ -57,9 +62,57 @@ void UART0_Init(){
 	UART0_BDL |= 0x89;		// setting baud rate for UART0 to 9600
 }
 
-// setup UART communication
-void UART0_Com(){
+// print a string of characters one char at a time
+void UART0_Print(char display[]){
+	int i = 0;
 
+	while(display[i]){
+		UART0_Putchar(display[i]);
+		i++;
+	}
+}
+
+uint8_t UART0_Getchar(){
+	// wait until character has been received, flag checks for receive data register full flag to go to 1
+	while(!(UART0_S1 & UART_S1_RDRF_MASK));
+
+	return UART0_D; // return the UART0 data register
+}
+
+// print a single character
+void UART0_Putchar (char display_value){
+	int tmp;
+	tmp = UART0_S1 & 0x80;
+
+	while(!tmp){
+		tmp = UART0_S1 & 0x80;
+	}
+
+	UART0_D = display_value;
+}
+
+// read in UART data until "start\r" has been detected
+int UART0_Tx_Begin(){
+	int i = 0;
+
+	char start_code[6] = "start\r";
+	char buffer[100]; // read data from UART0
+	char temp_read[6];
+
+	for (i = 0; i < 100; i++){
+
+		// read in the character from the UART interface
+		buffer[i] = UART0_Getchar();
+
+		// if a new line or carriage return is entered check the last character for start
+		if((buffer[i] == '\r') || (buffer[i] == '\n')){
+
+			//////////////////////////////////////////////////////////////////////////////////////////////work from here
+		}
+	}
+
+	// return 1 if the start command has been found
+	return 1;
 }
 
 // SPI
@@ -83,8 +136,19 @@ void masterInit(){
 
 int main(void)
 {
+	// initialize all modules
 	masterInit();
 
+	char message[20] = "\ntest \r";
+	char temp;
+
+	for(;;){
+		// receive character
+		temp = UART0_Getchar();
+
+		// display the character
+		UART0_Putchar(temp);
+	}
 
 	return 0;
 }
