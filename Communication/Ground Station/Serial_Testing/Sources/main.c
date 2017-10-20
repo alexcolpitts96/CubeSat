@@ -60,6 +60,26 @@ void UART0_Init(){
 	UART0_C2 |= 0xCC; 		// setting up control register 2 for UART0
 	UART0_C3 |= 0x03; 		// setting up control register 3 for UART0
 	UART0_BDL |= 0x89;		// setting baud rate for UART0 to 9600
+	// do not worry about upper baud register, value is sufficiently low
+}
+
+void UART3_Init(){
+	// calculate baud rate register value using ((21000*1000)/(baud_rate * 16))
+
+	// clock enables
+	SIM_SCGC4 |= SIM_SCGC4_UART3_MASK; // UART3 clock enabled
+	SIM_SCGC5 |= SIM_SCGC5_PORTB_MASK; // GPIO Port B, used by UART3
+
+	// port control mux for Port B to UART0
+	PORTB_PCR10 |= PORT_PCR_MUX(3); // RX, B10
+	PORTB_PCR11 |= PORT_PCR_MUX(3); // TX, B11
+
+	// control registers and baud rate
+	UART3_C1 |= 0x00; 		// setting up control register 1 for UART3
+	UART3_C2 |= 0xCC; 		// setting up control register 2 for UART3
+	UART3_C3 |= 0x03; 		// setting up control register 3 for UART3
+	UART3_BDL |= 0x89;		// setting baud rate for UART3 to 9600
+	// do not worry about upper baud register, value is sufficiently low
 }
 
 // print a string of characters one char at a time
@@ -72,11 +92,28 @@ void UART0_Print(char display[]){
 	}
 }
 
+// print a string of characters one char at a time
+void UART3_Print(char display[]){
+	int i = 0;
+
+	while(display[i]){
+		UART3_Putchar(display[i]);
+		i++;
+	}
+}
+
 uint8_t UART0_Getchar(){
 	// wait until character has been received, flag checks for receive data register full flag to go to 1
 	while(!(UART0_S1 & UART_S1_RDRF_MASK));
 
 	return UART0_D; // return the UART0 data register
+}
+
+uint8_t UART3_Getchar(){
+	// wait until character has been received, flag checks for receive data register full flag to go to 1
+	while(!(UART3_S1 & UART_S1_RDRF_MASK));
+
+	return UART3_D; // return the UART0 data register
 }
 
 // print a single character
@@ -91,28 +128,16 @@ void UART0_Putchar (char display_value){
 	UART0_D = display_value;
 }
 
-// read in UART data until "start\r" has been detected
-int UART0_Tx_Begin(){
-	int i = 0;
+// print a single character
+void UART3_Putchar (char display_value){
+	int tmp;
+	tmp = UART3_S1 & 0x80;
 
-	char start_code[6] = "start\r";
-	char buffer[100]; // read data from UART0
-	char temp_read[6];
-
-	for (i = 0; i < 100; i++){
-
-		// read in the character from the UART interface
-		buffer[i] = UART0_Getchar();
-
-		// if a new line or carriage return is entered check the last character for start
-		if((buffer[i] == '\r') || (buffer[i] == '\n')){
-
-			//////////////////////////////////////////////////////////////////////////////////////////////work from here
-		}
+	while(!tmp){
+		tmp = UART3_S1 & 0x80;
 	}
 
-	// return 1 if the start command has been found
-	return 1;
+	UART3_D = display_value;
 }
 
 // SPI
@@ -130,6 +155,8 @@ void CUSTOM_Init(){
 // Master Init Function
 void masterInit(){
 	UART0_Init();
+	UART3_Init();
+
 	SPI_Init();
 	CUSTOM_Init();
 }
@@ -139,15 +166,14 @@ int main(void)
 	// initialize all modules
 	masterInit();
 
-	char message[20] = "\ntest \r";
-	char temp;
+	uint8_t receive;
 
 	for(;;){
 		// receive character
-		temp = UART0_Getchar();
+		receive = UART3_Getchar();
 
 		// display the character
-		UART0_Putchar(temp);
+		UART0_Putchar(receive);
 	}
 
 	return 0;
