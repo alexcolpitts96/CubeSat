@@ -161,8 +161,7 @@ void masterInit(){
 	CUSTOM_Init();
 }
 
-int main(void)
-{
+int main(void){
 	// initialize all modules
 	masterInit();
 
