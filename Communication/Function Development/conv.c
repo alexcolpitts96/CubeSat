@@ -39,9 +39,20 @@
 #define UINT8_MASK_1 0x02
 #define UINT8_MASK_0 0x01
 
-typedef struct TX_STRUCT{
-	uint8_t block[92160];
-} TX;
+typedef struct Frame{
+	uint8_t data;
+	uint8_t pos;
+} Frame;
+
+// prepare the Frame
+Frame frame_init(uint8_t init_data, uint8_t init_pos){
+	Frame i;
+	
+	i.data = init_data;
+	i.pos = init_pos;
+	
+	return i;
+}
 
 // creates 640x480 RGB image simulation 
 uint8_t *image_creation(){ //return pointer with pseudo image associated
@@ -91,7 +102,9 @@ uint64_t *image_preprocess(uint8_t *p){
 	return q;
 }
 
-int main(){
+void conv_time_test(){
+	
+	// check computation time for convolution of image
 	uint8_t *p;
 	uint64_t *q;
 	
@@ -105,9 +118,49 @@ int main(){
 	q = image_preprocess(p); // convolve image with PN sequence
 	end = clock();
 	cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
-	printf("Time to convolve: %lf", cpu_time_used); // taking roughly 55 ms to complete the convolution
+	printf("Time to convolve: %lf\n", cpu_time_used); // taking roughly 55 ms to complete the convolution
 	
 	free(p);
-	free(q);
+	free(q);	
+};
+
+// create and test the buffer, IN PROGRESS
+void buffer_test(){
+	int i;
+	FILE *fp;
+	Frame tx = frame_init(0, 0);
+	//uint64_t conv_data;
+	
+	fp = fopen("C:/Users/alexc/Documents/GitHub/CubeSat/Communication/Function Development/image.txt", "r");
+	
+	for(i = 0; i < 26; i++){
+		tx.data = fgetc(fp);
+		//printf("0x%02X\n", tx.data);
+		printf("%d\n", tx.data);
+	}	
+	
+	fclose(fp);
+};
+
+
+
+int main(){
+	//conv_time_test();
+	//buffer_test();
+
+	int i;
+	uint8_t arr[11];
+	
+	arr[0] = 1; // set lowest bit in array to 0...
+	for(i = 0; i < 8; i++){
+		arr[0] = arr[0] < 8;
+		printf("%d", arr[i]);
+		arr[0] = 0;
+	}
+	
+	
+	
+	
+	
 	return 0;
 };
