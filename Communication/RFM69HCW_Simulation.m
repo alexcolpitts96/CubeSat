@@ -15,16 +15,7 @@ pn_length = 11;
 pn_1 = comm.BarkerCode('Length', pn_length, 'SamplesPerFrame', pn_length);
 pn_1 = step(pn_1)';
 pn_0 = pn_1 * -1';
-% stem(xcorr(pn_seq))
 
-% fsk information
-BRF = 300E3; % fsk bitrate, b/s
-FDA = 300E3; % frequency deviation, Hz
-
-% make sure frequency deviation is within spec
-if (FDA + BRF/2) > 500E3
-    disp('Error: FDA too high.')
-end
 
 %% creating the transmit frame with PN sequence, CDMA type solution
 
@@ -41,30 +32,60 @@ for i = 1:pixel_size
     end
 end
 
+tx_frame = reshape(tx_frame, [numel(tx_frame), 1]);
+tx_frame = (tx_frame+1)./2;
+
+%% fsk modulating the signal
+M = 2; % binary communication 
+FDA = 300E3; % frequency deviation, Hz
+BRF = 300E3; % fsk bitrate, b/s
+
+% make sure frequency deviation is within spec
+if (FDA + BRF/2) > 500E3
+    disp('Error: FDA too high.')
+end
+
+nsamp = 8; % spreading factor for fsk
+tx_fsk = fskmod(tx_frame, M, FDA, nsamp, 2*BRF);
+
+% for i = 1:pixel_size
+%     tx_fsk(i, :) = fskmod((tx_frame(1, :)+1)/2, M, FDA, pn_length, BRF);
+% end
 
 %% adding noise to the channel
-noise_power = 20;
-tx_frame = tx_frame + wgn(1, length(tx_frame), noise_power, 'dBm');
+noise_power = 30;
+tx_fsk = tx_fsk + wgn(numel(tx_fsk), 1, noise_power, 'dBm');
 
 
+%% fsk demodulation
 
-%% demodulating the signal 
-rx_demod = [];
+rx_fsk = fskdemod(tx_fsk, M, FDA, nsamp, 2*BRF);
+[num_fsk,BER_fsk] = biterr(tx_frame, rx_fsk);
+disp(sprintf('\nChannel Noise Power Level: %0.2f dBm', noise_power))
+disp(sprintf('\nFSK BER: %0.2f %%', BER_fsk*100))
+
+%% correlating the baseband signal
+
+% strip out one symbol at a time
+rx_frame = reshape(rx_fsk, [pixel_size, pn_length]);
+rx_frame = (rx_frame*2)-1;
+
+rx_data = zeros(1, pixel_size);
+
 for i = 1:pixel_size
-    if max(xcorr(tx_frame(i, :), pn_0)) > (pn_length*0.8) % needs to be at least 80% of the max peak
-        rx_demod = [rx_demod 1];
+    if max(-xcorr(rx_frame(i, :), pn_1)) > (0.8*pn_length)
+        rx_data(i) = 1;
     else
-        rx_demod = [rx_demod 0];        
-    end    
-end
-    
-% compare to original transmitted message
-if (rx_demod == sample_pixel)
-    disp('Correct Byte Received')
-else
-    disp('Incorrect Byte Received')
-    
+        rx_data(i) = 0;
+    end
 end
 
-disp(sprintf('\nNoise Power Level: %0.2f dBm', noise_power))
-    
+[num_pn,BER_pn] = biterr(sample_pixel, rx_data);
+disp(sprintf('\nPN BER: %0.2f %%', BER_pn*100))
+
+
+
+
+
+
+
