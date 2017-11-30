@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2015, Freescale Semiconductor, Inc.
+
+* Copyright (c) 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -169,7 +170,8 @@ int main(void){
 
 	for(;;){
 		// receive character
-		receive = UART3_Getchar();
+		//receive = UART3_Getchar();
+		receive = 4;
 
 		// display the character
 		UART0_Putchar(receive);
@@ -181,3 +183,4 @@ int main(void){
 ////////////////////////////////////////////////////////////////////////////////
 // EOF
 ////////////////////////////////////////////////////////////////////////////////
+

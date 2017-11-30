@@ -26,7 +26,7 @@ P_tx = 20; % dBm
 % assume chip is ZETA-915-ND (500E3) or RFM69HCW (300E3)
 data_rate = 300E3;
 
-BW = 2*data_rate;
+BW = 600E3;
 
 % contants
 r_earth = 6371E3; %m
@@ -143,3 +143,4 @@ end
 
 disp(sprintf('Best and Worse Case Scenarios, No Amplifier, N_seq = 11'))
 disp(sprintf('Receive Power:    %0.2f (dBm)\n', P_tx_na - total_attn + G_rx + chip_gain))
+disp(sprintf('SNR(dB):          %0.2f (dB)\n', P_tx_na - total_attn + G_rx + chip_gain - NF_dB))

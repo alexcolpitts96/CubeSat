@@ -29,12 +29,60 @@
  */
 
 #include "fsl_device_registers.h"
+#include "stdio.h"
+#include "stdlib.h"
+#include "math.h"
 
 static int i = 0;
 
+void UART0_Init(){
+
+	// clock enables for GPIO and UART
+	SIM_SCGC4 |= SIM_SCGC4_UART0_MASK; // enable UART
+	SIM_SCGC5 |= SIM_SCGC5_PORTB_MASK; // enable GPIO B
+
+	// mux pins for GPIO and UART
+	PORTB_PCR16 |= PORT_PCR_MUX(3); // RX, B16
+	PORTB_PCR17 |= PORT_PCR_MUX(3); // TX, B17
+
+	// calculate baud rate register value using ((21000*1000)/(baud_rate * 16))
+	UART0_BDL |= 0x89;		// setting baud rate for UART0 to 9600
+
+	// control registers for UART
+	UART0_C1 |= 0; // no parity
+	UART0_C2 |= UART_C2_RE_MASK | UART_C2_TE_MASK; // enable transmit and receive
+	UART0_C3 |= UART_C3_PEIE_MASK | UART_C3_FEIE_MASK;
+}
+
+void SPI0_Init(){
+
+	// clock enables for GPIO and SPI
+	SIM_SCGC6 |= SIM_SCGC6_SPI0_MASK; // enable SPI0
+	SIM_SCGC5 |= SIM_SCGC5_PORTD_MASK; // enable GPIO D
+
+	// mux pins for SPI and UART
+	PORTD_PCR0 |= PORT_PCR_MUX(2); // Chip select
+	PORTD_PCR1 |= PORT_PCR_MUX(2); // Clock
+	PORTD_PCR2 |= PORT_PCR_MUX(2); // MOSI
+	PORTD_PCR3 |= PORT_PCR_MUX(2); // MISO
+
+	// configure SPI0
+	SPI0_MCR |= SPI_MCR_MSTR_MASK | SPI_MCR_CONT_SCKE_MASK; // master, continuous clock
+	SPI0_CTAR0 |= SPI_CTAR_FMSZ(8) | SPI_CTAR_BR(0xC); // 8 bit frames, 4096 baud rate clock
+}
+
+void master_init(){
+	UART0_Init();
+	SPI0_Init();
+}
+
 int main(void)
 {
+	master_init();
 
+	for(;;){
+		i++;
+	}
 
     return 0;
 }
