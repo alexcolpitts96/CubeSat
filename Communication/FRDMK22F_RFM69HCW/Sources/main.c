@@ -28,14 +28,21 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+// libraries
 #include "fsl_device_registers.h"
 #include "stdio.h"
 #include "stdlib.h"
 #include "math.h"
+#include "RFM69registers.h"
+
+// definitions
+#define FREQUENCY
 
 static int i = 0;
 
 void UART0_Init(){
+	// initialize UART for PC display
+	// no external connections required
 
 	// clock enables for GPIO and UART
 	SIM_SCGC4 |= SIM_SCGC4_UART0_MASK; // enable UART
@@ -55,6 +62,11 @@ void UART0_Init(){
 }
 
 void SPI0_Init(){
+	// initialize the SPI bus
+	// CS -> D0
+	// CLK -> D1
+	// MOSI -> D2
+	// MISO -> D3
 
 	// clock enables for GPIO and SPI
 	SIM_SCGC6 |= SIM_SCGC6_SPI0_MASK; // enable SPI0
@@ -71,9 +83,40 @@ void SPI0_Init(){
 	SPI0_CTAR0 |= SPI_CTAR_FMSZ(8) | SPI_CTAR_BR(0xC); // 8 bit frames, 4096 baud rate clock
 }
 
+void RFM69_Init(){
+	// value need to be written to RFM69HCW through SPI
+	// SPI initialization MUST take place before chip initialization
+	// register values are taken from 'RFM69registers.h'
+	// FIFO takes 8 bit frames
+
+	// enable power for the module
+
+	// use preset values except for following changes
+	// set higher bitrate
+
+}
+
+void RFM69_TX(uint8_t tx){
+	// check chip mode register
+	// if register is in tx continue
+	// else set to tx mode
+
+	// push frame to FIFO
+}
+
+uint8_t RFM69_RX(uint8_t rx){
+	// check chip mode register
+	// if register is in rx continue
+	// else set to rx mode
+
+	// receive frame from FIFO
+	// return frame value
+}
+
 void master_init(){
 	UART0_Init();
 	SPI0_Init();
+	RFM69_Init(); // must always be after the SPI interface has been enabled
 }
 
 int main(void)
