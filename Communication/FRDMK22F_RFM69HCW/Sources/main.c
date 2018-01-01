@@ -36,7 +36,8 @@
 #include "RFM69registers.h"
 
 // definitions
-#define FREQUENCY
+#define RFM_WRITE 0x80
+#define RFM_READ 0x00
 
 static int i = 0;
 
@@ -84,39 +85,59 @@ void SPI0_Init(){
 }
 
 // read from SPI0 MISO and return the value
-// NOTE: This does not check if system is ready
-uint8_t SPI0_Read(){
+// NOTE: This does not check if RFM is ready
+uint8_t SPI0_Rx(){
+	// mask the received data to be only 8 bits
+	uint8_t temp = SPI0_POPR & 0xFF;
 
-	return 0;
+	// there wasn't any way to check RX complete flag?
+	return temp;
 }
 
 // write a byte to SPI0 MOSI
-// NOTE: This does not check if system is ready
-void SPI0_Write(uint8_t data){
+// NOTE: This does not check if RFM is ready
+void SPI0_Tx(uint8_t tx_data){
+	// wait until the transfer has completed, flag goes to 1
+	while(SPI0_SR | SPI_SR_TCF_MASK){
+		SPI0_SR |= SPI_SR_TCF_MASK; // reset flag with a 1
+	}
 
+	// transmit the next frame to the
+	SPI0_PUSHR |= SPI_PUSHR_TXDATA(tx_data);
 }
 
 void RFM69_Init(){
-	// value need to be written to RFM69HCW through SPI
+	// values need to be written to RFM69HCW through SPI
 	// SPI initialization MUST take place before chip initialization
 	// register values are taken from 'RFM69registers.h'
-	// addressing and communication takes 8 bit frames
 
+	// addressing and communication takes 8 bit frames
+	// first bit is w/r (1 is write, 0 is read)
+	// after w/r bit comes 7 data bits for the address, MSB first
 
 	// enable power for the module
 
 	// use preset values except for following changes
 	// set higher bitrate
 
-
-
 }
 
 void RFM69_TX(uint8_t tx){
-	// check chip mode register (REG_OPMODE)
-	// if register is in tx continue
+	// NOTE: To end tx the system must leave continuous tx mode using clock disable (?)
 
-	// else set to tx mode
+	// check chip mode register (REG_OPMODE)
+	SPI0_Tx(RFM_READ | REG_OPMODE); // read from RFM OPMODE
+	uint8_t status = SPI0_Rx();
+
+	// CONTINUE FROM HERE THIS WON'T WORK YET AS IT WILL JUST WRITE TO THE TX FIFO INSTEAD OF DATA
+	// if not in tx mode, set to tx mode
+	if(status != RF_OPMODE_TRANSMITTER){
+		SPI0_Tx(RFM_WRITE | REG_OPMODE); // address for OPMODE
+		SPI0_Tx(RF_OPMODE_TRANSMITTER); // tx mode for OPMODE
+
+		SPI0_Tx(RFM_WRITE | REG_FIFO); // system will now read continuously
+	}
+
 
 	// push frame to FIFO
 }
