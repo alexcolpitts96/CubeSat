@@ -83,22 +83,39 @@ void SPI0_Init(){
 	SPI0_CTAR0 |= SPI_CTAR_FMSZ(8) | SPI_CTAR_BR(0xC); // 8 bit frames, 4096 baud rate clock
 }
 
+// read from SPI0 MISO and return the value
+// NOTE: This does not check if system is ready
+uint8_t SPI0_Read(){
+
+	return 0;
+}
+
+// write a byte to SPI0 MOSI
+// NOTE: This does not check if system is ready
+void SPI0_Write(uint8_t data){
+
+}
+
 void RFM69_Init(){
 	// value need to be written to RFM69HCW through SPI
 	// SPI initialization MUST take place before chip initialization
 	// register values are taken from 'RFM69registers.h'
-	// FIFO takes 8 bit frames
+	// addressing and communication takes 8 bit frames
+
 
 	// enable power for the module
 
 	// use preset values except for following changes
 	// set higher bitrate
 
+
+
 }
 
 void RFM69_TX(uint8_t tx){
-	// check chip mode register
+	// check chip mode register (REG_OPMODE)
 	// if register is in tx continue
+
 	// else set to tx mode
 
 	// push frame to FIFO
