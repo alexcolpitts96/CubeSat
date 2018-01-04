@@ -32,14 +32,13 @@
 #include "fsl_device_registers.h"
 #include "stdio.h"
 #include "stdlib.h"
+#include "string.h"
 #include "math.h"
 #include "RFM69registers.h"
 
 // definitions
 #define RFM_WRITE 0x80
 #define RFM_READ 0x00
-
-static int i = 0;
 
 void UART0_Init(){
 	// initialize UART for PC display
@@ -60,6 +59,35 @@ void UART0_Init(){
 	UART0_C1 |= 0; // no parity
 	UART0_C2 |= UART_C2_RE_MASK | UART_C2_TE_MASK; // enable transmit and receive
 	UART0_C3 |= UART_C3_PEIE_MASK | UART_C3_FEIE_MASK;
+}
+
+uint8_t UART0_Getchar(){
+	// wait until character has been received, flag checks for receive data register full flag to go to 1
+	while(!(UART0_S1 & UART_S1_RDRF_MASK));
+
+	return UART0_D; // return the UART0 data register
+}
+
+// print a single character
+void UART0_Putchar (char display_value){
+	int tmp;
+	tmp = UART0_S1 & 0x80;
+
+	while(!tmp){
+		tmp = UART0_S1 & 0x80;
+	}
+
+	UART0_D = display_value;
+}
+
+// print a string of characters one char at a time
+void UART0_Print(char display[]){
+	int i = 0;
+
+	while(display[i]){
+		UART0_Putchar(display[i]);
+		i++;
+	}
 }
 
 void SPI0_Init(){
@@ -98,9 +126,9 @@ uint8_t SPI0_Rx(){
 // NOTE: This does not check if RFM is ready
 void SPI0_Tx(uint8_t tx_data){
 	// wait until the transfer has completed, flag goes to 1
-	while(SPI0_SR | SPI_SR_TCF_MASK){
-		SPI0_SR |= SPI_SR_TCF_MASK; // reset flag with a 1
-	}
+	//while(SPI0_SR | SPI_SR_TCF_MASK){
+	//	SPI0_SR |= SPI_SR_TCF_MASK; // reset flag with a 1
+	//}
 
 	// transmit the next frame to the
 	SPI0_PUSHR |= SPI_PUSHR_TXDATA(tx_data);
@@ -119,7 +147,6 @@ void RFM69_Init(){
 
 	// use preset values except for following changes
 	// set higher bitrate
-
 }
 
 void RFM69_TX(uint8_t tx){
@@ -132,8 +159,8 @@ void RFM69_TX(uint8_t tx){
 	// CONTINUE FROM HERE THIS WON'T WORK YET AS IT WILL JUST WRITE TO THE TX FIFO INSTEAD OF DATA
 	// if not in tx mode, set to tx mode
 	if(status != RF_OPMODE_TRANSMITTER){
-		SPI0_Tx(RFM_WRITE | REG_OPMODE); // address for OPMODE
-		SPI0_Tx(RF_OPMODE_TRANSMITTER); // tx mode for OPMODE
+		SPI0_Tx(RFM_WRITE | REG_OPMODE); // write address for OPMODE to RFM
+		SPI0_Tx(RF_OPMODE_TRANSMITTER); // write tx mode for OPMODE to RFM
 
 		SPI0_Tx(RFM_WRITE | REG_FIFO); // system will now read continuously
 	}
@@ -149,23 +176,42 @@ uint8_t RFM69_RX(uint8_t rx){
 
 	// receive frame from FIFO
 	// return frame value
+	return 0;
 }
 
 void master_init(){
 	UART0_Init();
-	SPI0_Init();
-	RFM69_Init(); // must always be after the SPI interface has been enabled
+	//SPI0_Init();
+	//RFM69_Init(); // must always be after the SPI interface has been enabled
+}
+
+// hand function test information to write and have returned
+uint8_t SPI_Test(uint8_t test){
+	SPI0_Tx(test); // output the data
+	uint8_t temp = SPI0_Rx() & 0xFF; // returned data
+
+	if(temp == test){
+		return 1;
+	}
+	else{
+		return 0;
+	}
 }
 
 int main(void)
 {
 	master_init();
 
-	for(;;){
-		i++;
-	}
+	uint8_t receive;
 
-    return 0;
+	for(;;){
+		// receive character
+		//receive = UART0_Getchar();
+		receive = 4;
+
+		// display the character
+		UART0_Putchar(receive);
+		}
 }
 ////////////////////////////////////////////////////////////////////////////////
 // EOF
