@@ -61,31 +61,61 @@ void UART0_Init(){
 	UART0_C3 |= UART_C3_PEIE_MASK | UART_C3_FEIE_MASK;
 }
 
-uint8_t UART0_Getchar(){
-	// wait until character has been received, flag checks for receive data register full flag to go to 1
-	while(!(UART0_S1 & UART_S1_RDRF_MASK));
+void UART1_Init(){
+	// initialize UART for PC display
+	// no external connections required
 
-	return UART0_D; // return the UART0 data register
+	// clock enables for GPIO and UART
+	SIM_SCGC4 |= SIM_SCGC4_UART1_MASK; // enable UART 1
+	SIM_SCGC5 |= SIM_SCGC5_PORTE_MASK; // enable GPIO E
+
+	// mux pins for GPIO and UART
+	PORTE_PCR3 |= PORT_PCR_MUX(3); // RX, E3
+	PORTE_PCR4 |= PORT_PCR_MUX(3); // TX, E4
+
+	// calculate baud rate register value using ((21000*1000)/(baud_rate * 16))
+	UART1_BDL |= 0x89;		// setting baud rate for UART0 to 9600
+
+	// control registers for UART
+	UART1_C1 |= 0; // no parity
+	UART1_C2 |= UART_C2_RE_MASK | UART_C2_TE_MASK; // enable transmit and receive
+	UART1_C3 |= UART_C3_PEIE_MASK | UART_C3_FEIE_MASK;
 }
 
 // print a single character
-void UART0_Putchar (char display_value){
-	int tmp;
-	tmp = UART0_S1 & 0x80;
+void UART0_Putchar (char display_char){
 
-	while(!tmp){
-		tmp = UART0_S1 & 0x80;
-	}
+	while(!(UART0_S1 & UART_S1_TC_MASK)){} // wait until the tx is ready for next char
 
-	UART0_D = display_value;
+	UART0_D = display_char; // when ready send next char
 }
 
-// print a string of characters one char at a time
-void UART0_Print(char display[]){
-	int i = 0;
+// print a single character
+void UART1_Putchar (char display_char){
 
-	while(display[i]){
-		UART0_Putchar(display[i]);
+	while(!(UART1_S1 & UART_S1_TC_MASK)){} // wait until the tx is ready for next char
+
+	UART1_D = display_char; // when ready send next char
+}
+
+// display string in terminal
+void UART0_Putstring() {
+	int i = 0;
+	char welcome[80] = "Welcome to our program\0";
+
+	while(welcome[i]){
+		UART0_Putchar(welcome[i]);
+		i++;
+	}
+}
+
+// display string in terminal
+void UART1_Putstring() {
+	int i = 0;
+	char welcome[80] = "Welcome to our program\0";
+
+	while(welcome[i]){
+		UART1_Putchar(welcome[i]);
 		i++;
 	}
 }
@@ -181,6 +211,7 @@ uint8_t RFM69_RX(uint8_t rx){
 
 void master_init(){
 	UART0_Init();
+	UART1_Init();
 	//SPI0_Init();
 	//RFM69_Init(); // must always be after the SPI interface has been enabled
 }
@@ -198,19 +229,14 @@ uint8_t SPI_Test(uint8_t test){
 	}
 }
 
+
 int main(void)
 {
 	master_init();
 
-	uint8_t receive;
-
 	for(;;){
-		// receive character
-		//receive = UART0_Getchar();
-		receive = 4;
-
-		// display the character
-		UART0_Putchar(receive);
+		UART0_Putstring();
+		UART1_Putstring();
 		}
 }
 ////////////////////////////////////////////////////////////////////////////////
