@@ -115,9 +115,10 @@ void UART0_Putstring() {
 }
 
 // display string in terminal
-void UART1_Putstring() {
+void UART1_Putstring(uint8_t num) {
 	int i = 0;
-	char welcome[80] = "Test\n\0";
+	char welcome[80] = "Test  \n\0";
+	welcome[5] = num;
 
 	while(welcome[i]){
 		UART1_Putchar(welcome[i]);
@@ -139,20 +140,57 @@ void SPI0_Init(){
 	SIM_SCGC6 |= SIM_SCGC6_SPI0_MASK; // enable SPI0
 
 	// mux pins for SPI and UART
-	PORTD_PCR0 |= PORT_PCR_MUX(2); // Chip select
-	PORTD_PCR1 |= PORT_PCR_MUX(2); // Clock
-	PORTD_PCR2 |= PORT_PCR_MUX(2); // MOSI
-	PORTD_PCR3 |= PORT_PCR_MUX(2); // MISO
+	PORTD_PCR(0) |= PORT_PCR_MUX(2); // Chip select
+	PORTD_PCR(1) |= PORT_PCR_MUX(2); // Clock
+	PORTD_PCR(2) |= PORT_PCR_MUX(2); // MOSI
+	PORTD_PCR(3) |= PORT_PCR_MUX(2); // MISO
 
 	// reset all flags by writing ones
-	SPI0_SR |= SPI_SR_TCF_MASK | SPI_SR_EOQF_MASK | SPI_SR_TFUF_MASK | SPI_SR_TFFF_MASK | SPI_SR_RFOF_MASK | SPI_SR_RFDF_MASK;
+	SPI0_SR = SPI_SR_TCF_MASK | SPI_SR_EOQF_MASK | SPI_SR_TFUF_MASK | SPI_SR_TFFF_MASK | SPI_SR_RFOF_MASK | SPI_SR_RFDF_MASK;
+
+	// reset registers
+	SPI0_TCR = 0;
+	SPI0_RSER = 0;
+	SPI0_PUSHR = 0; // no transmission since SPI0 is halted
+	SPI0_CTAR0 = 0;
 
 	// configure SPI0
-	SPI0_MCR |= SPI_MCR_MSTR_MASK | SPI_MCR_CONT_SCKE_MASK | SPI_MCR_PCSIS_MASK; // master, continuous clock, CS active low
+	SPI0_CTAR0 |= SPI_CTAR_FMSZ_8BIT | SPI_CTAR_CPOL_MASK | SPI_CTAR_BR(0x9) | SPI_CTAR_CPHA_MASK; // 8 bit frames, active low clock, ??? baud rate clock, BR factor 2
+	SPI0_MCR |= SPI_MCR_MSTR_MASK | SPI_MCR_PCSIS_MASK; // master, CS active low
 	SPI0_MCR &= (~SPI_MCR_DIS_RXF_MASK) | (~SPI_MCR_DIS_TXF_MASK); // enable rx and tx FIFOs
-	SPI0_MCR &= (~SPI_MCR_MDIS_MASK) | (~SPI_MCR_HALT_MASK); // enable module clock and start transfers
-	SPI0_CTAR0 |= SPI_CTAR_FMSZ_8BIT | SPI_CTAR_CPOL_MASK | SPI_CTAR_BR(6) | SPI_CTAR_CPHA_MASK; // 8 bit frames, active low clock, ??? baud rate clock, BR factor 2
-	// SPI_CTAR_FMSZ(8)
+	SPI0_MCR &= (~SPI_MCR_MDIS_MASK) & (~SPI_MCR_HALT_MASK); // enable module clock and start transfers
+
+	// SPI_CTAR_FMSZ(8), potentially replace SPI_CTAR_FMSZ_8BIT macro
+}
+
+// write a byte to SPI0 MOSI
+// NOTE: This does not check if RFM is ready
+void SPI0_Tx(uint8_t tx_data){
+
+	// halt SPI module
+	SPI0_MCR |= SPI_MCR_HALT_MASK;
+
+	// flush FIFOs
+	SPI0_MCR |= SPI_MCR_CLR_RXF_MASK | SPI_MCR_CLR_TXF_MASK;
+
+	// ensure no freezing for debugging
+	SPI0_MCR &= ~SPI_MCR_FRZ_MASK;
+
+	// clear the status bits by writing ones
+	SPI0_SR |= (SPI_SR_TCF_MASK | SPI_SR_EOQF_MASK | SPI_SR_TFUF_MASK | SPI_SR_TFFF_MASK | SPI_SR_RFOF_MASK | SPI_SR_RFDF_MASK);
+
+	// enable transfers and reset counter
+	SPI0_TCR &= ~SPI_TCR_SPI_TCNT_MASK; // reset transfer counter to 0
+	SPI0_MCR &= ~SPI_MCR_HALT_MASK; // enable transfers
+
+	// send bits
+	SPI0_PUSHR = (~SPI_PUSHR_CONT_MASK) & (SPI_PUSHR_PCS0_ON | tx_data); // may need to be changed based on chip, CS0
+
+	// wait for transmission to complete flag to go to 1 (TCF)
+	while(!(SPI0_SR & SPI_SR_TCF_MASK));
+
+	// clear status bits, this may not need to be done
+	SPI0_SR |= SPI_SR_TFFF_MASK;
 }
 
 // read from SPI0 MISO and return the value
@@ -172,37 +210,6 @@ uint8_t SPI0_Rx(){
 	SPI0_MCR &=  ~SPI_MCR_HALT_MASK;
 
 
-}
-
-// write a byte to SPI0 MOSI
-// NOTE: This does not check if RFM is ready
-void SPI0_Tx(uint8_t tx_data){
-	uint8_t temp;
-
-	// halt SPI module
-	SPI0_MCR |= SPI_MCR_HALT_MASK;
-
-	// flush FIFOs
-	SPI0_MCR |= SPI_MCR_CLR_RXF_MASK | SPI_MCR_CLR_TXF_MASK;
-
-	// clear the status bits by writing ones
-	SPI0_SR |= (SPI_SR_TCF_MASK | SPI_SR_EOQF_MASK | SPI_SR_TFUF_MASK | SPI_SR_TFFF_MASK | SPI_SR_RFOF_MASK | SPI_SR_RFDF_MASK);
-
-	// configure and enable SPI transfers
-	SPI0_TCR = 0; // reset transfer counter
-	SPI0_MCR &= ~SPI_MCR_HALT_MASK;
-
-	// send bits
-	SPI0_PUSHR = (SPI_PUSHR_CONT_MASK | SPI_PUSHR_PCS0_ON | tx_data); // may need to be changed based on chip, CS0
-
-	// wait for transfer to complete
-	temp = SPI0_SR & SPI_SR_TCF_MASK;
-	while(!temp){
-		temp = SPI0_SR & SPI_SR_TCF_MASK;
-	}; // wait for transfer complete flag (TCF)
-
-	// clear status bits, this may not need to be done
-	SPI0_SR |= SPI_SR_TFFF_MASK;
 }
 
 void RFM69_Init(){
@@ -257,16 +264,16 @@ void master_init(){
 	//RFM69_Init(); // must always be after the SPI interface has been enabled
 }
 
-int main(void)
-{
+int main(void){
+
 	master_init();
 
 	uint8_t i;
 	while(1){
 	for(i = 1; i <= 0xFF; i++){
+		UART1_Putstring(i);
 		SPI0_Tx(i);
 		//UART0_Putstring();
-		UART1_Putstring();
 		}
 	}
 }
