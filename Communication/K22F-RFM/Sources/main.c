@@ -244,6 +244,7 @@ void RFM69_Init(){
 
 	// leave REG_FRFxxx to default values (915 MHz)
 
+	/*
 	// start OSC1 calibration sequence
 	SPI0_Tx((RFM_WRITE | REG_OSC1) << 8 | RF_OSC1_RCCAL_START);
 
@@ -251,12 +252,10 @@ void RFM69_Init(){
 	temp = 0;
 	SPI0_Tx((RFM_WRITE | REG_OSC1) << 8);
 	while(!temp){
-		SPI0_Tx((RFM_WRITE | REG_OSC1) << 8);
+		SPI0_Tx((RFM_READ | REG_OSC1) << 8);
 		temp = SPI0_Rx() & RF_OSC1_RCCAL_DONE;
 	}
-
-
-
+	*/
 }
 
 void RFM69_TX(uint8_t tx){
@@ -275,11 +274,12 @@ void master_init(){
 }
 
 int main(void){
+	// note max current draw for board is 120 mA, keep below that
 
 	master_init();
 
-	uint8_t i, temp;
 	SPI0_Tx_Prep(); // configure SPI
+
 	while(1){
 		RFM69_Init();
 	}
