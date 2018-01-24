@@ -59,7 +59,7 @@ void SPI0_Prep(){
 	SPI0_MCR &= ~SPI_MCR_HALT_MASK; // enable transfers
 }
 
-uint8_t SPI0_Rx(){
+uint16_t SPI0_Rx(){
 	uint8_t temp;
 
 	// wait for receive fifo drain flag (RFDF) to go to 1

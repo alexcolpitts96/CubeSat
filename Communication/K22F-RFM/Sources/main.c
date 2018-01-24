@@ -65,18 +65,21 @@ void RFM69_Init(){
 
 	// leave REG_FRFxxx to default values (915 MHz)
 
-	/*
-	// start OSC1 calibration sequence
+	// Calibrate RC Oscillator
 	SPI0_Tx((RFM_WRITE | REG_OSC1) << 8 | RF_OSC1_RCCAL_START);
-
-	// check OSC1 calibration to see if completed
 	temp = 0;
-	SPI0_Tx((RFM_WRITE | REG_OSC1) << 8);
 	while(!temp){
-		SPI0_Tx((RFM_READ | REG_OSC1) << 8);
-		temp = SPI0_Rx() & RF_OSC1_RCCAL_DONE;
+		SPI0_Tx(RFM_READ | REG_OSC1); // make read request
+		temp = SPI0_Rx() & RF_OSC1_RCCAL_DONE; // mask all bits except for RCCAL_DONE
 	}
-	*/
+
+	// leave RegAfcCtrl as default
+
+	// ignore RegListenX for now
+
+	// set power level to 0 (dBm)
+	SPI0_Tx((RFM_WRITE | REG_PALEVEL) << 8 | RF_PALEVEL_PA0_ON | RF_PALEVEL_PA1_OFF | RF_PALEVEL_PA2_OFF | RF_PALEVEL_OUTPUTPOWER_10010);
+
 }
 
 void RFM69_TX(uint8_t tx){
@@ -96,13 +99,11 @@ void master_init(){
 
 int main(void){
 	// note max current draw for board is 120 mA, keep below that
+	uint16_t temp;
 
 	master_init();
 
-	SPI0_Prep(); // configure SPI
-
 	while(1){
-		UART1_Putchar('s');
-		SPI0_Tx(0xFFFF);
+		RFM69_Init();
 	}
 }
