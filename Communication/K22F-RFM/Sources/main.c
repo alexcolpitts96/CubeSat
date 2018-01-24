@@ -40,10 +40,7 @@
 #define RFM_WRITE 0x80
 #define RFM_READ 0x00
 
-#define SPI_CTAR_FMSZ_8BIT 0x38000000 // used by SPI0_Init
 #define SPI_PUSHR_PCS0_ON 0x10000 // used by SPI0_Tx
-
-
 
 void UART0_Init(){
 	// initialize UART for PC display
@@ -88,7 +85,7 @@ void UART1_Init(){
 }
 
 // print a single character
-void UART0_Putchar (char display_char){
+void UART0_Putchar(char display_char){
 
 	while(!(UART0_S1 & UART_S1_TC_MASK)){} // wait until the tx is ready for next char
 
@@ -96,7 +93,7 @@ void UART0_Putchar (char display_char){
 }
 
 // print a single character
-void UART1_Putchar (char display_char){
+void UART1_Putchar(char display_char){
 
 	while(!(UART1_S1 & UART_S1_TC_MASK)){} // wait until the tx is ready for next char
 
@@ -115,7 +112,7 @@ void UART0_Putstring() {
 }
 
 // display string in terminal
-void UART1_Putstring(uint8_t num) {
+void UART1_Putstring(uint8_t num){
 	int i = 0;
 	char welcome[80] = "Test  \n\0";
 	welcome[5] = num;
@@ -126,8 +123,8 @@ void UART1_Putstring(uint8_t num) {
 	}
 }
 
-void SPI0_Init(){
-	// general concept taken from reference manual and https://community.nxp.com/thread/372146#comment-562567 (For FRDM-K64F)
+void SPI0_Init(int frame_size){
+	// taken from reference manual and https://community.nxp.com/thread/372146#comment-562567 (For FRDM-K64F)
 
 	// initialize the SPI bus
 	// CS -> D0
@@ -155,17 +152,14 @@ void SPI0_Init(){
 	SPI0_CTAR0 = 0;
 
 	// configure SPI0
-	SPI0_CTAR0 |= SPI_CTAR_FMSZ_8BIT | SPI_CTAR_CPOL_MASK | SPI_CTAR_BR(0x9) | SPI_CTAR_CPHA_MASK; // 8 bit frames, active low clock, ??? baud rate clock, BR factor 2
+	SPI0_CTAR0 |= SPI_CTAR_FMSZ(frame_size-1) | SPI_CTAR_CPOL_MASK | SPI_CTAR_BR(0x9) | SPI_CTAR_CPHA_MASK; // 16 bit frames, active low clock, ??? baud rate clock, BR factor 2
 	SPI0_MCR |= SPI_MCR_MSTR_MASK | SPI_MCR_PCSIS_MASK; // master, CS active low
 	SPI0_MCR &= (~SPI_MCR_DIS_RXF_MASK) | (~SPI_MCR_DIS_TXF_MASK); // enable rx and tx FIFOs
 	SPI0_MCR &= (~SPI_MCR_MDIS_MASK) & (~SPI_MCR_HALT_MASK); // enable module clock and start transfers
-
-	// SPI_CTAR_FMSZ(8), potentially replace SPI_CTAR_FMSZ_8BIT macro
 }
 
-// write a byte to SPI0 MOSI
-// NOTE: This does not check if RFM is ready
-void SPI0_Tx(uint8_t tx_data){
+// configure SPI to start transfer
+void SPI0_Tx_Prep(){
 
 	// halt SPI module
 	SPI0_MCR |= SPI_MCR_HALT_MASK;
@@ -182,9 +176,11 @@ void SPI0_Tx(uint8_t tx_data){
 	// enable transfers and reset counter
 	SPI0_TCR &= ~SPI_TCR_SPI_TCNT_MASK; // reset transfer counter to 0
 	SPI0_MCR &= ~SPI_MCR_HALT_MASK; // enable transfers
+}
 
-	// send bits
-	SPI0_PUSHR = (~SPI_PUSHR_CONT_MASK) & (SPI_PUSHR_PCS0_ON | tx_data); // may need to be changed based on chip, CS0
+// transmit byte after SPI has been configured for tx
+void SPI0_Tx(uint16_t tx_data){
+	SPI0_PUSHR =  (SPI_PUSHR_PCS0_ON | tx_data); // may need to be changed based on chip, CS0
 
 	// wait for transmission to complete flag to go to 1 (TCF)
 	while(!(SPI0_SR & SPI_SR_TCF_MASK));
@@ -193,74 +189,88 @@ void SPI0_Tx(uint8_t tx_data){
 	SPI0_SR |= SPI_SR_TFFF_MASK;
 }
 
-// read from SPI0 MISO and return the value
-// NOTE: This does not check if RFM is ready
-uint8_t SPI0_Rx(){
+// MAY NOT BE NEEDED AS IT IS IDENTICAL TO SPI0_Tx_Prep()
+void SPI0_Rx_Prep(){
 	// halt SPI module
-	SPI0_MCR |=  SPI_MCR_HALT_MASK;
+	SPI0_MCR |= SPI_MCR_HALT_MASK;
 
 	// flush FIFOs
 	SPI0_MCR |= SPI_MCR_CLR_RXF_MASK | SPI_MCR_CLR_TXF_MASK;
 
+	// ensure no freezing for debugging
+	SPI0_MCR &= ~SPI_MCR_FRZ_MASK;
+
 	// clear the status bits by writing ones
-	SPI0_SR |= SPI_SR_TCF_MASK | SPI_SR_EOQF_MASK | SPI_SR_TFUF_MASK | SPI_SR_TFFF_MASK | SPI_SR_RFOF_MASK | SPI_SR_RFDF_MASK;
+	SPI0_SR |= (SPI_SR_TCF_MASK | SPI_SR_EOQF_MASK | SPI_SR_TFUF_MASK | SPI_SR_TFFF_MASK | SPI_SR_RFOF_MASK | SPI_SR_RFDF_MASK);
 
-	// configure and enable SPI transfers
-	SPI0_TCR = 0; // reset transfer counter
-	SPI0_MCR &=  ~SPI_MCR_HALT_MASK;
+	// enable transfers and reset counter
+	SPI0_TCR &= ~SPI_TCR_SPI_TCNT_MASK; // reset transfer counter to 0
+	SPI0_MCR &= ~SPI_MCR_HALT_MASK; // enable transfers
+}
 
+uint8_t SPI0_Rx(){
+	uint8_t temp;
 
+	// wait for receive fifo drain flag (RFDF) to go to 1
+	while(!(SPI0_SR & SPI_SR_RFDF_MASK));
+
+	// save the rx data
+	temp = SPI0_POPR;
+
+	// clear RFDF flag
+	SPI0_SR |= SPI_SR_RFDF_MASK;
+
+	return temp;
 }
 
 void RFM69_Init(){
-	// values need to be written to RFM69HCW through SPI
-	// SPI initialization MUST take place before chip initialization
-	// register values are taken from 'RFM69registers.h'
+	int temp;
+	SPI0_Tx_Prep(); // prepare SPI
 
-	// addressing and communication takes 8 bit frames
-	// first bit is w/r (1 is write, 0 is read)
-	// after w/r bit comes 7 data bits for the address, MSB first
+	// see page 60 in RFM user manual for register details
 
-	// enable power for the module
+	// module set to standby by default, ok for configuration
 
-	// use preset values except for following changes
-	// set higher bitrate
-}
+	// set to continuous mode, fsk (default)
+	SPI0_Tx((RFM_WRITE | REG_DATAMODUL) << 8 | RF_DATAMODUL_DATAMODE_CONTINUOUS);
 
-void RFM69_TX(uint8_t tx){
-	// NOTE: To end tx the system must leave continuous tx mode using clock disable (?)
+	// set bitrate of the communication link to 300 kbps
+	SPI0_Tx((RFM_WRITE | REG_BITRATEMSB) << 8 | RF_BITRATEMSB_300000);
+	SPI0_Tx((RFM_WRITE | REG_BITRATELSB) << 8 | RF_BITRATELSB_300000);
 
-	// check chip mode register (REG_OPMODE)
-	SPI0_Tx(RFM_READ | REG_OPMODE); // read from RFM OPMODE
-	uint8_t status = SPI0_Rx();
+	// must follow: frequency deviation + bitrate/2 <= 500kHz, f_dev = 200kHz
+	SPI0_Tx((RFM_WRITE | REG_FDEVMSB) << 8 | RF_FDEVMSB_200000);
+	SPI0_Tx((RFM_WRITE | REG_FDEVLSB) << 8 | RF_FDEVLSB_200000);
 
-	// CONTINUE FROM HERE THIS WON'T WORK YET AS IT WILL JUST WRITE TO THE TX FIFO INSTEAD OF DATA
-	// if not in tx mode, set to tx mode
-	if(status != RF_OPMODE_TRANSMITTER){
-		SPI0_Tx(RFM_WRITE | REG_OPMODE); // write address for OPMODE to RFM
-		SPI0_Tx(RF_OPMODE_TRANSMITTER); // write tx mode for OPMODE to RFM
+	// leave REG_FRFxxx to default values (915 MHz)
 
-		SPI0_Tx(RFM_WRITE | REG_FIFO); // system will now read continuously
+	// start OSC1 calibration sequence
+	SPI0_Tx((RFM_WRITE | REG_OSC1) << 8 | RF_OSC1_RCCAL_START);
+
+	// check OSC1 calibration to see if completed
+	temp = 0;
+	SPI0_Tx((RFM_WRITE | REG_OSC1) << 8);
+	while(!temp){
+		SPI0_Tx((RFM_WRITE | REG_OSC1) << 8);
+		temp = SPI0_Rx() & RF_OSC1_RCCAL_DONE;
 	}
 
 
-	// push frame to FIFO
+
+}
+
+void RFM69_TX(uint8_t tx){
+
 }
 
 uint8_t RFM69_RX(uint8_t rx){
-	// check chip mode register
-	// if register is in rx continue
-	// else set to rx mode
-
-	// receive frame from FIFO
-	// return frame value
-	return 0;
+	return 0xFF; // dummy return
 }
 
 void master_init(){
 	UART0_Init();
 	UART1_Init();
-	SPI0_Init();
+	SPI0_Init(16);
 	//RFM69_Init(); // must always be after the SPI interface has been enabled
 }
 
@@ -268,13 +278,10 @@ int main(void){
 
 	master_init();
 
-	uint8_t i;
+	uint8_t i, temp;
+	SPI0_Tx_Prep(); // configure SPI
 	while(1){
-	for(i = 1; i <= 0xFF; i++){
-		UART1_Putstring(i);
-		SPI0_Tx(i);
-		//UART0_Putstring();
-		}
+		RFM69_Init();
 	}
 }
 ////////////////////////////////////////////////////////////////////////////////

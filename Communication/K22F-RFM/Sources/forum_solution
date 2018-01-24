@@ -93,13 +93,9 @@ int main(void){
 while(1){
 
   SPI0_MCR |=  SPI_MCR_HALT_MASK;
-
   SPI0_MCR |= (SPI_MCR_CLR_RXF_MASK | SPI_MCR_CLR_TXF_MASK); //flush the fifos
-
   SPI0_SR |= (SPI_SR_TCF_MASK | SPI_SR_EOQF_MASK | SPI_SR_TFUF_MASK | SPI_SR_TFFF_MASK | SPI_SR_RFOF_MASK | SPI_SR_RFDF_MASK); //clear the status bits (write-1-to-clear)
-
   SPI0_TCR |= SPI_TCR_SPI_TCNT_MASK;
-
   SPI0_MCR &=  ~SPI_MCR_HALT_MASK;
 
 
