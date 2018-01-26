@@ -28,7 +28,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// libraries
+// standard libraries
 #include "fsl_device_registers.h"
 #include "stdio.h"
 #include "stdlib.h"
@@ -45,7 +45,7 @@
 #define RFM_READ 0x00
 
 void RFM69_Init(){
-	int temp;
+	uint8_t temp;
 	SPI0_Prep(); // prepare SPI
 
 	// see page 60 in RFM user manual for register details
@@ -53,24 +53,24 @@ void RFM69_Init(){
 	// module set to standby by default, ok for configuration
 
 	// set to continuous mode, fsk (default)
-	SPI0_Tx((RFM_WRITE | REG_DATAMODUL) << 8 | RF_DATAMODUL_DATAMODE_CONTINUOUS);
+	SPI0_TX((RFM_WRITE | REG_DATAMODUL) << 8 | RF_DATAMODUL_DATAMODE_CONTINUOUS);
 
 	// set bitrate of the communication link to 300 kbps
-	SPI0_Tx((RFM_WRITE | REG_BITRATEMSB) << 8 | RF_BITRATEMSB_300000);
-	SPI0_Tx((RFM_WRITE | REG_BITRATELSB) << 8 | RF_BITRATELSB_300000);
+	//SPI0_TX((RFM_WRITE | REG_BITRATEMSB) << 8 | RF_BITRATEMSB_300000);
+	//SPI0_TX((RFM_WRITE | REG_BITRATELSB) << 8 | RF_BITRATELSB_300000);
 
 	// must follow: frequency deviation + bitrate/2 <= 500kHz, f_dev = 200kHz
-	SPI0_Tx((RFM_WRITE | REG_FDEVMSB) << 8 | RF_FDEVMSB_200000);
-	SPI0_Tx((RFM_WRITE | REG_FDEVLSB) << 8 | RF_FDEVLSB_200000);
+	//SPI0_TX((RFM_WRITE | REG_FDEVMSB) << 8 | RF_FDEVMSB_200000);
+	//SPI0_TX((RFM_WRITE | REG_FDEVLSB) << 8 | RF_FDEVLSB_200000);
 
 	// leave REG_FRFxxx to default values (915 MHz)
 
 	// Calibrate RC Oscillator
-	SPI0_Tx((RFM_WRITE | REG_OSC1) << 8 | RF_OSC1_RCCAL_START);
+	SPI0_TX((RFM_WRITE | REG_OSC1) << 8 | RF_OSC1_RCCAL_START);
 	temp = 0;
 	while(!temp){
-		SPI0_Tx(RFM_READ | REG_OSC1); // make read request
-		temp = SPI0_Rx() & RF_OSC1_RCCAL_DONE; // mask all bits except for RCCAL_DONE
+		SPI0_TX(RFM_READ | REG_OSC1); // make read request
+		temp = SPI0_RX() & RF_OSC1_RCCAL_DONE; // mask all bits except for RCCAL_DONE
 	}
 
 	// leave RegAfcCtrl as default
@@ -78,32 +78,78 @@ void RFM69_Init(){
 	// ignore RegListenX for now
 
 	// set power level to 0 (dBm)
-	SPI0_Tx((RFM_WRITE | REG_PALEVEL) << 8 | RF_PALEVEL_PA0_ON | RF_PALEVEL_PA1_OFF | RF_PALEVEL_PA2_OFF | RF_PALEVEL_OUTPUTPOWER_10010);
+	SPI0_TX((RFM_WRITE | REG_PALEVEL) << 8 | RF_PALEVEL_PA0_ON | RF_PALEVEL_PA1_OFF | RF_PALEVEL_PA2_OFF | RF_PALEVEL_OUTPUTPOWER_10010);
 
 }
 
-void RFM69_TX(uint8_t tx){
+void RFM69_TX_Prep(){
+	// change operation mode to transmit
+	SPI0_TX((RFM_WRITE | REG_OPMODE) << 8 | RF_OPMODE_TRANSMITTER);
 
+	// maybe look at configuring SPI to be 8 bits after this poin
 }
 
-uint8_t RFM69_RX(uint8_t rx){
-	return 0xFF; // dummy return
+void RFM69_RX_Prep(){
+	// change operation mode to receive
+	SPI0_TX((RFM_WRITE | REG_OPMODE) << 8 | RF_OPMODE_RECEIVER);
+	// maybe look at configuring SPI to be 8 bits after this point
+}
+
+void RFM69_TX(uint8_t tx_byte){
+	SPI0_TX((RFM_WRITE | REG_FIFO) << 8 | tx_byte); // want to write to fifo for TX
+}
+
+uint8_t RFM69_RX(){
+	SPI0_TX(RFM_READ | REG_FIFO); // want to read from fifo for RX
+	return SPI0_RX();
 }
 
 void master_init(){
 	UART0_Init();
 	UART1_Init();
 	SPI0_Init(16);
-	//RFM69_Init(); // must always be after the SPI interface has been enabled
+	RFM69_Init(); // must always be after the SPI interface has been enabled
+}
+
+void TX_TEST(){
+	uint8_t i;
+
+	// prepare for wireless transmission
+	RFM69_TX_Prep();
+
+	while(1){ // loop through for visualisation purposes
+		for(i = 0; i < 0xFF; i++){
+			RFM69_TX(i); // transmit incrementing numbers
+		}
+	}
+}
+
+void RX_TEST(){
+	uint8_t temp;
+
+	RFM69_RX_Prep();
+
+	while(1){
+		temp = RFM69_RX();
+	}
 }
 
 int main(void){
-	// note max current draw for board is 120 mA, keep below that
-	uint16_t temp;
+	uint8_t i, temp;
 
+	// note max current draw for board is 120 mA, keep below that
+
+	// look at SPI0_CTAR0 PASC to change the time before the CS goes high again
+
+	// init all the modules needed
 	master_init();
 
 	while(1){
-		RFM69_Init();
+		//for(i = 0; i < 0xFF; i++){
+			SPI0_TX(RFM_READ | REG_FRFMSB << 8);
+			temp = SPI0_RX();
+		//}
 	}
+	//RX_TEST();
+	//TX_TEST();
 }

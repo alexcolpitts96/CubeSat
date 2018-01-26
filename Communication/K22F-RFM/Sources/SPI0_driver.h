@@ -33,7 +33,7 @@ void SPI0_Init(int frame_size){
 	SPI0_CTAR0 = 0;
 
 	// configure SPI0
-	SPI0_CTAR0 |= SPI_CTAR_FMSZ(frame_size-1) | SPI_CTAR_CPOL_MASK | SPI_CTAR_BR(0x9) | SPI_CTAR_CPHA_MASK; // 16 bit frames, active low clock, ??? baud rate clock, BR factor 2
+	SPI0_CTAR0 |= SPI_CTAR_FMSZ(frame_size-1) | SPI_CTAR_CPOL_MASK | SPI_CTAR_BR(0x9) | SPI_CTAR_CPHA_MASK | SPI_CTAR_PASC(0x3); // 16 bit frames, active low clock, ??? baud rate clock, BR factor 2
 	SPI0_MCR |= SPI_MCR_MSTR_MASK | SPI_MCR_PCSIS_MASK; // master, CS active low
 	SPI0_MCR &= (~SPI_MCR_DIS_RXF_MASK) | (~SPI_MCR_DIS_TXF_MASK); // enable rx and tx FIFOs
 	SPI0_MCR &= (~SPI_MCR_MDIS_MASK) & (~SPI_MCR_HALT_MASK); // enable module clock and start transfers
@@ -59,7 +59,7 @@ void SPI0_Prep(){
 	SPI0_MCR &= ~SPI_MCR_HALT_MASK; // enable transfers
 }
 
-uint16_t SPI0_Rx(){
+uint16_t SPI0_RX(){
 	uint8_t temp;
 
 	// wait for receive fifo drain flag (RFDF) to go to 1
@@ -74,7 +74,7 @@ uint16_t SPI0_Rx(){
 	return temp;
 }
 
-void SPI0_Tx(uint16_t tx_data){
+void SPI0_TX(uint16_t tx_data){
 	SPI0_PUSHR =  (SPI_PUSHR_PCS0_ON | tx_data); // may need to be changed based on chip, CS0
 
 	// wait for transmission to complete flag to go to 1 (TCF)
