@@ -53,7 +53,8 @@ void RFM69_Init(){
 	// module set to standby by default, ok for configuration
 
 	// set to continuous mode, fsk (default)
-	SPI0_TX((RFM_WRITE | REG_DATAMODUL) << 8 | RF_DATAMODUL_DATAMODE_CONTINUOUS);
+	SPI0_TX(RFM_WRITE | REG_DATAMODUL);
+	SPI0_TX(RF_DATAMODUL_DATAMODE_CONTINUOUS);
 
 	// set bitrate of the communication link to 300 kbps
 	//SPI0_TX((RFM_WRITE | REG_BITRATEMSB) << 8 | RF_BITRATEMSB_300000);
@@ -66,12 +67,15 @@ void RFM69_Init(){
 	// leave REG_FRFxxx to default values (915 MHz)
 
 	// Calibrate RC Oscillator
-	SPI0_TX((RFM_WRITE | REG_OSC1) << 8 | RF_OSC1_RCCAL_START);
+	SPI0_TX(RFM_WRITE | REG_OSC1);
+	SPI0_TX(RF_OSC1_RCCAL_START);
 	temp = 0;
+	/*
 	while(!temp){
 		SPI0_TX(RFM_READ | REG_OSC1); // make read request
 		temp = SPI0_RX() & RF_OSC1_RCCAL_DONE; // mask all bits except for RCCAL_DONE
 	}
+	*/
 
 	// leave RegAfcCtrl as default
 
@@ -84,19 +88,22 @@ void RFM69_Init(){
 
 void RFM69_TX_Prep(){
 	// change operation mode to transmit
-	SPI0_TX((RFM_WRITE | REG_OPMODE) << 8 | RF_OPMODE_TRANSMITTER);
+	SPI0_TX(RFM_WRITE | REG_OPMODE);
+	SPI0_TX(RF_OPMODE_TRANSMITTER);
 
 	// maybe look at configuring SPI to be 8 bits after this poin
 }
 
 void RFM69_RX_Prep(){
 	// change operation mode to receive
-	SPI0_TX((RFM_WRITE | REG_OPMODE) << 8 | RF_OPMODE_RECEIVER);
+	SPI0_TX(RFM_WRITE | REG_OPMODE);
+	SPI0_TX(RF_OPMODE_RECEIVER);
 	// maybe look at configuring SPI to be 8 bits after this point
 }
 
 void RFM69_TX(uint8_t tx_byte){
-	SPI0_TX((RFM_WRITE | REG_FIFO) << 8 | tx_byte); // want to write to fifo for TX
+	SPI0_TX(RFM_WRITE | REG_FIFO);
+	SPI0_TX(tx_byte); // want to write to fifo for TX
 }
 
 uint8_t RFM69_RX(){
@@ -107,7 +114,7 @@ uint8_t RFM69_RX(){
 void master_init(){
 	UART0_Init();
 	UART1_Init();
-	SPI0_Init(16);
+	SPI0_Init(8);
 	RFM69_Init(); // must always be after the SPI interface has been enabled
 }
 
@@ -145,10 +152,10 @@ int main(void){
 	master_init();
 
 	while(1){
-		//for(i = 0; i < 0xFF; i++){
-			SPI0_TX(RFM_READ | REG_FRFMSB << 8);
-			temp = SPI0_RX();
-		//}
+		for(i = 0; i < 0xFF; i++){
+			SPI0_TX(i);
+			//temp = SPI0_RX();
+		}
 	}
 	//RX_TEST();
 	//TX_TEST();
