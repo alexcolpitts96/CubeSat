@@ -29,29 +29,45 @@
  */
 
 // standard libraries
+#include "fsl_device_registers.h"
+#include "stdio.h"
+#include "stdlib.h"
+#include "string.h"
 
+// custom libraries
+#include "RFM69registers.h"
+#include "RFM69_driver.h"
+//#include "SPI0_driver.h" // contained in RFM69_driver.h
+#include "UART0_driver.h"
+#include "UART1_driver.h"
+
+// definitions
+#define RFM_WRITE 0x80
+#define RFM_READ 0x00
+#define RFM_SAFE_BTYE 0xFF
 
 void TX_TEST(){
 	uint8_t i;
 
-	// prepare for wireless transmission
 	RFM69_TX_Prep();
 
-	while(1){ // loop through for visualisation purposes
+	while(1){
 		for(i = 0; i < 0xFF; i++){
-			RFM69_TX(i); // transmit incrementing numbers
+			RFM69_TX(i);
 		}
 	}
 }
 
 void RX_TEST(){
-	uint8_t temp;
+	uint16_t temp;
 
 	RFM69_RX_Prep();
 
 	while(1){
-		temp = RFM69_RX();
+		temp = RFM69_RX() & 0xFF; // receive and mask the result
 	}
+
+
 }
 
 void master_init(){
@@ -73,11 +89,14 @@ int main(void){
 
 	SPI0_Prep();
 
+	//TX_TEST();
+
+	SPI0_TX(((RFM_WRITE | REG_OPMODE) << 8) | RF_OPMODE_TRANSMITTER);
+
 	while(1){
 		for(i = 0; i < 0xFF; i++){
-			tx = (RFM_READ | REG_FRFMSB) << 8;
-			SPI0_TX(tx);
-			temp = SPI0_RX();
+			SPI0_TX(((RFM_WRITE | REG_FIFO) << 8) | i);
 		}
 	}
+
 }
