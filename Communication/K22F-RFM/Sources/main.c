@@ -111,13 +111,6 @@ uint8_t RFM69_RX(){
 	return SPI0_RX();
 }
 
-void master_init(){
-	UART0_Init();
-	UART1_Init();
-	SPI0_Init(8);
-	RFM69_Init(); // must always be after the SPI interface has been enabled
-}
-
 void TX_TEST(){
 	uint8_t i;
 
@@ -141,22 +134,30 @@ void RX_TEST(){
 	}
 }
 
+void master_init(){
+	UART0_Init();
+	UART1_Init();
+	SPI0_Init(16);
+	RFM69_Init(); // must always be after the SPI interface has been enabled
+}
+
 int main(void){
-	uint8_t i, temp;
+	uint16_t i, temp, tx;
 
 	// note max current draw for board is 120 mA, keep below that
 
-	// look at SPI0_CTAR0 PASC to change the time before the CS goes high again
+	// vary SPI init depending on the task to be completed
 
 	// init all the modules needed
 	master_init();
 
+	SPI0_Prep();
+
 	while(1){
 		for(i = 0; i < 0xFF; i++){
-			SPI0_TX(i);
-			//temp = SPI0_RX();
+			tx = (RFM_READ | REG_VERSION) << 8;
+			SPI0_TX(tx);
+			temp = SPI0_RX();
 		}
 	}
-	//RX_TEST();
-	//TX_TEST();
 }
