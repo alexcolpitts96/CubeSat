@@ -89,8 +89,8 @@ int main(void){
 
 	SPI0_Prep();
 
-	//TX_TEST();
 
+	/*
 	SPI0_TX(((RFM_WRITE | REG_OPMODE) << 8) | RF_OPMODE_TRANSMITTER);
 
 	while(1){
@@ -98,5 +98,14 @@ int main(void){
 			SPI0_TX(((RFM_WRITE | REG_FIFO) << 8) | i);
 		}
 	}
+	*/
 
+	SPI0_TX(((RFM_WRITE | REG_OPMODE) << 8) | RF_OPMODE_RECEIVER);
+
+	while(1){
+		for(i = 0; i < 0xFF; i++){
+			SPI0_TX(((RFM_READ | REG_VERSION) << 8));
+			temp = SPI0_RX();
+		}
+	}
 }
