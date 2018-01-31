@@ -46,35 +46,11 @@
 #define RFM_READ 0x00
 #define RFM_SAFE_BTYE 0xFF
 
-void TX_TEST(){
-	uint8_t i;
-
-	RFM69_TX_Prep();
-
-	while(1){
-		for(i = 0; i < 0xFF; i++){
-			RFM69_TX(i);
-		}
-	}
-}
-
-void RX_TEST(){
-	uint16_t temp;
-
-	RFM69_RX_Prep();
-
-	while(1){
-		temp = RFM69_RX() & 0xFF; // receive and mask the result
-	}
-
-
-}
-
 void master_init(){
 	UART0_Init();
 	UART1_Init();
 	SPI0_Init(16);
-	RFM69_Init(); // must always be after the SPI interface has been enabled
+	//RFM69_Init(); // must always be after the SPI interface has been enabled
 }
 
 int main(void){
@@ -87,25 +63,8 @@ int main(void){
 	// init all the modules needed
 	master_init();
 
-	SPI0_Prep();
-
-
-	/*
-	SPI0_TX(((RFM_WRITE | REG_OPMODE) << 8) | RF_OPMODE_TRANSMITTER);
-
 	while(1){
-		for(i = 0; i < 0xFF; i++){
-			SPI0_TX(((RFM_WRITE | REG_FIFO) << 8) | i);
-		}
-	}
-	*/
-
-	SPI0_TX(((RFM_WRITE | REG_OPMODE) << 8) | RF_OPMODE_RECEIVER);
-
-	while(1){
-		for(i = 0; i < 0xFF; i++){
-			SPI0_TX(((RFM_READ | REG_VERSION) << 8));
-			temp = SPI0_RX();
-		}
+		UART1_Putchar('s');
+		RFM69_Init();
 	}
 }

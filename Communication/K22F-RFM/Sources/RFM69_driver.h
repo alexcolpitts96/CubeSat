@@ -6,6 +6,15 @@
 #define RFM_WRITE 0x80
 #define RFM_READ 0x00
 
+void RFM69_TX(uint8_t REG, uint8_t tx_byte){
+	SPI0_TX(((RFM_WRITE | REG) << 8) | tx_byte); // write to REG
+}
+
+uint8_t RFM69_RX(uint8_t REG){
+	SPI0_TX((RFM_READ | REG) << 8); // want to read from REG
+	return SPI0_RX() & 0xFF;
+}
+
 // configuration structure has been modified from https://github.com/LowPowerLab/RFM69/blob/master/RFM69.cpp
 const uint8_t CONFIG[][2] =
 {
@@ -47,8 +56,32 @@ const uint8_t CONFIG[][2] =
 };
 
 void RFM69_Init(){
+	uint8_t i;
 
+	SPI0_Prep(); // ensure SPI0 is ready for tx/rx
 
+	// sync to the module to ensure reading and writing is working properly
+	// no need to wait for timeout, this either works or the whole system dies
+
+	UART1_Putchar('a');
+	// send alternating 1s and 0s
+	while(RFM69_RX(REG_SYNCVALUE1) != 0xAA){
+		RFM69_TX(REG_SYNCVALUE1, 0xAA);
+	}
+
+	UART1_Putchar('5');
+	// send alternating 0s and 1s
+	while(RFM69_RX(REG_SYNCVALUE1) != 0x55){
+		RFM69_TX(REG_SYNCVALUE1, 0x55);
+	}
+
+	UART1_Putchar('c');
+	// write the config structure to the device
+	for(i = 0; CONFIG[i][0] != 255; i++){
+		RFM69_TX(CONFIG[i][0], CONFIG[i][1]); // column 1 is reg, column 2 is data
+	}
+
+	// got to line 139 in the driver file
 
 }
 
@@ -62,11 +95,4 @@ void RFM69_RX_Prep(){
 	SPI0_TX(((RFM_WRITE | REG_OPMODE) << 8) | RF_OPMODE_RECEIVER);
 }
 
-void RFM69_TX(uint8_t tx_byte){
-	SPI0_TX(((RFM_WRITE | REG_FIFO) << 8) | tx_byte);
-}
 
-uint16_t RFM69_RX(){
-	SPI0_TX((RFM_READ | REG_FIFO) << 8); // want to read from fifo for RX
-	return SPI0_RX();
-}
