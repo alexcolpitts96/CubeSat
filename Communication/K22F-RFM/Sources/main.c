@@ -35,11 +35,11 @@
 #include "string.h"
 
 // custom libraries
-#include "RFM69registers.h"
-#include "RFM69_driver.h"
+#include "../RFM69/RFM69registers.h"
+#include "../RFM69/RFM69_driver.h"
 //#include "SPI0_driver.h" // contained in RFM69_driver.h
-#include "UART0_driver.h"
-#include "UART1_driver.h"
+#include "../UART0/UART0_driver.h"
+#include "../UART1/UART1_driver.h"
 
 // definitions
 #define RFM_WRITE 0x80
@@ -50,7 +50,7 @@ void master_init(){
 	UART0_Init();
 	UART1_Init();
 	SPI0_Init(16);
-	//RFM69_Init(); // must always be after the SPI interface has been enabled
+	RFM69_Init(); // must always be after the SPI interface has been enabled
 }
 
 int main(void){
@@ -64,7 +64,6 @@ int main(void){
 	master_init();
 
 	while(1){
-		UART1_Putchar('s');
-		RFM69_Init();
+
 	}
 }

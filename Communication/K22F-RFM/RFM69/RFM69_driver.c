@@ -1,6 +1,7 @@
 // custom libraries
+//#include <SPI0_driver.c>
+#include "../SPI0/SPI0_driver.h"
 #include "RFM69registers.h"
-#include "SPI0_driver.h"
 
 // definitions
 #define RFM_WRITE 0x80
@@ -16,7 +17,7 @@ uint8_t RFM69_RX(uint8_t REG){
 	return SPI0_RX() & 0xFF;
 }
 
-// configuration structure has been modified from https://github.com/LowPowerLab/RFM69/blob/master/RFM69.cpp
+// configuration structure and drivers have been modified from https://github.com/LowPowerLab/RFM69/blob/master/RFM69.cpp
 const uint8_t CONFIG[][2] =
 {
 		// standbye with sequencer during config
@@ -78,9 +79,6 @@ void RFM69_Init(){
 	for(i = 0; CONFIG[i][0] != 255; i++){
 		RFM69_TX(CONFIG[i][0], CONFIG[i][1]); // column 1 is reg, column 2 is data
 	}
-
-	// got to line 139 in the driver file
-
 }
 
 void RFM69_TX_MODE(){
@@ -112,5 +110,3 @@ void RFM69_RX_MODE(){
 	// wait for RFM to be ready to receive
 	while((RFM69_RX(REG_IRQFLAGS1) & RF_IRQFLAGS1_MODEREADY) == 0);
 }
-
-
