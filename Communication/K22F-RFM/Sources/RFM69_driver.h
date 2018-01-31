@@ -5,6 +5,7 @@
 // definitions
 #define RFM_WRITE 0x80
 #define RFM_READ 0x00
+#define LISTEN_ABORT_IGNORE 0xE3
 
 void RFM69_TX(uint8_t REG, uint8_t tx_byte){
 	SPI0_TX(((RFM_WRITE | REG) << 8) | tx_byte); // write to REG
@@ -63,19 +64,16 @@ void RFM69_Init(){
 	// sync to the module to ensure reading and writing is working properly
 	// no need to wait for timeout, this either works or the whole system dies
 
-	UART1_Putchar('a');
 	// send alternating 1s and 0s
 	while(RFM69_RX(REG_SYNCVALUE1) != 0xAA){
 		RFM69_TX(REG_SYNCVALUE1, 0xAA);
 	}
 
-	UART1_Putchar('5');
 	// send alternating 0s and 1s
 	while(RFM69_RX(REG_SYNCVALUE1) != 0x55){
 		RFM69_TX(REG_SYNCVALUE1, 0x55);
 	}
 
-	UART1_Putchar('c');
 	// write the config structure to the device
 	for(i = 0; CONFIG[i][0] != 255; i++){
 		RFM69_TX(CONFIG[i][0], CONFIG[i][1]); // column 1 is reg, column 2 is data
@@ -85,14 +83,34 @@ void RFM69_Init(){
 
 }
 
-void RFM69_TX_Prep(){
-	// change operation mode to transmit
-	SPI0_TX(((RFM_WRITE | REG_OPMODE) << 8) | RF_OPMODE_TRANSMITTER);
+void RFM69_TX_MODE(){
+	uint8_t read;
+
+	// read in current REG_OPMODE value, ignore ListenAbort field
+	read = RFM69_RX(REG_OPMODE) & LISTEN_ABORT_IGNORE;
+
+	// check current mode and change to transmit if needed
+	if(read != RF_OPMODE_TRANSMITTER){
+		RFM69_TX(REG_OPMODE, RF_OPMODE_TRANSMITTER);
+	}
+
+	// wait for RFM to be ready to transmit
+	while((RFM69_RX(REG_IRQFLAGS1) & RF_IRQFLAGS1_MODEREADY) == 0);
 }
 
-void RFM69_RX_Prep(){
-	// change operation mode to receive
-	SPI0_TX(((RFM_WRITE | REG_OPMODE) << 8) | RF_OPMODE_RECEIVER);
+void RFM69_RX_MODE(){
+	uint8_t read;
+
+	// read in current REG_OPMODE value, ignore ListenAbort field
+	read = RFM69_RX(REG_OPMODE) & LISTEN_ABORT_IGNORE;
+
+	// check current mode and change to receive if needed
+	if(read != RF_OPMODE_RECEIVER){
+		RFM69_TX(REG_OPMODE, RF_OPMODE_RECEIVER);
+	}
+
+	// wait for RFM to be ready to receive
+	while((RFM69_RX(REG_IRQFLAGS1) & RF_IRQFLAGS1_MODEREADY) == 0);
 }
 
 
