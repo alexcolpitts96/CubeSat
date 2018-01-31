@@ -28,43 +28,51 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// standard libraries
-#include "fsl_device_registers.h"
-#include "stdio.h"
-#include "stdlib.h"
-#include "string.h"
+#include "MK22F51212.h"
+//#include "fsl_device_registers.h"
+//Created Hsuan-wei Lo 3476309
 
-// custom libraries
-#include "RFM69registers.h"
-#include "RFM69_driver.h"
-//#include "SPI0_driver.h" // contained in RFM69_driver.h
-#include "UART0_driver.h"
-#include "UART1_driver.h"
+void ADC0_Init();
+float ADC0_Convert();
 
-// definitions
-#define RFM_WRITE 0x80
-#define RFM_READ 0x00
-#define RFM_SAFE_BTYE 0xFF
+int main(void)
+{
+	float num=0;
+	ADC0_Init();
 
-void master_init(){
-	UART0_Init();
-	UART1_Init();
-	SPI0_Init(16);
-	//RFM69_Init(); // must always be after the SPI interface has been enabled
+	num=ADC0_Convert();//Print the Read ADC value in the num
+
+    return 0;
 }
 
-int main(void){
-	uint16_t i, temp, tx;
+void ADC0_Init (){
 
-	// note max current draw for board is 120 mA, keep below that
+	//Pick Port ADC0_DP0 for the testing
 
-	// vary SPI init depending on the task to be completed
+	SIM_SCGC6 |= SIM_SCGC6_ADC0_MASK;//0x08000000
 
-	// init all the modules needed
-	master_init();
+	ADC0_CFG1 |= 0b00101000;// Set the Mode in 10 as it to have 10-bit conversion
+							// Set the ADIV (clock Divide Select) ratio is 1
 
-	while(1){
-		UART1_Putchar('s');
-		RFM69_Init();
+	ADC0_CFG2 |= 0x00;
+
+	ADC0_SC2 |= 0x00;// ADTRG software triiger, DMA disabled, Voltage Refereence (REFSEL) default voltage reference =1.207
+					  // ACREN Range function disabled
+
+	ADC0_SC3 |= 0x00;
+
+	ADC0_SC1A = 0b0000000; //Mask the ADCH selection
+
+}
+
+float ADC0_Convert() {
+
+	ADC0_SC1A &= ADC_SC1_ADCH(0); //Mask the ADCH selection
+	while(1) {
+		if ((ADC0_SC1A&0x80)==0x80) {
+			break;
+		}
 	}
-}
+	return ADC0_RA;//Return the value read from the ADC register
+
+	}
