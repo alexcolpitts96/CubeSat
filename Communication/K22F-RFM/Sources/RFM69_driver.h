@@ -59,6 +59,6 @@ void RFM69_TX(uint8_t tx_byte){
 }
 
 uint16_t RFM69_RX(){
-	SPI0_TX(RFM_READ | REG_FIFO << 8); // want to read from fifo for RX
+	SPI0_TX((RFM_READ | REG_FIFO) << 8); // want to read from fifo for RX
 	return SPI0_RX();
 }
