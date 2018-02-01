@@ -54,16 +54,14 @@ void master_init(){
 }
 
 int main(void){
-	uint16_t i, temp, tx;
+	uint16_t i, j, temp;
 
 	// note max current draw for board is 120 mA, keep below that
-
-	// vary SPI init depending on the task to be completed
 
 	// init all the modules needed
 	master_init();
 
 	while(1){
-
+		RFM69_Init();
 	}
 }
