@@ -40,6 +40,7 @@
 //#include "SPI0_driver.h" // contained in RFM69_driver.h
 #include "../UART0/UART0_driver.h"
 #include "../UART1/UART1_driver.h"
+#include "../GPIO/gpio.h"
 
 // definitions
 #define RFM_WRITE 0x80
