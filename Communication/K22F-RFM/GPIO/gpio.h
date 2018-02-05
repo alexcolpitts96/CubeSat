@@ -18,4 +18,10 @@ void blueLED(int state);
 // returns the value read from SW3
 int checkSW3();
 
+// configure GPIO input pin to receive flags
+void RFM69_DIO0_Init();
+
+// read in value from DIO0 pin on RFM69
+uint8_t RFM69_DIO0_Read();
+
 #endif /* SOURCES_GPIO_GPIO_H */

@@ -2,6 +2,7 @@
 //#include <SPI0_driver.c>
 #include "../SPI0/SPI0_driver.h"
 #include "RFM69registers.h"
+#include "../GPIO/gpio.h"
 
 // definitions
 #define RFM_WRITE 0x80
@@ -36,9 +37,9 @@ const uint8_t CONFIG[][2] = {
 	{REG_FRFMID, RF_FRFMID_915},
 	{REG_FRFLSB, RF_FRFLSB_915},
 
-	// power level setting -18 dBm +  18 dBm (0b10010) = 0 dBm
-	//{REG_PALEVEL, RF_PALEVEL_PA0_ON | RF_PALEVEL_PA1_OFF | RF_PALEVEL_PA2_OFF | RF_PALEVEL_OUTPUTPOWER_10010},
-	{REG_PALEVEL, RF_PALEVEL_PA0_ON | RF_PALEVEL_PA1_OFF | RF_PALEVEL_PA2_OFF | RF_PALEVEL_OUTPUTPOWER_11111},
+	// power level settings, +5 dBm
+	{REG_PALEVEL, RF_PALEVEL_PA0_OFF | RF_PALEVEL_PA1_ON | RF_PALEVEL_PA2_ON | RF_PALEVEL_OUTPUTPOWER_10011},
+	//{REG_PALEVEL, RF_PALEVEL_PA0_ON | RF_PALEVEL_PA1_OFF | RF_PALEVEL_PA2_OFF | RF_PALEVEL_OUTPUTPOWER_11111},
 
 	// over current protection, max draw of 95 mA
 	{REG_OCP, RF_OCP_ON | RF_OCP_TRIM_95},
@@ -56,27 +57,28 @@ const uint8_t CONFIG[][2] = {
 	{REG_IRQFLAGS2, RF_IRQFLAGS2_FIFOOVERRUN},
 
 	// RSSI Threshold setting
-	{REG_RSSITHRESH, RF_RSSITHRESH_VALUE}, // -value/2 (dBm), -114 dBm
+	//{REG_RSSITHRESH, RF_RSSITHRESH_VALUE}, // -value/2 (dBm), -114 dBm
+	{REG_RSSITHRESH, 150},
 
 	{REG_SYNCCONFIG, RF_SYNC_ON | RF_SYNC_FIFOFILL_AUTO | RF_SYNC_SIZE_2 | RF_SYNC_TOL_0},
 
 	// pick random sync value
-	{REG_SYNCVALUE1, 0x2D},
+	//{REG_SYNCVALUE1, 0xAA},
 
 	// set network ID, not needed
 	//{REG_SYNCVALUE2, networkID},
 
-	// fixed length, no DC, CRC on, CRC error throws out data, no address filtering
-	{REG_PACKETCONFIG1, RF_PACKET1_FORMAT_FIXED | RF_PACKET1_DCFREE_OFF | RF_PACKET1_CRC_ON | RF_PACKET1_CRCAUTOCLEAR_ON | RF_PACKET1_ADRSFILTERING_OFF},
+	// non-fixed length, no DC, CRC on, CRC error throws out data, no address filtering
+	{REG_PACKETCONFIG1, RF_PACKET1_FORMAT_VARIABLE | RF_PACKET1_DCFREE_MANCHESTER | RF_PACKET1_CRC_ON | RF_PACKET1_CRCAUTOCLEAR_ON | RF_PACKET1_ADRSFILTERING_OFF},
 
-	// payload will be 1 byte address + 11 bytes data
-	{REG_PAYLOADLENGTH, 12},
+	// payload may not be longer than largest Barker Code
+	{REG_PAYLOADLENGTH, 13},
 
 	// no address filtering
 	//{REG_NODEADRS, nodeID},
 
-	// tx when fifo has 11 bytes in it
-	{REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTART_FIFOTHRESH | 0xB}, //RF_FIFOTHRESH_VALUE, set to 11 bytes in fifo (0xB)
+	// tx when fifo when condition is met
+	{REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTART_FIFONOTEMPTY | 13}, //RF_FIFOTHRESH_VALUE, set to 11 bytes in fifo (0xB)
 
 	// no AES, restart after a while, if no receive go into receive mode again
 	{REG_PACKETCONFIG2, RF_PACKET2_RXRESTARTDELAY_2BITS | RF_PACKET2_AUTORXRESTART_ON | RF_PACKET2_AES_OFF},

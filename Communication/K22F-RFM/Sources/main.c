@@ -40,22 +40,34 @@
 //#include "SPI0_driver.h" // contained in RFM69_driver.h
 #include "../UART0/UART0_driver.h"
 #include "../UART1/UART1_driver.h"
-#include "../GPIO/gpio.h"
+//#include "../GPIO/gpio.h"
 
 // definitions
 #define RFM_WRITE 0x80
 #define RFM_READ 0x00
 #define RFM_SAFE_BTYE 0xFF
 
+#define SEQ_LEN 13
+
 void master_init(){
 	UART0_Init();
 	UART1_Init();
 	SPI0_Init(16);
+	RFM69_DIO0_Init();
 	RFM69_Init(); // must always be after the SPI interface has been enabled
+
 }
 
 int main(void){
-	uint16_t i, j, temp;
+	uint16_t i, j;
+	int temp, correct = 0;
+
+	uint8_t *p;
+	p = malloc(sizeof(uint8_t)*SEQ_LEN);
+
+	for(i = 0; i < SEQ_LEN; i++){
+		p[i] = i;
+	}
 
 	// note max current draw for board is 120 mA, keep below that
 
@@ -63,6 +75,20 @@ int main(void){
 	master_init();
 
 	while(1){
-		RFM69_Init();
+		correct = 0;
+		//UART1_Putchar('s');
+		//RFM69_SEND(p);
+
+		///*
+		RFM69_RECEIVE(p);
+
+		for(i = 0; i < SEQ_LEN; i++){
+			temp = p[i];
+			if(i == temp){
+				correct++;
+			}
+		}
+		UART1_Putchar((uint8_t) correct);
+		//*/
 	}
 }

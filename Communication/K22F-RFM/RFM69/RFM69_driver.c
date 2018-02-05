@@ -2,12 +2,13 @@
 //#include <SPI0_driver.c>
 #include "../SPI0/SPI0_driver.h"
 #include "RFM69registers.h"
+#include "../GPIO/gpio.h"
 
 // definitions
 #define RFM_WRITE 0x80
 #define RFM_READ 0x00
 #define LISTEN_ABORT_IGNORE 0xE3
-#define SEQ_LEN 11
+#define SEQ_LEN 12
 
 // configuration structure and drivers have been modified from https://github.com/LowPowerLab/RFM69/blob/master/RFM69.cpp
 const uint8_t CONFIG[][2] = {
@@ -31,9 +32,9 @@ const uint8_t CONFIG[][2] = {
 	{REG_FRFMID, RF_FRFMID_915},
 	{REG_FRFLSB, RF_FRFLSB_915},
 
-	// power level setting -18 dBm +  18 dBm (0b10010) = 0 dBm
-	//{REG_PALEVEL, RF_PALEVEL_PA0_ON | RF_PALEVEL_PA1_OFF | RF_PALEVEL_PA2_OFF | RF_PALEVEL_OUTPUTPOWER_10010},
-	{REG_PALEVEL, RF_PALEVEL_PA0_ON | RF_PALEVEL_PA1_OFF | RF_PALEVEL_PA2_OFF | RF_PALEVEL_OUTPUTPOWER_11111},
+	// power level settings, +5 dBm
+	{REG_PALEVEL, RF_PALEVEL_PA0_OFF | RF_PALEVEL_PA1_ON | RF_PALEVEL_PA2_ON | RF_PALEVEL_OUTPUTPOWER_10011},
+	//{REG_PALEVEL, RF_PALEVEL_PA0_ON | RF_PALEVEL_PA1_OFF | RF_PALEVEL_PA2_OFF | RF_PALEVEL_OUTPUTPOWER_11111},
 
 	// over current protection, max draw of 95 mA
 	{REG_OCP, RF_OCP_ON | RF_OCP_TRIM_95},
@@ -51,27 +52,28 @@ const uint8_t CONFIG[][2] = {
 	{REG_IRQFLAGS2, RF_IRQFLAGS2_FIFOOVERRUN},
 
 	// RSSI Threshold setting
-	{REG_RSSITHRESH, RF_RSSITHRESH_VALUE}, // -value/2 (dBm), -114 dBm
+	//{REG_RSSITHRESH, RF_RSSITHRESH_VALUE}, // -value/2 (dBm), -114 dBm
+	{REG_RSSITHRESH, 150},
 
 	{REG_SYNCCONFIG, RF_SYNC_ON | RF_SYNC_FIFOFILL_AUTO | RF_SYNC_SIZE_2 | RF_SYNC_TOL_0},
 
 	// pick random sync value
-	{REG_SYNCVALUE1, 0x2D},
+	//{REG_SYNCVALUE1, 0xAA},
 
 	// set network ID, not needed
 	//{REG_SYNCVALUE2, networkID},
 
-	// fixed length, no DC, CRC on, CRC error throws out data, no address filtering
-	{REG_PACKETCONFIG1, RF_PACKET1_FORMAT_FIXED | RF_PACKET1_DCFREE_OFF | RF_PACKET1_CRC_ON | RF_PACKET1_CRCAUTOCLEAR_ON | RF_PACKET1_ADRSFILTERING_OFF},
+	// non-fixed length, no DC, CRC on, CRC error throws out data, no address filtering
+	{REG_PACKETCONFIG1, RF_PACKET1_FORMAT_VARIABLE | RF_PACKET1_DCFREE_MANCHESTER | RF_PACKET1_CRC_ON | RF_PACKET1_CRCAUTOCLEAR_ON | RF_PACKET1_ADRSFILTERING_OFF},
 
-	// payload will be 1 byte address + 11 bytes data
-	{REG_PAYLOADLENGTH, 12},
+	// payload may not be longer than largest Barker Code
+	{REG_PAYLOADLENGTH, 13},
 
 	// no address filtering
 	//{REG_NODEADRS, nodeID},
 
-	// tx when fifo has 11 bytes in it
-	{REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTART_FIFOTHRESH | 0xB}, //RF_FIFOTHRESH_VALUE, set to 11 bytes in fifo (0xB)
+	// tx when fifo when condition is met
+	{REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTART_FIFONOTEMPTY | 13}, //RF_FIFOTHRESH_VALUE, set to 11 bytes in fifo (0xB)
 
 	// no AES, restart after a while, if no receive go into receive mode again
 	{REG_PACKETCONFIG2, RF_PACKET2_RXRESTARTDELAY_2BITS | RF_PACKET2_AUTORXRESTART_ON | RF_PACKET2_AES_OFF},
@@ -114,6 +116,9 @@ void RFM69_Init(){
 	for(i = 0; CONFIG[i][0] != 255; i++){
 		RFM69_TX(CONFIG[i][0], CONFIG[i][1]); // column 1 is reg, column 2 is data
 	}
+
+	// setup GPIO for flag receiving
+	RFM69_DIO0_Init();
 }
 
 // pass in mode to have the system set into it
@@ -151,7 +156,7 @@ void RFM69_SEND(uint8_t *buffer){
 	RFM69_SET_MODE(RF_OPMODE_TRANSMITTER);
 
 	// wait for packet to be sent by checking GPIO
-
+	while(!RFM69_DIO0_Read());
 
 	// return to standby when done
 	RFM69_SET_MODE(RF_OPMODE_STANDBY);
@@ -159,10 +164,17 @@ void RFM69_SEND(uint8_t *buffer){
 
 // incomplete function
 void RFM69_RECEIVE(uint8_t *buffer){
-	uint8_t read, temp;
+	uint8_t read, temp, i;
 
-	// read in flags
-	read = RFM69_RX(REG_IRQFLAGS2) & RF_IRQFLAGS2_PAYLOADREADY;
+	// set to transmit while checking FIFO
+	//RFM69_SET_MODE(RF_OPMODE_STANDBY);
+
+	// set DIO0 to payloadready in receive mode
+	RFM69_TX(REG_DIOMAPPING1, RF_DIOMAPPING1_DIO0_01);
+
+	// read in payload ready flag
+	//read = RFM69_RX(REG_IRQFLAGS2) & RF_IRQFLAGS2_PAYLOADREADY;
+	read = RFM69_DIO0_Read();
 
 	// if there was a packet there already, restart receive
 	if(read){
@@ -170,17 +182,18 @@ void RFM69_RECEIVE(uint8_t *buffer){
 		RFM69_TX(REG_PACKETCONFIG2, temp);
 	}
 
-	// set DIO0 to payloadready in receive mode
-	RFM69_TX(REG_DIOMAPPING1, RF_DIOMAPPING1_DIO0_01);
-
 	// set mode to receiver
 	RFM69_SET_MODE(RF_OPMODE_RECEIVER);
 
-	// wait for payload ready to occur (read GPIO)
+	// wait for payload ready to go high
+	while(!RFM69_DIO0_Read());
 
+	// read FIFO into buffer address that was passed to the function
+	for(i = 0; i < SEQ_LEN; i++){
+		buffer[i] = RFM69_RX(REG_FIFO);
+	}
 
-	// read FIFO into buffer given to function
-
+	return;
 }
 
 
