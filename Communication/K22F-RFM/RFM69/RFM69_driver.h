@@ -8,12 +8,8 @@
 #define RFM_WRITE 0x80
 #define RFM_READ 0x00
 #define LISTEN_ABORT_IGNORE 0xE3
-
-#define nodeID 1
+#define SEQ_LEN 12
 #define networkID 1
-
-volatile uint8_t mode;
-volatile uint8_t RSSI;
 
 // configuration structure and drivers have been modified from https://github.com/LowPowerLab/RFM69/blob/master/RFM69.cpp
 const uint8_t CONFIG[][2] = {

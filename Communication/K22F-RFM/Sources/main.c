@@ -77,9 +77,9 @@ int main(void){
 	while(1){
 		correct = 0;
 		//UART1_Putchar('s');
-		//RFM69_SEND(p);
+		RFM69_SEND(p);
 
-		///*
+		/*
 		RFM69_RECEIVE(p);
 
 		for(i = 0; i < SEQ_LEN; i++){

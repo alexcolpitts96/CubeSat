@@ -9,6 +9,7 @@
 #define RFM_READ 0x00
 #define LISTEN_ABORT_IGNORE 0xE3
 #define SEQ_LEN 12
+#define networkID 1
 
 // configuration structure and drivers have been modified from https://github.com/LowPowerLab/RFM69/blob/master/RFM69.cpp
 const uint8_t CONFIG[][2] = {
