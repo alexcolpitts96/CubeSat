@@ -63,7 +63,9 @@ int main(void){
 	int temp, correct = 0;
 
 	uint8_t *p;
-	p = malloc(sizeof(uint8_t)*SEQ_LEN);
+	//p = malloc(sizeof(uint8_t)*SEQ_LEN);
+	uint8_t buffer[SEQ_LEN];
+	p = &buffer;
 
 	for(i = 0; i < SEQ_LEN; i++){
 		p[i] = i;
@@ -77,9 +79,9 @@ int main(void){
 	while(1){
 		correct = 0;
 		//UART1_Putchar('s');
-		RFM69_SEND(p);
+		//RFM69_SEND(p);
 
-		/*
+		///*
 		RFM69_RECEIVE(p);
 
 		for(i = 0; i < SEQ_LEN; i++){

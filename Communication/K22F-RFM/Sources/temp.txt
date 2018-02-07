@@ -1,0 +1,34 @@
+// internal function
+void RFM69::receiveBegin() {
+  DATALEN = 0;
+  SENDERID = 0;
+  TARGETID = 0;
+  PAYLOADLEN = 0;
+  ACK_REQUESTED = 0;
+  ACK_RECEIVED = 0;
+  RSSI = 0;
+  if (readReg(REG_IRQFLAGS2) & RF_IRQFLAGS2_PAYLOADREADY)
+    writeReg(REG_PACKETCONFIG2, (readReg(REG_PACKETCONFIG2) & 0xFB) | RF_PACKET2_RXRESTART); // avoid RX deadlocks
+  writeReg(REG_DIOMAPPING1, RF_DIOMAPPING1_DIO0_01); // set DIO0 to "PAYLOADREADY" in receive mode
+  setMode(RF69_MODE_RX);
+}
+
+// checks if a packet was received and/or puts transceiver in receive (ie RX or listen) mode
+bool RFM69::receiveDone() {
+//ATOMIC_BLOCK(ATOMIC_FORCEON)
+//{
+  noInterrupts(); // re-enabled in unselect() via setMode() or via receiveBegin()
+  if (_mode == RF69_MODE_RX && PAYLOADLEN > 0)
+  {
+    setMode(RF69_MODE_STANDBY); // enables interrupts
+    return true;
+  }
+  else if (_mode == RF69_MODE_RX) // already in RX no payload yet
+  {
+    interrupts(); // explicitly re-enable interrupts
+    return false;
+  }
+  receiveBegin();
+  return false;
+//}
+}

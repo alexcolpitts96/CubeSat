@@ -34,7 +34,8 @@ const uint8_t CONFIG[][2] = {
 	{REG_FRFLSB, RF_FRFLSB_915},
 
 	// power level settings, +5 dBm
-	{REG_PALEVEL, RF_PALEVEL_PA0_OFF | RF_PALEVEL_PA1_ON | RF_PALEVEL_PA2_ON | RF_PALEVEL_OUTPUTPOWER_10011},
+	{REG_PALEVEL, RF_PALEVEL_PA0_OFF | RF_PALEVEL_PA1_ON | RF_PALEVEL_PA2_ON | RF_PALEVEL_OUTPUTPOWER_11111},
+	//{REG_PALEVEL, RF_PALEVEL_PA0_OFF | RF_PALEVEL_PA1_ON | RF_PALEVEL_PA2_ON | RF_PALEVEL_OUTPUTPOWER_10011},
 	//{REG_PALEVEL, RF_PALEVEL_PA0_ON | RF_PALEVEL_PA1_OFF | RF_PALEVEL_PA2_OFF | RF_PALEVEL_OUTPUTPOWER_11111},
 
 	// over current protection, max draw of 95 mA
@@ -164,18 +165,17 @@ void RFM69_SEND(uint8_t *buffer){
 }
 
 // incomplete function
-void RFM69_RECEIVE(uint8_t *buffer){
+void RFM69_RECEIVE(uint8_t *buffer){ // look at page 45, 5.2.2.3
 	uint8_t read, temp, i;
 
-	// set to transmit while checking FIFO
 	//RFM69_SET_MODE(RF_OPMODE_STANDBY);
 
 	// set DIO0 to payloadready in receive mode
 	RFM69_TX(REG_DIOMAPPING1, RF_DIOMAPPING1_DIO0_01);
 
 	// read in payload ready flag
-	//read = RFM69_RX(REG_IRQFLAGS2) & RF_IRQFLAGS2_PAYLOADREADY;
-	read = RFM69_DIO0_Read();
+	read = RFM69_RX(REG_IRQFLAGS2) & RF_IRQFLAGS2_PAYLOADREADY;
+	//read = RFM69_DIO0_Read();
 
 	// if there was a packet there already, restart receive
 	if(read){
