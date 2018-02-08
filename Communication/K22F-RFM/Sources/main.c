@@ -60,15 +60,20 @@ void master_init(){
 int main(void){
 	uint16_t i, j;
 	int temp, correct = 0;
+	char msg;
 
 	uint8_t *p;
 	//p = malloc(sizeof(uint8_t)*SEQ_LEN);
-	uint8_t buffer[SEQ_LEN];
+	char buffer[SEQ_LEN];
 	p = &buffer;
 
+	strcpy(&buffer, "start");
+
+	/*
 	for(i = 0; i < SEQ_LEN; i++){
 		p[i] = i;
 	}
+	*/
 
 	// note max current draw for board is 120 mA, keep below that
 
@@ -84,7 +89,7 @@ int main(void){
 		RFM69_RECEIVE(p);
 
 		for(i = 0; i < SEQ_LEN; i++){
-			temp = p[i];
+			msg = p[i];
 			if(i == temp){
 				correct++;
 			}
