@@ -55,7 +55,6 @@ void master_init(){
 	SPI0_Init(16);
 	RFM69_DIO0_Init();
 	RFM69_Init(); // must always be after the SPI interface has been enabled
-
 }
 
 int main(void){
