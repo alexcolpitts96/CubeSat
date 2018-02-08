@@ -167,6 +167,16 @@ void RFM69_SEND(uint8_t *buffer){
 	RFM69_SET_MODE(RF_OPMODE_STANDBY);
 }
 
+// check if payloadready flag has been set, return 1 if set
+uint8_t RFM69_PL_RD(){
+
+	if(RFM69_RX(REG_IRQFLAGS2) & RF_IRQFLAGS2_PAYLOADREADY){
+		return 1;
+	}
+
+	return 0;
+}
+
 // incomplete function
 void RFM69_RECEIVE(uint8_t *buffer){ // look at page 45, 5.2.2.3
 	uint8_t read, temp, i, payload_len;
@@ -174,29 +184,34 @@ void RFM69_RECEIVE(uint8_t *buffer){ // look at page 45, 5.2.2.3
 	// may not be needed
 	RFM69_SET_MODE(RF_OPMODE_STANDBY);
 
-	// read in payload ready flag
-	read = RFM69_RX(REG_IRQFLAGS2) & RF_IRQFLAGS2_PAYLOADREADY;
 	//read = RFM69_DIO0_Read();
 
-	// if there was a packet there already, restart receive
-	if(read){
-		temp = (RFM69_RX(REG_PACKETCONFIG2) & 0xFB) | RF_PACKET2_RXRESTART;
-		RFM69_TX(REG_PACKETCONFIG2, temp);
+	/*// if there was a packet there already, restart receive
+	if(RFM69_PL_RD()){
+
+		RFM69_TX();
+
+		//temp = (RFM69_RX(REG_PACKETCONFIG2) & 0xFB) | RF_PACKET2_RXRESTART;
+		//RFM69_TX(REG_PACKETCONFIG2, temp);
 	}
+	//*/
 
 	// set DIO0 to payloadready in receive mode
 	RFM69_TX(REG_DIOMAPPING1, RF_DIOMAPPING1_DIO0_01);
 
-	// set mode to receiver
+	// set mode to receiver, will clear FIFO (STANDBY -> RX)
 	RFM69_SET_MODE(RF_OPMODE_RECEIVER);
 
-	// wait for payload ready to go high
+	/*// wait for payload ready to go high
 	//while(!RFM69_DIO0_Read());
 	read = RFM69_RX(REG_IRQFLAGS2) & RF_IRQFLAGS2_PAYLOADREADY;
-
 	while(!read){
 		read = RFM69_RX(REG_IRQFLAGS2) & RF_IRQFLAGS2_PAYLOADREADY;
 	}
+	//*/
+
+	// wait for payload ready to go high
+	while(RFM69_PL_RD());
 
 	// may need to be removed
 	// set to standby once a package has been received to save power
@@ -205,9 +220,17 @@ void RFM69_RECEIVE(uint8_t *buffer){ // look at page 45, 5.2.2.3
 	// read payload length
 	//payload_len = RFM69_RX(REG_FIFO);
 
-	// read FIFO into buffer address that was passed to the function
+	/*// read FIFO into buffer address that was passed to the function
 	for(i = 0; i < SEQ_LEN; i++){
 		buffer[i] = RFM69_RX(REG_FIFO);
+	}
+	//*/
+
+	i = 0; // may need to add in making sure that buffer doesn't get overflown
+	// read in from FIFO while it is not empty
+	while(RFM69_RX(REG_IRQFLAGS2) & RF_IRQFLAGS2_PAYLOADREADY){
+		buffer[i] = RFM69_RX(REG_FIFO);
+		i++;
 	}
 
 	return;

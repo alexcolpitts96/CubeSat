@@ -45,7 +45,7 @@
 // definitions
 #define RFM_WRITE 0x80
 #define RFM_READ 0x00
-#define RFM_SAFE_BTYE 0xFF
+#define RFM_SAFE_BTYE 0xFF // this is a safe register to address as it doesn't exist
 
 #define SEQ_LEN 13
 
