@@ -1,12 +1,19 @@
-#include "fsl_device_registers.h"
-#include "stdio.h"
-#include "stdlib.h"
+/*
+ * uart.h
+ *
+ *  Created on: Jan 31, 2018
+ *      Author: quinn
+ */
 
-// init the module
-void UART1_Init();
+#ifndef UART_UART_H_
+#define UART_UART_H_
 
-// print a single character
-void UART1_Putchar(char display_char);
+void UART1_putty_init();
 
-// display string in terminal
-void UART1_Putstring(uint8_t num);
+void putty_putchar(char c);
+
+char putty_getchar(void);
+
+void putty_putstr(char *str);
+
+#endif /* UART_UART_H_ */

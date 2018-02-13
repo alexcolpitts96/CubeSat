@@ -9,6 +9,7 @@
 #define RFM_READ 0x00
 #define LISTEN_ABORT_IGNORE 0xE3
 #define SEQ_LEN 13
+#define MAX_STRING_LENGTH 60
 #define networkID 100
 
 // configuration structure and drivers have been modified from https://github.com/LowPowerLab/RFM69/blob/master/RFM69.cpp
@@ -55,7 +56,7 @@ const uint8_t CONFIG[][2] = {
 
 	// RSSI Threshold setting
 	//{REG_RSSITHRESH, RF_RSSITHRESH_VALUE}, // -value/2 (dBm), -114 dBm
-	{REG_RSSITHRESH, 100},
+	{REG_RSSITHRESH, 200},
 
 	// may need sync_size set to lower number
 	{REG_SYNCCONFIG, RF_SYNC_ON | RF_SYNC_FIFOFILL_AUTO | RF_SYNC_SIZE_4 | RF_SYNC_TOL_0},
@@ -66,19 +67,20 @@ const uint8_t CONFIG[][2] = {
 	{REG_SYNCVALUE3, 0x55},
 	{REG_SYNCVALUE4, 0x55},
 
-	// non-fixed length, no DC, CRC on, CRC error throws out data, no address filtering
+	// non-fixed length, no DC, CRC on, CRC error throws out data, no address filtering, RF_PACKET1_DCFREE_MANCHESTER
 	//{REG_PACKETCONFIG1, RF_PACKET1_FORMAT_VARIABLE | RF_PACKET1_DCFREE_OFF | RF_PACKET1_CRC_ON | RF_PACKET1_CRCAUTOCLEAR_ON | RF_PACKET1_ADRSFILTERING_OFF},
 	{REG_PACKETCONFIG1, RF_PACKET1_FORMAT_FIXED | RF_PACKET1_DCFREE_OFF | RF_PACKET1_CRC_ON | RF_PACKET1_CRCAUTOCLEAR_ON | RF_PACKET1_ADRSFILTERING_OFF},
 
 	// payload may not be longer than longest Barker Code (13 chips)
-	{REG_PAYLOADLENGTH, SEQ_LEN-1},
+	{REG_PAYLOADLENGTH, MAX_STRING_LENGTH-1},
+	//{REG_PAYLOADLENGTH, MAX_STRING_LENGTH},
 
 	// no address filtering
 	//{REG_NODEADRS, nodeID},
 
 	// tx fifo when condition is met
 	//{REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTART_FIFONOTEMPTY | RF_FIFOTHRESH_VALUE}, // transmit when the FIFO isn't empty, change thresh to SEQ_LEN as needed
-	{REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTART_FIFOTHRESH | (SEQ_LEN-1)}, // may need to be SEQ_LEN instead
+	{REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTART_FIFOTHRESH | (MAX_STRING_LENGTH-1)}, // may need to be SEQ_LEN instead
 
 	// no AES, restart after a while, if no receive go into receive mode again
 	{REG_PACKETCONFIG2, RF_PACKET2_RXRESTARTDELAY_2BITS | RF_PACKET2_AUTORXRESTART_ON | RF_PACKET2_AES_OFF},
@@ -153,7 +155,7 @@ void RFM69_SEND(uint8_t *buffer){
 	RFM69_TX(REG_DIOMAPPING1, RF_DIOMAPPING1_DIO0_00);
 
 	// transmit the buffer
-	for(i = 0; i < SEQ_LEN; i++){
+	for(i = 0; i < MAX_STRING_LENGTH; i++){
 		RFM69_TX(REG_FIFO, buffer[i]);
 	}
 
@@ -189,10 +191,10 @@ void RFM69_RECEIVE(uint8_t *buffer){ // look at page 45, 5.2.2.3
 	/*// if there was a packet there already, restart receive
 	if(RFM69_PL_RD()){
 
-		RFM69_TX();
+		//RFM69_TX();
 
-		//temp = (RFM69_RX(REG_PACKETCONFIG2) & 0xFB) | RF_PACKET2_RXRESTART;
-		//RFM69_TX(REG_PACKETCONFIG2, temp);
+		temp = (RFM69_RX(REG_PACKETCONFIG2) & 0xFB) | RF_PACKET2_RXRESTART;
+		RFM69_TX(REG_PACKETCONFIG2, temp);
 	}
 	//*/
 
@@ -213,22 +215,13 @@ void RFM69_RECEIVE(uint8_t *buffer){ // look at page 45, 5.2.2.3
 	// wait for payload ready to go high
 	while(RFM69_PL_RD());
 
-	// may need to be removed
 	// set to standby once a package has been received to save power
 	RFM69_SET_MODE(RF_OPMODE_STANDBY);
 
-	// read payload length
-	//payload_len = RFM69_RX(REG_FIFO);
-
-	/*// read FIFO into buffer address that was passed to the function
-	for(i = 0; i < SEQ_LEN; i++){
-		buffer[i] = RFM69_RX(REG_FIFO);
-	}
-	//*/
-
-	i = 0; // may need to add in making sure that buffer doesn't get overflown
 	// read in from FIFO while it is not empty
-	while(RFM69_RX(REG_IRQFLAGS2) & RF_IRQFLAGS2_PAYLOADREADY){
+
+	for(i = 0; i < MAX_STRING_LENGTH; i++){
+	//while(RFM69_RX(REG_IRQFLAGS2) & RF_IRQFLAGS2_PAYLOADREADY){
 		buffer[i] = RFM69_RX(REG_FIFO);
 		i++;
 	}

@@ -1,44 +1,53 @@
+/*
+ * uart.c
+ *
+ *  Created on: Jan 31, 2018
+ *      Author: quinn
+ */
+
+/*Configure UART1 for use with PuTTY terminal using
+ * PTE0 and PTE1.
+ */
+
 #include "fsl_device_registers.h"
-#include "stdio.h"
-#include "stdlib.h"
 
-void UART1_Init(){
-	// initialize UART for PC display
-	// no external connections required
+void UART1_putty_init(){
+	SIM_SCGC5 |= SIM_SCGC5_PORTE_MASK; // enable clock to PORTE
+	SIM_SCGC4 |= SIM_SCGC4_UART1_MASK; // enable clock to UART1
 
-	// clock enables for GPIO and UART
-	SIM_SCGC4 |= SIM_SCGC4_UART1_MASK; // enable UART 1
-	SIM_SCGC5 |= SIM_SCGC5_PORTC_MASK; // enable GPIO C
+	PORTE_PCR1 |= PORT_PCR_MUX(3);
+	PORTE_PCR0 |= PORT_PCR_MUX(3); // configure bits to be UART1
 
-	// mux pins for GPIO and UART
-	PORTC_PCR3 |= PORT_PCR_MUX(3); // RX, C3
-	PORTC_PCR4 |= PORT_PCR_MUX(3); // TX, C4
+	UART1_C2 &= ~(UART_C2_TE_MASK | UART_C2_RE_MASK); // disable receive/transfer
 
-	// calculate baud rate register value using ((21000*1000)/(baud_rate * 16))
-	UART1_BDL |= 0x89;		// setting baud rate for UART0 to 9600
+	UART1_C1 = 0; // set 8 bits
 
-	// control registers for UART
-	UART1_C1 |= 0; // no parity
-	UART1_C2 |= UART_C2_RE_MASK | UART_C2_TE_MASK; // enable transmit and receive
-	UART1_C3 |= UART_C3_PEIE_MASK | UART_C3_FEIE_MASK;
+	UART1_BDH = 0; // upper four bits set to zero
+	UART1_BDL = 0b10001001; // lower four bits set to baud rate ~ 9600
+
+	UART1_C2 |= (UART_C2_TE_MASK | UART_C2_RE_MASK); // enable receive/transfer
 }
 
-// print a single character
-void UART1_Putchar(char display_char){
-
-	while(!(UART1_S1 & UART_S1_TC_MASK)){} // wait until the tx is ready for next char
-
-	UART1_D = display_char; // when ready send next char
+//Sends a character to PuTTY interface
+void putty_putchar(char c){
+	while(!(UART1_S1 & 0x80)); // check if the transmit buffer is full, do nothing if so
+	UART1_D = c; // if not, write 8 bits to the UART0 data register
+	return;
 }
 
-// display string in terminal
-void UART1_Putstring(uint8_t num){
-	int i = 0;
-	char welcome[80] = "Test  \n\0";
-	welcome[5] = num;
+//Waits for a character from the PuTTY interface
+char putty_getchar(void){
+	while(!(UART1_S1 & 0x20)); // check if the receive buffer is empty, do nothing if so
+	return UART1_D; // returns the gotten char
+}
 
-	while(welcome[i]){
-		UART1_Putchar(welcome[i]);
-		i++;
+//Sends a NUL-terminated string to the PuTTY interface
+void putty_putstr(char *str){
+	int n = 0;
+	while(str[n]){ // is the character a NULL?
+		putty_putchar(str[n]); // if not, use putChar to output it
+		n++;
 	}
+	return; // quit when we hit a NULL
 }
+
