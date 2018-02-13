@@ -9,7 +9,7 @@
 #define RFM_READ 0x00
 #define LISTEN_ABORT_IGNORE 0xE3
 #define SEQ_LEN 13
-#define MAX_STRING_LENGTH 60
+#define MAX_STRING_LENGTH 40
 #define networkID 100
 
 // configuration structure and drivers have been modified from https://github.com/LowPowerLab/RFM69/blob/master/RFM69.cpp
@@ -191,8 +191,6 @@ void RFM69_RECEIVE(uint8_t *buffer){ // look at page 45, 5.2.2.3
 	/*// if there was a packet there already, restart receive
 	if(RFM69_PL_RD()){
 
-		//RFM69_TX();
-
 		temp = (RFM69_RX(REG_PACKETCONFIG2) & 0xFB) | RF_PACKET2_RXRESTART;
 		RFM69_TX(REG_PACKETCONFIG2, temp);
 	}
@@ -203,14 +201,6 @@ void RFM69_RECEIVE(uint8_t *buffer){ // look at page 45, 5.2.2.3
 
 	// set mode to receiver, will clear FIFO (STANDBY -> RX)
 	RFM69_SET_MODE(RF_OPMODE_RECEIVER);
-
-	/*// wait for payload ready to go high
-	//while(!RFM69_DIO0_Read());
-	read = RFM69_RX(REG_IRQFLAGS2) & RF_IRQFLAGS2_PAYLOADREADY;
-	while(!read){
-		read = RFM69_RX(REG_IRQFLAGS2) & RF_IRQFLAGS2_PAYLOADREADY;
-	}
-	//*/
 
 	// wait for payload ready to go high
 	while(RFM69_PL_RD());

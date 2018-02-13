@@ -46,7 +46,7 @@
 #define RFM_WRITE 0x80
 #define RFM_READ 0x00
 #define RFM_SAFE_BTYE 0xFF // this is a safe register to address as it doesn't exist
-#define MAX_STRING_LENGTH 60
+#define MAX_STRING_LENGTH 40
 
 #define SEQ_LEN 13
 
@@ -60,14 +60,12 @@ void master_init(){
 }
 
 int main(void){
-	char buffer[MAX_STRING_LENGTH];
+	uint8_t buffer[MAX_STRING_LENGTH];
+	uint16_t temp;
 
 	int i, mode_select;
 	uint8_t *p;
-	p = (char *) calloc(MAX_STRING_LENGTH, sizeof(char));
-
-	//uint8_t buffer[MAX_STRING_LENGTH];// = "test";
-	//p = &buffer;
+	p = (uint8_t *) calloc(MAX_STRING_LENGTH, sizeof(char));
 
 	// init all the modules needed
 	master_init();
@@ -78,21 +76,20 @@ int main(void){
 
 	//start as transmitter /////////////////////////////////////////////////////////////////////////////////////////
 	while(mode_select == 1){
-		//temp = 0;
 
-		/* get the message to send
-		while(temp != '@' && i < MAX_STRING_LENGTH){
-			temp = putty_getchar(); // store in buffer
-			p[i] = temp;
-			putty_putchar(temp); // echo to console
-			i++;
-		}
-		//*/
+		// clean the buffer
 		memset(p, '\0', sizeof(uint8_t)*MAX_STRING_LENGTH);
-		strcpy(p, "string");
+
+		// copy in the data of interest, all other data is null
+		memcpy((uint8_t *) p, "string", sizeof("string"));
 
 		RFM69_SEND(p);
-		putty_putchar('s');
+
+		for(i = 0; i < MAX_STRING_LENGTH; i++){
+			putty_putchar(p[i]);
+		}
+
+		//putty_putchar('s');
 		putty_putchar('\n');
 		putty_putchar('\r');
 
@@ -102,6 +99,7 @@ int main(void){
 
 	//start as receiver /////////////////////////////////////////////////////////////////////////////////////////
 	while(mode_select == 2){
+
 		memset(p, '\0', sizeof(uint8_t)*MAX_STRING_LENGTH);
 		RFM69_RECEIVE(p);
 
@@ -114,5 +112,11 @@ int main(void){
 		putty_putchar('\r');
 
 		memset(p, '\0', sizeof(uint8_t)*MAX_STRING_LENGTH);
+	}
+
+	while(mode_select == 3){
+		temp = RFM69_RX(REG_VERSION);
+		putty_putchar(temp & 0xFF);
+
 	}
 }
