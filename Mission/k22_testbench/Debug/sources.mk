@@ -26,9 +26,11 @@ S_UPPER_DEPS :=
 
 # Every subdirectory with source files must be described here
 SUBDIRS := \
-. \
 UART \
 Sources \
+SPI_SD \
 Project_Settings/Startup_Code \
+I2C \
 GPIO \
+Camera \
 

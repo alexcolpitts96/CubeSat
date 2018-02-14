@@ -10,8 +10,11 @@ RM := rm -rf
 -include sources.mk
 -include UART/subdir.mk
 -include Sources/subdir.mk
+-include SPI_SD/subdir.mk
 -include Project_Settings/Startup_Code/subdir.mk
+-include I2C/subdir.mk
 -include GPIO/subdir.mk
+-include Camera/subdir.mk
 -include subdir.mk
 -include objects.mk
 
