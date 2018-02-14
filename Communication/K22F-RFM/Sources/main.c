@@ -45,50 +45,76 @@
 // definitions
 #define RFM_WRITE 0x80
 #define RFM_READ 0x00
-#define RFM_SAFE_BTYE 0xFF
+#define RFM_SAFE_BTYE 0xFF // this is a safe register to address as it doesn't exist
+#define MAX_STRING_LENGTH 40
 
 #define SEQ_LEN 13
 
 void master_init(){
 	UART0_Init();
-	UART1_Init();
+
+	UART1_putty_init();
 	SPI0_Init(16);
 	RFM69_DIO0_Init();
 	RFM69_Init(); // must always be after the SPI interface has been enabled
-
 }
 
 int main(void){
-	uint16_t i, j;
-	int temp, correct = 0;
+	//uint8_t buffer[MAX_STRING_LENGTH];
+	uint16_t temp;
 
+	int i, mode_select;
 	uint8_t *p;
-	p = malloc(sizeof(uint8_t)*SEQ_LEN);
-
-	for(i = 0; i < SEQ_LEN; i++){
-		p[i] = i;
-	}
-
-	// note max current draw for board is 120 mA, keep below that
+	p = (uint8_t *) calloc(MAX_STRING_LENGTH, sizeof(char));
 
 	// init all the modules needed
 	master_init();
 
-	while(1){
-		correct = 0;
-		//UART1_Putchar('s');
+	// 1 is transmit
+	// 2 is receive
+	mode_select = 2;
+
+	//start as transmitter /////////////////////////////////////////////////////////////////////////////////////////
+	while(mode_select == 1){
+
+		// clean the buffer
+		memset(p, 0, sizeof(uint8_t)*MAX_STRING_LENGTH);
+
+		// copy in the data of interest, all other data is null
+		memcpy((uint8_t *) p, "string", sizeof("string"));
+
 		RFM69_SEND(p);
 
-		/*
+		for(i = 0; i < MAX_STRING_LENGTH; i++){
+			putty_putchar(p[i]);
+		}
+
+		putty_putchar('\n');
+		putty_putchar('\r');
+
+		// clean the buffer
+		memset(p, 0, sizeof(uint8_t)*MAX_STRING_LENGTH);
+	}
+
+	//start as receiver /////////////////////////////////////////////////////////////////////////////////////////
+	while(mode_select == 2){
+
+		memset(p, 0, sizeof(uint8_t)*MAX_STRING_LENGTH);
 		RFM69_RECEIVE(p);
 
-		for(i = 0; i < SEQ_LEN; i++){
-			temp = p[i];
-			if(i == temp){
-				correct++;
-			}
+		for(i = 0; i < MAX_STRING_LENGTH; i++){
+			putty_putchar(p[i]);
 		}
-		UART1_Putchar((uint8_t) correct);
-		//*/
+
+		putty_putchar('\n');
+		putty_putchar('\r');
+
+		memset(p, 0, sizeof(uint8_t)*MAX_STRING_LENGTH);
+	}
+
+	while(mode_select == 3){
+		temp = RFM69_RX(REG_VERSION);
+		putty_putchar(temp & 0xFF);
+
 	}
 }
