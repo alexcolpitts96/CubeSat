@@ -46,9 +46,7 @@
 #define RFM_WRITE 0x80
 #define RFM_READ 0x00
 #define RFM_SAFE_BTYE 0xFF // this is a safe register to address as it doesn't exist
-#define MAX_STRING_LENGTH 40
-
-#define SEQ_LEN 13
+#define MAX_STRING_LENGTH 26
 
 void master_init(){
 	UART0_Init();
@@ -81,7 +79,7 @@ int main(void){
 		memset(p, 0, sizeof(uint8_t)*MAX_STRING_LENGTH);
 
 		// copy in the data of interest, all other data is null
-		memcpy((uint8_t *) p, "string", sizeof("string"));
+		memcpy((uint8_t *) p, "abcdefghijklmnopqrstuvwxyz", sizeof("abcdefghijklmnopqrstuvwxyz"));
 
 		RFM69_SEND(p);
 

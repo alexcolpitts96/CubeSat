@@ -8,9 +8,7 @@
 #define RFM_WRITE 0x80
 #define RFM_READ 0x00
 #define LISTEN_ABORT_IGNORE 0xE3
-#define SEQ_LEN 13
-#define MAX_STRING_LENGTH 40
-#define networkID 100
+#define MAX_STRING_LENGTH 26
 
 // configuration structure and drivers have been modified from https://github.com/LowPowerLab/RFM69/blob/master/RFM69.cpp
 const uint8_t CONFIG[][2] = {
@@ -25,22 +23,27 @@ const uint8_t CONFIG[][2] = {
 	{REG_BITRATEMSB, RF_BITRATEMSB_4800},
 	{REG_BITRATELSB, RF_BITRATELSB_4800},
 
-	// fdev of 10kHz -> trying 20kHz
-	{REG_FDEVMSB, RF_FDEVMSB_20000},
-	{REG_FDEVLSB, RF_FDEVLSB_20000},
+	// fdev of 10kHz
+	{REG_FDEVMSB, RF_FDEVMSB_10000},
+	{REG_FDEVLSB, RF_FDEVLSB_10000},
 
 	// set carrier to 915 MHz (this is the default value)
 	{REG_FRFMSB, RF_FRFMSB_915},
 	{REG_FRFMID, RF_FRFMID_915},
 	{REG_FRFLSB, RF_FRFLSB_915},
 
-	// power level settings, +5 dBm
-	{REG_PALEVEL, RF_PALEVEL_PA0_OFF | RF_PALEVEL_PA1_ON | RF_PALEVEL_PA2_ON | RF_PALEVEL_OUTPUTPOWER_11111},
-	//{REG_PALEVEL, RF_PALEVEL_PA0_OFF | RF_PALEVEL_PA1_ON | RF_PALEVEL_PA2_ON | RF_PALEVEL_OUTPUTPOWER_10011},
-	//{REG_PALEVEL, RF_PALEVEL_PA0_ON | RF_PALEVEL_PA1_OFF | RF_PALEVEL_PA2_OFF | RF_PALEVEL_OUTPUTPOWER_11111},
+	// start calibration
+	{REG_OSC1, RF_OSC1_RCCAL_START},
+
+	// power level settings
+	//{REG_PALEVEL, RF_PALEVEL_PA0_OFF | RF_PALEVEL_PA1_ON | RF_PALEVEL_PA2_ON | RF_PALEVEL_OUTPUTPOWER_11111},
+	{REG_PALEVEL, RF_PALEVEL_PA0_ON | RF_PALEVEL_PA1_OFF | RF_PALEVEL_PA2_OFF | RF_PALEVEL_OUTPUTPOWER_11111},
 
 	// over current protection, max draw of 95 mA
 	{REG_OCP, RF_OCP_ON | RF_OCP_TRIM_95},
+
+	// set to 200 ohm impedance since it isn't matched
+	{REG_LNA, RF_LNA_ZIN_200},
 
 	// set to recommended default, reset values are different
 	{REG_RXBW, RF_RXBW_DCCFREQ_010 | RF_RXBW_MANT_16 | RF_RXBW_EXP_2},
@@ -51,38 +54,36 @@ const uint8_t CONFIG[][2] = {
 	// clock out disable as it is not needed
 	{REG_DIOMAPPING2, RF_DIOMAPPING2_CLKOUT_OFF},
 
-	// make sure fifos don't get overrun
-	//{REG_IRQFLAGS2, RF_IRQFLAGS2_FIFOOVERRUN},
-
-	// RSSI Threshold setting
-	//{REG_RSSITHRESH, RF_RSSITHRESH_VALUE}, // -value/2 (dBm), -114 dBm
+	// RSSI Threshold setting, set to -100 dBm (-value/2 in dBm)
 	{REG_RSSITHRESH, 200},
+
+	// preamble bytes, standard values
+	{REG_PREAMBLEMSB, 0},
+	{REG_PREAMBLELSB, 3},
 
 	// may need sync_size set to lower number
 	{REG_SYNCCONFIG, RF_SYNC_ON | RF_SYNC_FIFOFILL_AUTO | RF_SYNC_SIZE_4 | RF_SYNC_TOL_0},
 
 	// pick random sync value
-	{REG_SYNCVALUE1, 0x55},
-	{REG_SYNCVALUE2, 0x55},
-	{REG_SYNCVALUE3, 0x55},
-	{REG_SYNCVALUE4, 0x55},
+	{REG_SYNCVALUE1, 0x2D},
+	{REG_SYNCVALUE2, 0x3C},
+	{REG_SYNCVALUE3, 0xD2},
+	{REG_SYNCVALUE4, 0xC3},
 
 	// non-fixed length, no DC, CRC on, CRC error throws out data, no address filtering, RF_PACKET1_DCFREE_MANCHESTER
 	//{REG_PACKETCONFIG1, RF_PACKET1_FORMAT_VARIABLE | RF_PACKET1_DCFREE_OFF | RF_PACKET1_CRC_ON | RF_PACKET1_CRCAUTOCLEAR_ON | RF_PACKET1_ADRSFILTERING_OFF},
-	{REG_PACKETCONFIG1, RF_PACKET1_FORMAT_FIXED | RF_PACKET1_DCFREE_OFF | RF_PACKET1_CRC_ON | RF_PACKET1_CRCAUTOCLEAR_ON | RF_PACKET1_ADRSFILTERING_OFF},
+	{REG_PACKETCONFIG1, RF_PACKET1_FORMAT_FIXED | RF_PACKET1_DCFREE_MANCHESTER | RF_PACKET1_CRC_ON | RF_PACKET1_CRCAUTOCLEAR_ON | RF_PACKET1_ADRSFILTERING_OFF},
 
 	// payload may not be longer than buffer
 	{REG_PAYLOADLENGTH, MAX_STRING_LENGTH},
-	//{REG_PAYLOADLENGTH, MAX_STRING_LENGTH},
-
-	// no address filtering
-	//{REG_NODEADRS, nodeID},
 
 	// tx fifo when condition is met
 	{REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTART_FIFOTHRESH | (MAX_STRING_LENGTH-1)}, // as soon as full packet is in the system will transmit
+	//{REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTART_FIFONOTEMPTY | (MAX_STRING_LENGTH-1)},
 
 	// no AES, restart after a while, if no receive go into receive mode again
 	{REG_PACKETCONFIG2, RF_PACKET2_RXRESTARTDELAY_2BITS | RF_PACKET2_AUTORXRESTART_ON | RF_PACKET2_AES_OFF},
+	//{REG_PACKETCONFIG2, RF_PACKET2_RXRESTARTDELAY_2BITS | RF_PACKET2_AUTORXRESTART_OFF | RF_PACKET2_AES_OFF},
 
 	// apparently helps with fading
 	{REG_TESTDAGC, RF_DAGC_IMPROVED_LOWBETA0},
@@ -122,6 +123,10 @@ void RFM69_Init(){
 	for(i = 0; CONFIG[i][0] != 255; i++){
 		RFM69_TX(CONFIG[i][0], CONFIG[i][1]); // column 1 is reg, column 2 is data
 	}
+
+	// system was set into standby during configuration
+	// make sure calibration of OSC1 completed
+	while(!(RFM69_RX(REG_OSC1) & RF_OSC1_RCCAL_DONE));
 
 	// setup GPIO for flag receiving
 	RFM69_DIO0_Init();
@@ -197,33 +202,28 @@ void RFM69_RECEIVE(uint8_t *buffer){ // look at page 45, 5.2.2.3
 
 	//read = RFM69_DIO0_Read();
 
-	/*// if there was a packet there already, restart receive
-	if(RFM69_PL_RD()){
-
-		temp = (RFM69_RX(REG_PACKETCONFIG2) & 0xFB) | RF_PACKET2_RXRESTART;
-		RFM69_TX(REG_PACKETCONFIG2, temp);
-	}
-	//*/
-
 	// set DIO0 to payloadready in receive mode
 	RFM69_TX(REG_DIOMAPPING1, RF_DIOMAPPING1_DIO0_01);
-
-	// clear fifo and reset flags
-	//RFM69_CLEAR_FIFO();
 
 	// set mode to receiver
 	RFM69_SET_MODE(RF_OPMODE_RECEIVER);
 
+	// clear fifo and reset flags
+	RFM69_CLEAR_FIFO();
+
 	// wait for payload ready to go high
 	//while(!RFM69_DIO0_Read());
 	while(!RFM69_PL_RD());
+
+	// check CRC
+	while(!(RFM69_RX(REG_IRQFLAGS2) & RF_AUTOMODES_ENTER_CRCOK));
 
 	// set to standby once a package has been received to save power
 	RFM69_SET_MODE(RF_OPMODE_STANDBY);
 
 	i = 0;
 	//for(i = 0; i < MAX_STRING_LENGTH; i++){
-	while(i < MAX_STRING_LENGTH){
+	while(i < MAX_STRING_LENGTH && !(RFM69_RX(REG_IRQFLAGS2) & RF_AUTOMODES_ENTER_FIFONOTEMPTY)){
 	//while(RFM69_RX(REG_IRQFLAGS2) & RF_IRQFLAGS2_PAYLOADREADY){
 		buffer[i] = RFM69_RX(REG_FIFO);
 		i++;

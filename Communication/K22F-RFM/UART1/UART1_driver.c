@@ -12,6 +12,8 @@
 #include "fsl_device_registers.h"
 
 void UART1_putty_init(){
+	uint32_t ubd, temp;
+
 	SIM_SCGC5 |= SIM_SCGC5_PORTE_MASK; // enable clock to PORTE
 	SIM_SCGC4 |= SIM_SCGC4_UART1_MASK; // enable clock to UART1
 
