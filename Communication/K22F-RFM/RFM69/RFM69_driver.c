@@ -25,9 +25,9 @@ const uint8_t CONFIG[][2] = {
 	{REG_BITRATEMSB, RF_BITRATEMSB_4800},
 	{REG_BITRATELSB, RF_BITRATELSB_4800},
 
-	// fdev of 10kHz
-	{REG_FDEVMSB, RF_FDEVMSB_10000},
-	{REG_FDEVLSB, RF_FDEVLSB_10000},
+	// fdev of 10kHz -> trying 20kHz
+	{REG_FDEVMSB, RF_FDEVMSB_20000},
+	{REG_FDEVLSB, RF_FDEVLSB_20000},
 
 	// set carrier to 915 MHz (this is the default value)
 	{REG_FRFMSB, RF_FRFMSB_915},
@@ -71,16 +71,15 @@ const uint8_t CONFIG[][2] = {
 	//{REG_PACKETCONFIG1, RF_PACKET1_FORMAT_VARIABLE | RF_PACKET1_DCFREE_OFF | RF_PACKET1_CRC_ON | RF_PACKET1_CRCAUTOCLEAR_ON | RF_PACKET1_ADRSFILTERING_OFF},
 	{REG_PACKETCONFIG1, RF_PACKET1_FORMAT_FIXED | RF_PACKET1_DCFREE_OFF | RF_PACKET1_CRC_ON | RF_PACKET1_CRCAUTOCLEAR_ON | RF_PACKET1_ADRSFILTERING_OFF},
 
-	// payload may not be longer than longest Barker Code (13 chips)
-	{REG_PAYLOADLENGTH, MAX_STRING_LENGTH-1},
+	// payload may not be longer than buffer
+	{REG_PAYLOADLENGTH, MAX_STRING_LENGTH},
 	//{REG_PAYLOADLENGTH, MAX_STRING_LENGTH},
 
 	// no address filtering
 	//{REG_NODEADRS, nodeID},
 
 	// tx fifo when condition is met
-	//{REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTART_FIFONOTEMPTY | RF_FIFOTHRESH_VALUE}, // transmit when the FIFO isn't empty, change thresh to SEQ_LEN as needed
-	{REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTART_FIFOTHRESH | (MAX_STRING_LENGTH-1)}, // may need to be SEQ_LEN instead
+	{REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTART_FIFOTHRESH | (MAX_STRING_LENGTH-1)}, // as soon as full packet is in the system will transmit
 
 	// no AES, restart after a while, if no receive go into receive mode again
 	{REG_PACKETCONFIG2, RF_PACKET2_RXRESTARTDELAY_2BITS | RF_PACKET2_AUTORXRESTART_ON | RF_PACKET2_AES_OFF},
@@ -128,6 +127,11 @@ void RFM69_Init(){
 	RFM69_DIO0_Init();
 }
 
+// clear the FIFO as needed
+void RFM69_CLEAR_FIFO(){
+	RFM69_TX(REG_IRQFLAGS2, RF_IRQFLAGS2_FIFOOVERRUN); // clear flag and reset FIFO
+}
+
 // pass in mode to have the system set into it
 void RFM69_SET_MODE(uint8_t mode){
 	uint8_t read;
@@ -148,13 +152,16 @@ void RFM69_SET_MODE(uint8_t mode){
 void RFM69_SEND(uint8_t *buffer){
 	uint8_t i;
 
-	// set RFM into standby to load the FIFO
+	// set RFM to standby to load the FIFO
 	RFM69_SET_MODE(RF_OPMODE_STANDBY);
 
 	// DIO0 will be packet sent when put into tx mode
 	RFM69_TX(REG_DIOMAPPING1, RF_DIOMAPPING1_DIO0_00);
 
-	// transmit the buffer
+	// clear FIFO to ensure no data is there
+	RFM69_CLEAR_FIFO();
+
+	// read the buffer into the FIFO
 	for(i = 0; i < MAX_STRING_LENGTH; i++){
 		RFM69_TX(REG_FIFO, buffer[i]);
 	}
@@ -162,8 +169,9 @@ void RFM69_SEND(uint8_t *buffer){
 	// set to tx mode, RFM does the work
 	RFM69_SET_MODE(RF_OPMODE_TRANSMITTER);
 
-	// wait for packet to be sent by checking GPIO
-	while(!RFM69_DIO0_Read());
+	// wait for packet to be sent by checking GPIO or flag
+	//while(!RFM69_DIO0_Read());
+	while(!(RFM69_RX(REG_IRQFLAGS2) & RF_IRQFLAGS2_PACKETSENT));
 
 	// return to standby when done
 	RFM69_SET_MODE(RF_OPMODE_STANDBY);
@@ -175,8 +183,9 @@ uint8_t RFM69_PL_RD(){
 	if(RFM69_RX(REG_IRQFLAGS2) & RF_IRQFLAGS2_PAYLOADREADY){
 		return 1;
 	}
-
-	return 0;
+	else{
+		return 0;
+	}
 }
 
 // incomplete function
@@ -199,18 +208,22 @@ void RFM69_RECEIVE(uint8_t *buffer){ // look at page 45, 5.2.2.3
 	// set DIO0 to payloadready in receive mode
 	RFM69_TX(REG_DIOMAPPING1, RF_DIOMAPPING1_DIO0_01);
 
-	// set mode to receiver, will clear FIFO (STANDBY -> RX)
+	// clear fifo and reset flags
+	//RFM69_CLEAR_FIFO();
+
+	// set mode to receiver
 	RFM69_SET_MODE(RF_OPMODE_RECEIVER);
 
 	// wait for payload ready to go high
-	while(RFM69_PL_RD());
+	//while(!RFM69_DIO0_Read());
+	while(!RFM69_PL_RD());
 
 	// set to standby once a package has been received to save power
 	RFM69_SET_MODE(RF_OPMODE_STANDBY);
 
-	// read in from FIFO while it is not empty
-
-	for(i = 0; i < MAX_STRING_LENGTH; i++){
+	i = 0;
+	//for(i = 0; i < MAX_STRING_LENGTH; i++){
+	while(i < MAX_STRING_LENGTH){
 	//while(RFM69_RX(REG_IRQFLAGS2) & RF_IRQFLAGS2_PAYLOADREADY){
 		buffer[i] = RFM69_RX(REG_FIFO);
 		i++;

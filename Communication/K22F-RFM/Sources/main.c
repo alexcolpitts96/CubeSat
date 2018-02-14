@@ -60,7 +60,7 @@ void master_init(){
 }
 
 int main(void){
-	uint8_t buffer[MAX_STRING_LENGTH];
+	//uint8_t buffer[MAX_STRING_LENGTH];
 	uint16_t temp;
 
 	int i, mode_select;
@@ -78,7 +78,7 @@ int main(void){
 	while(mode_select == 1){
 
 		// clean the buffer
-		memset(p, '\0', sizeof(uint8_t)*MAX_STRING_LENGTH);
+		memset(p, 0, sizeof(uint8_t)*MAX_STRING_LENGTH);
 
 		// copy in the data of interest, all other data is null
 		memcpy((uint8_t *) p, "string", sizeof("string"));
@@ -89,29 +89,27 @@ int main(void){
 			putty_putchar(p[i]);
 		}
 
-		//putty_putchar('s');
 		putty_putchar('\n');
 		putty_putchar('\r');
 
 		// clean the buffer
-		memset(p, '\0', sizeof(uint8_t)*MAX_STRING_LENGTH);
+		memset(p, 0, sizeof(uint8_t)*MAX_STRING_LENGTH);
 	}
 
 	//start as receiver /////////////////////////////////////////////////////////////////////////////////////////
 	while(mode_select == 2){
 
-		memset(p, '\0', sizeof(uint8_t)*MAX_STRING_LENGTH);
+		memset(p, 0, sizeof(uint8_t)*MAX_STRING_LENGTH);
 		RFM69_RECEIVE(p);
 
 		for(i = 0; i < MAX_STRING_LENGTH; i++){
 			putty_putchar(p[i]);
-			buffer[i] = p[i];
 		}
 
 		putty_putchar('\n');
 		putty_putchar('\r');
 
-		memset(p, '\0', sizeof(uint8_t)*MAX_STRING_LENGTH);
+		memset(p, 0, sizeof(uint8_t)*MAX_STRING_LENGTH);
 	}
 
 	while(mode_select == 3){
