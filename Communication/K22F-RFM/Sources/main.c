@@ -50,6 +50,10 @@
 #define COMMAND_SIZE 5
 #define MAX_PACKET_SIZE 66 // limited by RFM69HCW FIFO
 
+// cubesat commands
+const uint8_t start_command[] = "start packet transmission"; // might need to be changed for packet length
+
+
 void master_init(){
 	UART0_Init();
 
@@ -60,9 +64,6 @@ void master_init(){
 }
 
 int main(void){
-	//uint8_t buffer[PACKET_SIZE];
-	uint16_t temp;
-
 	int i, mode_select;
 	uint8_t *p;
 	p = (uint8_t *) calloc(MAX_PACKET_SIZE, sizeof(uint8_t));
@@ -72,9 +73,10 @@ int main(void){
 
 	// 1 is transmit
 	// 2 is receive
-	// 3 is tx-rx handshake test
-	// 4 is rx-tx handshake test
-	mode_select = 5;
+	// 3 is ground station test
+	// 4 is satellite test
+	// 5 is text transmit relay (other radio must be in 2)
+	mode_select = 3;
 
 	//start as transmitter /////////////////////////////////////////////////////////////////////////////////////////
 	while(mode_select == 1){
@@ -109,71 +111,55 @@ int main(void){
 			putty_putchar(p[i]);
 		}
 
-		putty_putchar('\n');
-		putty_putchar('\r');
+		//putty_putchar('\n');
+		//putty_putchar('\r');
 
 		memset(p, 0, sizeof(uint8_t)*PACKET_SIZE);
 	}
 
-	// handshake tx-rx
+	// setup for ground station /////////////////////////////////////////////////////////////////////////////////////////
 	while(mode_select == 3){
 
-		// clear the buffer
-		memset(p, 0, sizeof(uint8_t)*PACKET_SIZE);
+		uint8_t handshake = 0; // 0 when no contact, 1 when contacted by satellite
 
-		// read in data
-		i = 0;
-		while(i < PACKET_SIZE && p[i-1] != '\r'){ // this makes me feel dirty inside
-			p[i] = putty_getchar();
-			i++;
+		// wait for contact to be made with the satellite
+		while(!handshake){
+			// transmit start sequence
+
+
+			// receive confirmation, set handshake as needed
+
+
 		}
 
-		// transmit packet
-		RFM69_SEND(p);
+		// receive image packet, loop continues
 
-		// clear buffer and capture packet
-		memset(p, 0, sizeof(uint8_t)*PACKET_SIZE);
-		RFM69_RECEIVE(p);
 
-		// display packet
-		for(i = 0; i < PACKET_SIZE; i++){
-			putty_putchar(p[i]);
-		}
+		// push image to putty log
 
-		// clear the buffer
-		memset(p, 0, sizeof(uint8_t)*PACKET_SIZE);
 	}
 
-	// handshake rx-tx
+	// setup for satellite /////////////////////////////////////////////////////////////////////////////////////////
 	while(mode_select == 4){
 
-		// clear buffer and capture packet
-		memset(p, 0, sizeof(uint8_t)*PACKET_SIZE);
-		RFM69_RECEIVE(p);
+		uint8_t packet_request = 0; // 0 when no request, 1 when contacted by ground station
 
-		// display packet
-		for(i = 0; i < PACKET_SIZE; i++){
-			putty_putchar(p[i]);
-		}
+		// wait for packet to be requested
+		while(!packet_request){
+			// receive packet
 
-		// clear the buffer
-		memset(p, 0, sizeof(uint8_t)*PACKET_SIZE);
 
-		// read in data
-		i = 0;
-		while(i < PACKET_SIZE && p[i-1] != '\r'){ // this makes me feel dirty inside
-			p[i] = putty_getchar();
-			i++;
+			// check is packet is start signal, set packet_request as needed
+
+
 		}
 
 		// transmit packet
-		RFM69_SEND(p);
 
-		// clean the buffer when done
-		memset(p, 0, sizeof(uint8_t)*PACKET_SIZE);
+
 	}
 
-	// text relay
+	// start as text relay /////////////////////////////////////////////////////////////////////////////////////////
 	while(mode_select == 5){
 		// clear the buffer
 		memset(p, 0, sizeof(uint8_t)*PACKET_SIZE);
