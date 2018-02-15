@@ -80,6 +80,7 @@ int main(void){
 
 		// copy in the data of interest, all other data is null
 		memcpy((uint8_t *) p, "abcdefghijklmnopqrstuvwxyz", sizeof("abcdefghijklmnopqrstuvwxyz"));
+		//memcpy((uint8_t *) p, "quickbrownfox", sizeof("quickbrownfox"));
 
 		RFM69_SEND(p);
 
@@ -87,8 +88,8 @@ int main(void){
 			putty_putchar(p[i]);
 		}
 
-		putty_putchar('\n');
-		putty_putchar('\r');
+		//putty_putchar('\n');
+		//putty_putchar('\r');
 
 		// clean the buffer
 		memset(p, 0, sizeof(uint8_t)*MAX_STRING_LENGTH);

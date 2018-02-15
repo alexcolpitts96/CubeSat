@@ -157,14 +157,14 @@ void RFM69_SET_MODE(uint8_t mode){
 void RFM69_SEND(uint8_t *buffer){
 	uint8_t i;
 
+	// clear FIFO to ensure no data is there
+	RFM69_CLEAR_FIFO();
+
 	// set RFM to standby to load the FIFO
 	RFM69_SET_MODE(RF_OPMODE_STANDBY);
 
 	// DIO0 will be packet sent when put into tx mode
 	RFM69_TX(REG_DIOMAPPING1, RF_DIOMAPPING1_DIO0_00);
-
-	// clear FIFO to ensure no data is there
-	RFM69_CLEAR_FIFO();
 
 	// read the buffer into the FIFO
 	for(i = 0; i < MAX_STRING_LENGTH; i++){
@@ -193,8 +193,8 @@ uint8_t RFM69_PL_RD(){
 	}
 }
 
-// incomplete function
-void RFM69_RECEIVE(uint8_t *buffer){ // look at page 45, 5.2.2.3
+// receive from the RFM69 fifo
+void RFM69_RECEIVE(uint8_t *buffer){
 	uint8_t read, temp, i, payload_len;
 
 	// may not be needed
@@ -212,19 +212,18 @@ void RFM69_RECEIVE(uint8_t *buffer){ // look at page 45, 5.2.2.3
 	RFM69_CLEAR_FIFO();
 
 	// wait for payload ready to go high
-	//while(!RFM69_DIO0_Read());
-	while(!RFM69_PL_RD());
-
-	// check CRC
-	while(!(RFM69_RX(REG_IRQFLAGS2) & RF_AUTOMODES_ENTER_CRCOK));
+	while(!RFM69_DIO0_Read());
 
 	// set to standby once a package has been received to save power
 	RFM69_SET_MODE(RF_OPMODE_STANDBY);
 
+	for(i = 0; i < 4; i++){
+		RFM69_RX(REG_FIFO); // dummy read
+	}
+
 	i = 0;
-	//for(i = 0; i < MAX_STRING_LENGTH; i++){
-	while(i < MAX_STRING_LENGTH && !(RFM69_RX(REG_IRQFLAGS2) & RF_AUTOMODES_ENTER_FIFONOTEMPTY)){
-	//while(RFM69_RX(REG_IRQFLAGS2) & RF_IRQFLAGS2_PAYLOADREADY){
+	//while(i < MAX_STRING_LENGTH && (RFM69_RX(REG_IRQFLAGS2) & RF_IRQFLAGS2_FIFONOTEMPTY)){
+	while(i < MAX_STRING_LENGTH && !RFM69_DIO0_Read()){
 		buffer[i] = RFM69_RX(REG_FIFO);
 		i++;
 	}
