@@ -8,7 +8,8 @@
 #define RFM_WRITE 0x80
 #define RFM_READ 0x00
 #define LISTEN_ABORT_IGNORE 0xE3
-#define MAX_STRING_LENGTH 26
+#define PACKET_SIZE 66
+#define MAX_PACKET_SIZE 66
 
 // configuration structure and drivers have been modified from https://github.com/LowPowerLab/RFM69/blob/master/RFM69.cpp
 const uint8_t CONFIG[][2] = {
@@ -75,11 +76,11 @@ const uint8_t CONFIG[][2] = {
 	{REG_PACKETCONFIG1, RF_PACKET1_FORMAT_FIXED | RF_PACKET1_DCFREE_MANCHESTER | RF_PACKET1_CRC_ON | RF_PACKET1_CRCAUTOCLEAR_ON | RF_PACKET1_ADRSFILTERING_OFF},
 
 	// payload may not be longer than buffer
-	{REG_PAYLOADLENGTH, MAX_STRING_LENGTH},
+	{REG_PAYLOADLENGTH, PACKET_SIZE},
 
 	// tx fifo when condition is met
-	{REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTART_FIFOTHRESH | (MAX_STRING_LENGTH-1)}, // as soon as full packet is in the system will transmit
-	//{REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTART_FIFONOTEMPTY | (MAX_STRING_LENGTH-1)},
+	{REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTART_FIFOTHRESH | (PACKET_SIZE-1)}, // as soon as full packet is in the system will transmit
+	//{REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTART_FIFONOTEMPTY | (PACKET_SIZE-1)},
 
 	// no AES, restart after a while, if no receive go into receive mode again
 	{REG_PACKETCONFIG2, RF_PACKET2_RXRESTARTDELAY_2BITS | RF_PACKET2_AUTORXRESTART_ON | RF_PACKET2_AES_OFF},
@@ -167,7 +168,7 @@ void RFM69_SEND(uint8_t *buffer){
 	RFM69_TX(REG_DIOMAPPING1, RF_DIOMAPPING1_DIO0_00);
 
 	// read the buffer into the FIFO
-	for(i = 0; i < MAX_STRING_LENGTH; i++){
+	for(i = 0; i < PACKET_SIZE; i++){
 		RFM69_TX(REG_FIFO, buffer[i]);
 	}
 
@@ -195,7 +196,7 @@ uint8_t RFM69_PL_RD(){
 
 // receive from the RFM69 fifo
 void RFM69_RECEIVE(uint8_t *buffer){
-	uint8_t read, temp, i, payload_len;
+	uint8_t i;
 
 	// may not be needed
 	RFM69_SET_MODE(RF_OPMODE_STANDBY);
@@ -222,8 +223,8 @@ void RFM69_RECEIVE(uint8_t *buffer){
 	}
 
 	i = 0;
-	//while(i < MAX_STRING_LENGTH && (RFM69_RX(REG_IRQFLAGS2) & RF_IRQFLAGS2_FIFONOTEMPTY)){
-	while(i < MAX_STRING_LENGTH && !RFM69_DIO0_Read()){
+	//while(i < PACKET_SIZE && (RFM69_RX(REG_IRQFLAGS2) & RF_IRQFLAGS2_FIFONOTEMPTY)){
+	while(i < PACKET_SIZE && !RFM69_DIO0_Read()){
 		buffer[i] = RFM69_RX(REG_FIFO);
 		i++;
 	}

@@ -46,7 +46,9 @@
 #define RFM_WRITE 0x80
 #define RFM_READ 0x00
 #define RFM_SAFE_BTYE 0xFF // this is a safe register to address as it doesn't exist
-#define MAX_STRING_LENGTH 26
+#define PACKET_SIZE 66
+#define COMMAND_SIZE 5
+#define MAX_PACKET_SIZE 66 // limited by RFM69HCW FIFO
 
 void master_init(){
 	UART0_Init();
@@ -58,25 +60,27 @@ void master_init(){
 }
 
 int main(void){
-	//uint8_t buffer[MAX_STRING_LENGTH];
+	//uint8_t buffer[PACKET_SIZE];
 	uint16_t temp;
 
 	int i, mode_select;
 	uint8_t *p;
-	p = (uint8_t *) calloc(MAX_STRING_LENGTH, sizeof(char));
+	p = (uint8_t *) calloc(MAX_PACKET_SIZE, sizeof(uint8_t));
 
 	// init all the modules needed
 	master_init();
 
 	// 1 is transmit
 	// 2 is receive
-	mode_select = 2;
+	// 3 is tx-rx handshake test
+	// 4 is rx-tx handshake test
+	mode_select = 5;
 
 	//start as transmitter /////////////////////////////////////////////////////////////////////////////////////////
 	while(mode_select == 1){
 
 		// clean the buffer
-		memset(p, 0, sizeof(uint8_t)*MAX_STRING_LENGTH);
+		memset(p, 0, sizeof(uint8_t)*PACKET_SIZE);
 
 		// copy in the data of interest, all other data is null
 		memcpy((uint8_t *) p, "abcdefghijklmnopqrstuvwxyz", sizeof("abcdefghijklmnopqrstuvwxyz"));
@@ -84,7 +88,7 @@ int main(void){
 
 		RFM69_SEND(p);
 
-		for(i = 0; i < MAX_STRING_LENGTH; i++){
+		for(i = 0; i < PACKET_SIZE; i++){
 			putty_putchar(p[i]);
 		}
 
@@ -92,28 +96,100 @@ int main(void){
 		//putty_putchar('\r');
 
 		// clean the buffer
-		memset(p, 0, sizeof(uint8_t)*MAX_STRING_LENGTH);
+		memset(p, 0, sizeof(uint8_t)*PACKET_SIZE);
 	}
 
 	//start as receiver /////////////////////////////////////////////////////////////////////////////////////////
 	while(mode_select == 2){
 
-		memset(p, 0, sizeof(uint8_t)*MAX_STRING_LENGTH);
+		memset(p, 0, sizeof(uint8_t)*PACKET_SIZE);
 		RFM69_RECEIVE(p);
 
-		for(i = 0; i < MAX_STRING_LENGTH; i++){
+		for(i = 0; i < PACKET_SIZE; i++){
 			putty_putchar(p[i]);
 		}
 
 		putty_putchar('\n');
 		putty_putchar('\r');
 
-		memset(p, 0, sizeof(uint8_t)*MAX_STRING_LENGTH);
+		memset(p, 0, sizeof(uint8_t)*PACKET_SIZE);
 	}
 
+	// handshake tx-rx
 	while(mode_select == 3){
-		temp = RFM69_RX(REG_VERSION);
-		putty_putchar(temp & 0xFF);
 
+		// clear the buffer
+		memset(p, 0, sizeof(uint8_t)*PACKET_SIZE);
+
+		// read in data
+		i = 0;
+		while(i < PACKET_SIZE && p[i-1] != '\r'){ // this makes me feel dirty inside
+			p[i] = putty_getchar();
+			i++;
+		}
+
+		// transmit packet
+		RFM69_SEND(p);
+
+		// clear buffer and capture packet
+		memset(p, 0, sizeof(uint8_t)*PACKET_SIZE);
+		RFM69_RECEIVE(p);
+
+		// display packet
+		for(i = 0; i < PACKET_SIZE; i++){
+			putty_putchar(p[i]);
+		}
+
+		// clear the buffer
+		memset(p, 0, sizeof(uint8_t)*PACKET_SIZE);
+	}
+
+	// handshake rx-tx
+	while(mode_select == 4){
+
+		// clear buffer and capture packet
+		memset(p, 0, sizeof(uint8_t)*PACKET_SIZE);
+		RFM69_RECEIVE(p);
+
+		// display packet
+		for(i = 0; i < PACKET_SIZE; i++){
+			putty_putchar(p[i]);
+		}
+
+		// clear the buffer
+		memset(p, 0, sizeof(uint8_t)*PACKET_SIZE);
+
+		// read in data
+		i = 0;
+		while(i < PACKET_SIZE && p[i-1] != '\r'){ // this makes me feel dirty inside
+			p[i] = putty_getchar();
+			i++;
+		}
+
+		// transmit packet
+		RFM69_SEND(p);
+
+		// clean the buffer when done
+		memset(p, 0, sizeof(uint8_t)*PACKET_SIZE);
+	}
+
+	// text relay
+	while(mode_select == 5){
+		// clear the buffer
+		memset(p, 0, sizeof(uint8_t)*PACKET_SIZE);
+
+		// read in data
+		i = 0;
+		while(i < PACKET_SIZE && p[i-1] != '\r'){ // this makes me feel dirty inside
+			p[i] = putty_getchar();
+			putty_putchar(p[i]);
+			i++;
+		}
+
+		putty_putchar('\n');
+		putty_putchar('\r');
+
+		// transmit packet
+		RFM69_SEND(p);
 	}
 }
