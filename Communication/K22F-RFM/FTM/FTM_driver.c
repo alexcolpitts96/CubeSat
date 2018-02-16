@@ -13,10 +13,9 @@ void FTM0_init(){
 	// select system clock, prescaler of 128
 	FTM0_SC |= FTM_SC_CLKS(0b01) | FTM_SC_PS(0b111);
 
-	// system clock/128 is 666 kHz, 3ms is roughly 2000 cycles (0x7D0)
+	// system clock/128 is 666 kHz, 3ms is roughly 2000 cycles (0x7D0), 10 ms is roughly 7000 (0x1B58)
 	// time to transmit and receive from the satellite is roughly 2.6 ms to 9.3 ms
-	//FTM0_MOD = FTM_MOD_MOD(0x7D0);
-	FTM0_MOD = FTM_MOD_MOD(0xFFFF);
+	FTM0_MOD = FTM_MOD_MOD(0x1B58);
 
 	// start counter at 0
 	FTM0_CNT = 0;

@@ -1,8 +1,9 @@
 // custom libraries
-//#include <SPI0_driver.c>
+#include "fsl_device_registers.h"
 #include "../SPI0/SPI0_driver.h"
 #include "RFM69registers.h"
 #include "../GPIO/gpio.h"
+#include "../FTM/FTM_driver.h" // needed for timeout capability
 
 // definitions
 #define RFM_WRITE 0x80

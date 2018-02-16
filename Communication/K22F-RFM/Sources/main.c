@@ -40,7 +40,8 @@
 #include "../UART1/UART1_driver.h"
 #include "../FTM/FTM_driver.h"
 #include "../UART0/UART0_driver.h"
-//#include "../GPIO/gpio.h" // included in RFM69 driver
+#include "../SPI0/SPI0_driver.h"
+#include "../GPIO/gpio.h" // included in RFM69 driver
 
 // definitions
 #define RFM_WRITE 0x80

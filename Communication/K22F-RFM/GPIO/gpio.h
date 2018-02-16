@@ -1,5 +1,3 @@
-
-
 #ifndef SOURCES_GPIO_GPIO_H
 #define SOURCES_GPIO_GPIO_H
 
