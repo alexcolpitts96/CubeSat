@@ -37,26 +37,25 @@
 // custom libraries
 #include "../RFM69/RFM69registers.h"
 #include "../RFM69/RFM69_driver.h"
-//#include "SPI0_driver.h" // contained in RFM69_driver.h
-#include "../UART0/UART0_driver.h"
 #include "../UART1/UART1_driver.h"
-//#include "../GPIO/gpio.h"
+#include "../FTM/FTM_driver.h"
+#include "../UART0/UART0_driver.h"
+//#include "../GPIO/gpio.h" // included in RFM69 driver
 
 // definitions
 #define RFM_WRITE 0x80
 #define RFM_READ 0x00
 #define RFM_SAFE_BTYE 0xFF // this is a safe register to address as it doesn't exist
 #define PACKET_SIZE 66
-#define COMMAND_SIZE 5
 #define MAX_PACKET_SIZE 66 // limited by RFM69HCW FIFO
 
 // cubesat commands
 const uint8_t start_command[] = "start packet transmission"; // might need to be changed for packet length
-
+const uint8_t receive_command[] = "start packet reception"; // might need to be changed for packet length, likely not needed
+const uint8_t test_data[PACKET_SIZE] = "abcdefghijklmnopqrstuvwxyz1234567890";
 
 void master_init(){
 	UART0_Init();
-
 	UART1_putty_init();
 	SPI0_Init(16);
 	RFM69_DIO0_Init();
@@ -122,21 +121,40 @@ int main(void){
 
 		uint8_t handshake = 0; // 0 when no contact, 1 when contacted by satellite
 
-		// wait for contact to be made with the satellite
+		// clean buffer to prevent false results
+		memset(p, 0, sizeof(uint8_t)*PACKET_SIZE);
+
+		/*// wait for contact to be made with the satellite
 		while(!handshake){
 			// transmit start sequence
+			memcpy((uint8_t *) p, &start_command, sizeof(start_command)); // may not need the address of start_command
 
+			// send start sequence packet
+			RFM69_SEND(p);
 
-			// receive confirmation, set handshake as needed
+			// clear buffer
+			memset(p, 0, sizeof(uint8_t)*PACKET_SIZE);
 
+			// receive confirmation signal
+			RFM69_RECEIVE(p);
 
+			// check if packet was the start reception command
+			if(strcmp(&receive_command, p) == 0){ // exit handshaking as needed
+				handshake = 1;
+			}
 		}
+		//*/
 
-		// receive image packet, loop continues
+		// transmit start command
 
+		// receive packet, must be able to timeout
 
-		// push image to putty log
+		// go back to transmitting if timeout occurs
 
+		// push image to putty log file
+		for(i = 0; i < PACKET_SIZE; i++){
+			putty_putchar(p[i]);
+		}
 	}
 
 	// setup for satellite /////////////////////////////////////////////////////////////////////////////////////////
@@ -144,19 +162,26 @@ int main(void){
 
 		uint8_t packet_request = 0; // 0 when no request, 1 when contacted by ground station
 
+		// clean buffer
+		memset(p, 0, sizeof(uint8_t)*PACKET_SIZE);
+
 		// wait for packet to be requested
 		while(!packet_request){
-			// receive packet
-
+			// receive packet request
+			RFM69_RECEIVE(p);
 
 			// check is packet is start signal, set packet_request as needed
-
-
+			if(strcmp(&start_command, p) == 0){
+				packet_request = 1;
+			}
 		}
 
+		// prepare packet
+		memset(p, 0, sizeof(uint8_t)*PACKET_SIZE);
+		memcpy((uint8_t *) p, &test_data, sizeof(test_data));
+
 		// transmit packet
-
-
+		RFM69_SEND(p);
 	}
 
 	// start as text relay /////////////////////////////////////////////////////////////////////////////////////////
