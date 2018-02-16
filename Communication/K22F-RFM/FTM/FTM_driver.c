@@ -1,5 +1,6 @@
 #include "FTM_driver.h"
 #include "fsl_device_registers.h"
+#include "../UART1/UART1_driver.h"
 
 // information on page 906 of sub-family reference manual
 void FTM0_init(){
@@ -14,7 +15,8 @@ void FTM0_init(){
 
 	// system clock/128 is 666 kHz, 3ms is roughly 2000 cycles (0x7D0)
 	// time to transmit and receive from the satellite is roughly 2.6 ms to 9.3 ms
-	FTM0_MOD = FTM_MOD_MOD(0x7D0);
+	//FTM0_MOD = FTM_MOD_MOD(0x7D0);
+	FTM0_MOD = FTM_MOD_MOD(0xFFFF);
 
 	// start counter at 0
 	FTM0_CNT = 0;

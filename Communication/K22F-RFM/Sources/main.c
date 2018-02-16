@@ -60,6 +60,7 @@ void master_init(){
 	SPI0_Init(16);
 	RFM69_DIO0_Init();
 	RFM69_Init(); // must always be after the SPI interface has been enabled
+	FTM0_init();
 }
 
 int main(void){
@@ -75,7 +76,8 @@ int main(void){
 	// 3 is ground station test
 	// 4 is satellite test
 	// 5 is text transmit relay (other radio must be in 2)
-	mode_select = 3;
+	// 6 is FTM0 test
+	mode_select = 6;
 
 	//start as transmitter /////////////////////////////////////////////////////////////////////////////////////////
 	while(mode_select == 1){
@@ -202,5 +204,15 @@ int main(void){
 
 		// transmit packet
 		RFM69_SEND(p);
+	}
+
+	// FTM0 TEST
+	while(mode_select == 6){
+
+		// reset counter to 0;
+		FTM0_CNT_RESET();
+
+		// run through loop until timeout occurs
+		while(FTM0_WAIT());
 	}
 }
