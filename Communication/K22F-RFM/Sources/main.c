@@ -78,7 +78,7 @@ int main(void){
 	// 4 is satellite test
 	// 5 is text transmit relay (other radio must be in 2)
 	// 6 is FTM0 test
-	mode_select = 6;
+	mode_select = 3;
 
 	//start as transmitter /////////////////////////////////////////////////////////////////////////////////////////
 	while(mode_select == 1){
@@ -123,11 +123,12 @@ int main(void){
 	while(mode_select == 3){
 
 		uint8_t handshake = 0; // 0 when no contact, 1 when contacted by satellite
+		uint8_t timeout; // will be -1 if timeout, 1 if no timeout
 
 		// clean buffer to prevent false results
 		memset(p, 0, sizeof(uint8_t)*PACKET_SIZE);
 
-		/*// wait for contact to be made with the satellite
+		///*// wait for contact to be made with the satellite
 		while(!handshake){
 			// transmit start sequence
 			memcpy((uint8_t *) p, &start_command, sizeof(start_command)); // may not need the address of start_command
@@ -138,21 +139,21 @@ int main(void){
 			// clear buffer
 			memset(p, 0, sizeof(uint8_t)*PACKET_SIZE);
 
-			// receive confirmation signal
-			RFM69_RECEIVE(p);
+			// receive confirmation signal, able to timeout
+			timeout = RFM69_RECEIVE_TIMEOUT(p);
 
-			// check if packet was the start reception command
-			if(strcmp(&receive_command, p) == 0){ // exit handshaking as needed
+			// check if packet was the start reception command and no timeout occurred...
+			//if((strcmp(&receive_command, p) == 0) && timeout == 1){ // exit handshaking as needed
+			if(timeout == 1){ // if no timeout occurred
 				handshake = 1;
 			}
+
+			// if timed out
+			else{
+				handshake = 0;
+			}
 		}
-		//*/
-
-		// transmit start command
-
-		// receive packet, must be able to timeout
-
-		// go back to transmitting if timeout occurs
+		//*/ ability to comment out the above portion of code
 
 		// push image to putty log file
 		for(i = 0; i < PACKET_SIZE; i++){
@@ -164,6 +165,7 @@ int main(void){
 	while(mode_select == 4){
 
 		uint8_t packet_request = 0; // 0 when no request, 1 when contacted by ground station
+		uint8_t timeout;
 
 		// clean buffer
 		memset(p, 0, sizeof(uint8_t)*PACKET_SIZE);
@@ -171,10 +173,10 @@ int main(void){
 		// wait for packet to be requested
 		while(!packet_request){
 			// receive packet request
-			RFM69_RECEIVE(p);
+			timeout = RFM69_RECEIVE_TIMEOUT(p);
 
-			// check is packet is start signal, set packet_request as needed
-			if(strcmp(&start_command, p) == 0){
+			// check is packet is start signal, ensure no timeout
+			if((strcmp(&start_command, p) == 0) && timeout == 1){
 				packet_request = 1;
 			}
 		}
@@ -214,6 +216,7 @@ int main(void){
 		FTM0_CNT_RESET();
 
 		// run through loop until timeout occurs
-		while(FTM0_WAIT());
+		while(!FTM0_WAIT());
+		putty_putchar('s');
 	}
 }

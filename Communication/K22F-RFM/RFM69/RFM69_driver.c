@@ -5,6 +5,10 @@
 #include "../GPIO/gpio.h"
 #include "../FTM/FTM_driver.h" // needed for timeout capability
 
+// need access to memset and standard commands
+#include <stdio.h>
+#include <string.h>
+
 // definitions
 #define RFM_WRITE 0x80
 #define RFM_READ 0x00
@@ -184,6 +188,43 @@ void RFM69_SEND(uint8_t *buffer){
 	RFM69_SET_MODE(RF_OPMODE_STANDBY);
 }
 
+void RFM69_SEND_TIMEOUT(uint8_t *buffer){
+	uint8_t i, timeout = 0;
+
+	// clear FIFO to ensure no data is there
+	RFM69_CLEAR_FIFO();
+
+	// set RFM to standby to load the FIFO
+	RFM69_SET_MODE(RF_OPMODE_STANDBY);
+
+	// DIO0 will be packet sent when put into tx mode
+	RFM69_TX(REG_DIOMAPPING1, RF_DIOMAPPING1_DIO0_00);
+
+	// reset timer
+	FTM0_CNT_RESET();
+
+	// while not timing out send the packet
+	while(!timeout){
+
+		// read the buffer into the FIFO
+		for(i = 0; i < PACKET_SIZE; i++){
+			RFM69_TX(REG_FIFO, buffer[i]);
+		}
+
+		// set to tx mode, RFM does the work
+		RFM69_SET_MODE(RF_OPMODE_TRANSMITTER);
+
+		// wait for packet to be sent by checking GPIO or flag
+		//while(!RFM69_DIO0_Read());
+		while(!(RFM69_RX(REG_IRQFLAGS2) & RF_IRQFLAGS2_PACKETSENT));
+
+		timeout = FTM0_WAIT();
+	}
+
+	// return to standby when done
+	RFM69_SET_MODE(RF_OPMODE_STANDBY);
+}
+
 // check if payloadready flag has been set, return 1 if set
 uint8_t RFM69_PL_RD(){
 
@@ -233,4 +274,61 @@ void RFM69_RECEIVE(uint8_t *buffer){
 	return;
 }
 
+// try to receive a packet, return -1 and clear buffer if no packet received after some time T
+// timeout variable will be 0 when no timeout, 1 when timed out
+uint8_t RFM69_RECEIVE_TIMEOUT(uint8_t *buffer){
+	uint8_t i, timeout = 0; // no timeout initially
 
+	// may not be needed
+	RFM69_SET_MODE(RF_OPMODE_STANDBY);
+
+	//read = RFM69_DIO0_Read();
+
+	// set DIO0 to payloadready in receive mode
+	RFM69_TX(REG_DIOMAPPING1, RF_DIOMAPPING1_DIO0_01);
+
+	// set mode to receiver
+	RFM69_SET_MODE(RF_OPMODE_RECEIVER);
+
+	// clear fifo and reset flags
+	RFM69_CLEAR_FIFO();
+
+	// reset FTM to ensure full time counting
+	FTM0_CNT_RESET();
+
+	// wait for payload ready to go high and make sure no timeout has occurred
+	while(!RFM69_DIO0_Read() && !timeout){
+		timeout = FTM0_WAIT();
+	}
+
+	// if no timeout has occurred read packet and return 1
+	if(timeout == 0){
+
+		// set to standby once a package has been received to save power
+		RFM69_SET_MODE(RF_OPMODE_STANDBY);
+
+		// dummy reads to remove trash bytes
+		for(i = 0; i < 4; i++){
+			RFM69_RX(REG_FIFO);
+		}
+
+		i = 0;
+		// read packet from fifo into the buffer
+		while(i < PACKET_SIZE && !RFM69_DIO0_Read()){
+			buffer[i] = RFM69_RX(REG_FIFO);
+			i++;
+		}
+
+		// completed successfully
+		return 1;
+	}
+
+	// clear buffer and return -1 (error)
+	else{
+		// clear the buffer
+		memset(buffer, 0, sizeof(uint8_t)*PACKET_SIZE);
+
+		// return error
+		return -1;
+	}
+}

@@ -17,7 +17,7 @@ void FTM0_init();
 // reset the counter to zero
 void FTM0_CNT_RESET();
 
-// return 1 while not overflown, return 0 when overflow occurs
+// return 0 while not overflown, return 1 when overflow occurs
 uint8_t FTM0_WAIT();
 
 #endif // SOURCES_FTM_FTM_H

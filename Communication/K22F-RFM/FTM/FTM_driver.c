@@ -31,13 +31,13 @@ void FTM0_CNT_RESET(){
 }
 
 uint8_t FTM0_WAIT(){
-	// if time has overflown return 0
-	if(FTM0_SC & FTM_SC_TOF_MASK){
-		return 0;
+	// if timer has overflown return 1
+	if(FTM0_SC & FTM_SC_TOF_MASK){ // flag will be set to 1 if overflown
+		return 1;
 	}
 
 	// else return 1
 	else{
-		return 1;
+		return 0;
 	}
 }
