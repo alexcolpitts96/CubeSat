@@ -78,7 +78,7 @@ int main(void){
 	// 4 is satellite test
 	// 5 is text transmit relay (other radio must be in 2)
 	// 6 is FTM0 test
-	mode_select = 3;
+	mode_select = 4;
 
 	//start as transmitter /////////////////////////////////////////////////////////////////////////////////////////
 	while(mode_select == 1){
@@ -105,16 +105,21 @@ int main(void){
 
 	//start as receiver /////////////////////////////////////////////////////////////////////////////////////////
 	while(mode_select == 2){
+		uint8_t packet_request = 0;
 
 		memset(p, 0, sizeof(uint8_t)*PACKET_SIZE);
 		RFM69_RECEIVE(p);
+
+		if((strcmp(&start_command, p) == 0)){
+			packet_request = 1;
+		}
 
 		for(i = 0; i < PACKET_SIZE; i++){
 			putty_putchar(p[i]);
 		}
 
-		//putty_putchar('\n');
-		//putty_putchar('\r');
+		putty_putchar('\n');
+		putty_putchar('\r');
 
 		memset(p, 0, sizeof(uint8_t)*PACKET_SIZE);
 	}
@@ -123,7 +128,7 @@ int main(void){
 	while(mode_select == 3){
 
 		uint8_t handshake = 0; // 0 when no contact, 1 when contacted by satellite
-		uint8_t timeout; // will be -1 if timeout, 1 if no timeout
+		uint8_t timeout = 0; // will be 0 if timeout, 1 if no timeout
 
 		// clean buffer to prevent false results
 		memset(p, 0, sizeof(uint8_t)*PACKET_SIZE);
@@ -131,10 +136,11 @@ int main(void){
 		///*// wait for contact to be made with the satellite
 		while(!handshake){
 			// transmit start sequence
-			memcpy((uint8_t *) p, &start_command, sizeof(start_command)); // may not need the address of start_command
+			memcpy((uint8_t *) p, &start_command, sizeof(start_command));
 
 			// send start sequence packet
 			RFM69_SEND(p);
+			putty_putchar('t');
 
 			// clear buffer
 			memset(p, 0, sizeof(uint8_t)*PACKET_SIZE);
@@ -165,28 +171,34 @@ int main(void){
 	while(mode_select == 4){
 
 		uint8_t packet_request = 0; // 0 when no request, 1 when contacted by ground station
-		uint8_t timeout;
+		//uint8_t timeout;
 
 		// clean buffer
 		memset(p, 0, sizeof(uint8_t)*PACKET_SIZE);
 
-		// wait for packet to be requested
+		///*// wait for packet to be requested
 		while(!packet_request){
 			// receive packet request
-			timeout = RFM69_RECEIVE_TIMEOUT(p);
+			//timeout = RFM69_RECEIVE_TIMEOUT(p);
+			RFM69_RECEIVE(p);
 
 			// check is packet is start signal, ensure no timeout
-			if((strcmp(&start_command, p) == 0) && timeout == 1){
+			//if((strcmp(&start_command, p) == 0) && timeout == 1){
+			if((strcmp(&start_command, p) == 0)){
 				packet_request = 1;
 			}
 		}
+		//*/
+
+		// wait to receive packet
+		//RFM69_RECEIVE(p);
 
 		// prepare packet
 		memset(p, 0, sizeof(uint8_t)*PACKET_SIZE);
 		memcpy((uint8_t *) p, &test_data, sizeof(test_data));
 
-		// transmit packet
-		RFM69_SEND(p);
+		// transmit packet multiple times
+		RFM69_SEND_TIMEOUT(p);
 	}
 
 	// start as text relay /////////////////////////////////////////////////////////////////////////////////////////

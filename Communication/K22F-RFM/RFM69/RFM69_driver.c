@@ -26,8 +26,10 @@ const uint8_t CONFIG[][2] = {
 	{REG_DATAMODUL, RF_DATAMODUL_DATAMODE_PACKET | RF_DATAMODUL_MODULATIONTYPE_FSK | RF_DATAMODUL_MODULATIONSHAPING_00},
 
 	// set speed to 4800 bps (testing purposes only)
-	{REG_BITRATEMSB, RF_BITRATEMSB_4800},
-	{REG_BITRATELSB, RF_BITRATELSB_4800},
+	//{REG_BITRATEMSB, RF_BITRATEMSB_4800},
+	//{REG_BITRATELSB, RF_BITRATELSB_4800},
+	{REG_BITRATEMSB, RF_BITRATEMSB_9600},
+	{REG_BITRATELSB, RF_BITRATELSB_9600},
 
 	// fdev of 10kHz
 	{REG_FDEVMSB, RF_FDEVMSB_10000},
@@ -274,7 +276,7 @@ void RFM69_RECEIVE(uint8_t *buffer){
 	return;
 }
 
-// try to receive a packet, return -1 and clear buffer if no packet received after some time T
+// try to receive a packet, return 0 and clear buffer if no packet received after some time T
 // timeout variable will be 0 when no timeout, 1 when timed out
 uint8_t RFM69_RECEIVE_TIMEOUT(uint8_t *buffer){
 	uint8_t i, timeout = 0; // no timeout initially
@@ -329,6 +331,6 @@ uint8_t RFM69_RECEIVE_TIMEOUT(uint8_t *buffer){
 		memset(buffer, 0, sizeof(uint8_t)*PACKET_SIZE);
 
 		// return error
-		return -1;
+		return 0;
 	}
 }

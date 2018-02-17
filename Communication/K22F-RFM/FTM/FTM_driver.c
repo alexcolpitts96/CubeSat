@@ -10,12 +10,11 @@ void FTM0_init(){
 	// no overflow interrupt by default
 	// upcounting by default
 
-	// select system clock, prescaler of 128
-	FTM0_SC |= FTM_SC_CLKS(0b01) | FTM_SC_PS(0b111);
+	// select system clock (0b01), prescaler of 64 (110)
+	FTM0_SC |= FTM_SC_CLKS(0b01) | FTM_SC_PS(0b101);
 
-	// system clock/128 is 666 kHz, 3ms is roughly 2000 cycles (0x7D0), 10 ms is roughly 7000 (0x1B58)
-	// time to transmit and receive from the satellite is roughly 2.6 ms to 9.3 ms
-	FTM0_MOD = FTM_MOD_MOD(0x1B58);
+	// time to transmit and receive from the satellite is roughly 2.6 ms to 9.3 ms, give longer interval of 50 ms
+	FTM0_MOD = FTM_MOD_MOD(0xF424);
 
 	// start counter at 0
 	FTM0_CNT = 0;
@@ -25,6 +24,7 @@ void FTM0_init(){
 
 // reset the counter to zero
 void FTM0_CNT_RESET(){
+	FTM0_SC &= ~FTM_SC_TOF_MASK; // write a 0 to reset TOF flag
 	FTM0_CNT = 0;
 
 	return;
