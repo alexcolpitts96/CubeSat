@@ -191,7 +191,7 @@ void RFM69_SEND(uint8_t *buffer){
 }
 
 void RFM69_SEND_TIMEOUT(uint8_t *buffer){
-	uint8_t i, timeout = 0;
+	uint8_t i, timeout = 0, tx_counter = 0;
 
 	// clear FIFO to ensure no data is there
 	RFM69_CLEAR_FIFO();
@@ -221,6 +221,7 @@ void RFM69_SEND_TIMEOUT(uint8_t *buffer){
 		while(!(RFM69_RX(REG_IRQFLAGS2) & RF_IRQFLAGS2_PACKETSENT));
 
 		timeout = FTM0_WAIT();
+		tx_counter++; // used for debugging
 	}
 
 	// return to standby when done

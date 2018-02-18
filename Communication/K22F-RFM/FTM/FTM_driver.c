@@ -11,10 +11,12 @@ void FTM0_init(){
 	// upcounting by default
 
 	// select system clock (0b01), prescaler of 64 (110)
-	FTM0_SC |= FTM_SC_CLKS(0b01) | FTM_SC_PS(0b101);
+	//FTM0_SC |= FTM_SC_CLKS(0b01) | FTM_SC_PS(0b101);
+	FTM0_SC |= FTM_SC_CLKS(0b10) | FTM_SC_PS(0b001);
 
 	// time to transmit and receive from the satellite is roughly 2.6 ms to 9.3 ms, give longer interval of 50 ms
-	FTM0_MOD = FTM_MOD_MOD(0xF424);
+	//FTM0_MOD = FTM_MOD_MOD(0xF424);
+	FTM0_MOD = FTM_MOD_MOD(0xFFFF);
 
 	// start counter at 0
 	FTM0_CNT = 0;

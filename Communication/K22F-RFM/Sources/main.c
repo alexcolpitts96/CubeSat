@@ -78,7 +78,7 @@ int main(void){
 	// 4 is satellite test
 	// 5 is text transmit relay (other radio must be in 2)
 	// 6 is FTM0 test
-	mode_select = 4;
+	mode_select = 3;
 
 	//start as transmitter /////////////////////////////////////////////////////////////////////////////////////////
 	while(mode_select == 1){
@@ -87,8 +87,9 @@ int main(void){
 		memset(p, 0, sizeof(uint8_t)*PACKET_SIZE);
 
 		// copy in the data of interest, all other data is null
-		memcpy((uint8_t *) p, "abcdefghijklmnopqrstuvwxyz", sizeof("abcdefghijklmnopqrstuvwxyz"));
+		//memcpy((uint8_t *) p, "abcdefghijklmnopqrstuvwxyz", sizeof("abcdefghijklmnopqrstuvwxyz"));
 		//memcpy((uint8_t *) p, "quickbrownfox", sizeof("quickbrownfox"));
+		memcpy((uint8_t *) p, &start_command, sizeof(start_command));
 
 		RFM69_SEND(p);
 
@@ -140,7 +141,7 @@ int main(void){
 
 			// send start sequence packet
 			RFM69_SEND(p);
-			putty_putchar('t');
+			//putty_putchar('t');
 
 			// clear buffer
 			memset(p, 0, sizeof(uint8_t)*PACKET_SIZE);
@@ -165,6 +166,9 @@ int main(void){
 		for(i = 0; i < PACKET_SIZE; i++){
 			putty_putchar(p[i]);
 		}
+
+		putty_putchar('\n');
+		putty_putchar('\r');
 	}
 
 	// setup for satellite /////////////////////////////////////////////////////////////////////////////////////////
