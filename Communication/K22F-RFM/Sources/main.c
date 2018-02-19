@@ -35,13 +35,13 @@
 #include "string.h"
 
 // custom libraries
-#include "../RFM69/RFM69registers.h"
 #include "../RFM69/RFM69_driver.h"
 #include "../UART1/UART1_driver.h"
 #include "../FTM/FTM_driver.h"
 #include "../UART0/UART0_driver.h"
 #include "../SPI0/SPI0_driver.h"
 #include "../GPIO/gpio.h" // included in RFM69 driver
+#include "../Comms/Comms.h"
 
 // definitions
 #define RFM_WRITE 0x80
@@ -79,7 +79,9 @@ int main(void){
 	// 4 is satellite test
 	// 5 is text transmit relay (other radio must be in 2)
 	// 6 is FTM0 test
-	mode_select = 3;
+	// 7 is txStart test (G)
+	// 8 is imageSize test (S)
+	mode_select = 7;
 
 	//start as transmitter /////////////////////////////////////////////////////////////////////////////////////////
 	while(mode_select == 1){
@@ -234,5 +236,19 @@ int main(void){
 		// run through loop until timeout occurs
 		while(!FTM0_WAIT());
 		putty_putchar('s');
+	}
+
+	// txStart test
+	while(mode_select == 7){
+		uint16_t block_num = 0;
+
+		txStart(p);
+
+		block_num = (p[1] << 8) + p[0];
+	}
+
+	// imageSize test
+	while(mode_select == 8){
+		imageSize(p, 0xFFFF);
 	}
 }
