@@ -1,3 +1,9 @@
+/* RFM69HCW Driver
+ *
+ * Alex Colpitts
+ *
+ */
+
 #ifndef SOURCES_RFM69_RFM69_H
 #define SOURCES_RFM69_RFM69_H
 

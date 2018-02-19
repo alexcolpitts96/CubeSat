@@ -51,8 +51,9 @@
 #define MAX_PACKET_SIZE 66 // limited by RFM69HCW FIFO
 
 // cubesat commands
-const uint8_t start_command[] = "start packet transmission"; // might need to be changed for packet length
-const uint8_t receive_command[] = "start packet reception"; // might need to be changed for packet length, likely not needed
+const uint8_t start_command[PACKET_SIZE] = "start packet transmission"; // might need to be changed for packet length
+
+// for testing purposes
 const uint8_t test_data[PACKET_SIZE] = "abcdefghijklmnopqrstuvwxyz1234567890";
 
 void master_init(){
@@ -150,7 +151,6 @@ int main(void){
 			timeout = RFM69_RECEIVE_TIMEOUT(p);
 
 			// check if packet was the start reception command and no timeout occurred...
-			//if((strcmp(&receive_command, p) == 0) && timeout == 1){ // exit handshaking as needed
 			if(timeout == 1){ // if no timeout occurred
 				handshake = 1;
 			}
