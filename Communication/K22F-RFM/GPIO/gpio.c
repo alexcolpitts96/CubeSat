@@ -7,7 +7,7 @@
 
 #include "fsl_device_registers.h"
 
-void GPIO_init(){
+void GPIO_init() {
 	//SIM_SCGC5 |= SIM_SCGC5_PORTA_MASK; // enable clock to port A
 	//SIM_SCGC5 |= SIM_SCGC5_PORTB_MASK; // enable clock to port B
 	// SIM_SCGC5 |= SIM_SCGC5_PORTC_MASK; // enable clock to port C
@@ -27,36 +27,37 @@ void GPIO_init(){
 	return;
 }
 
-void greenLED(int state){
-	if(state){
-		GPIOA_PCOR = 1<<1;
-	}else{
-		GPIOA_PSOR = 1<<1;
+void greenLED(int state) {
+	if (state) {
+		GPIOA_PCOR = 1 << 1;
+	} else {
+		GPIOA_PSOR = 1 << 1;
 	}
 }
 
-void redLED(int state){
-	if(state){
-		GPIOA_PCOR = 1<<2;
-	}else{
-		GPIOA_PSOR = 1<<2;
+void redLED(int state) {
+	if (state) {
+		GPIOA_PCOR = 1 << 2;
+	} else {
+		GPIOA_PSOR = 1 << 2;
 	}
 }
 
-void blueLED(int state){
-	if(state){
-		GPIOD_PCOR = 1<<5;
-	}else{
-		GPIOD_PSOR = 1<<5;
+void blueLED(int state) {
+	if (state) {
+		GPIOD_PCOR = 1 << 5;
+	} else {
+		GPIOD_PSOR = 1 << 5;
 	}
 }
 
-int checkSW3(){
-	if(GPIOB_PDIR & 1<<17) return 0;
+int checkSW3() {
+	if (GPIOB_PDIR & 1 << 17)
+		return 0;
 	return 1;
 }
 
-void RFM69_DIO0_Init(){
+void RFM69_DIO0_Init() {
 	// pick system clock module as needed
 	SIM_SCGC5 |= SIM_SCGC5_PORTA_MASK; // enable clock to port A
 
@@ -66,7 +67,7 @@ void RFM69_DIO0_Init(){
 	// set PDDR to receive (input is zero by default)
 }
 
-int RFM69_DIO0_Read(){
+int RFM69_DIO0_Read() {
 	int read;
 
 	// check receive register (corresponding GPIO pin)

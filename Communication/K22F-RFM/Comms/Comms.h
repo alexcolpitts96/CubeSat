@@ -16,7 +16,6 @@ void packetRequest(uint8_t *p, int block);
 // get satellite to start transmitting from p, receives image block count into p
 void txStart(uint8_t *p);
 
-
 //////////////////////////////////// Satellite Functions ////////////////////////////////////
 
 // transmit block n

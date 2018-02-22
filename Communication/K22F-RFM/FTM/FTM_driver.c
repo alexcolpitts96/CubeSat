@@ -3,7 +3,7 @@
 #include "../UART1/UART1_driver.h"
 
 // information on page 906 of sub-family reference manual
-void FTM0_init(){
+void FTM0_init() {
 	// turn on system clock
 	SIM_SCGC6 |= SIM_SCGC6_FTM0_MASK;
 
@@ -25,21 +25,21 @@ void FTM0_init(){
 }
 
 // reset the counter to zero
-void FTM0_CNT_RESET(){
+void FTM0_CNT_RESET() {
 	FTM0_SC &= ~FTM_SC_TOF_MASK; // write a 0 to reset TOF flag
 	FTM0_CNT = 0;
 
 	return;
 }
 
-uint8_t FTM0_WAIT(){
+uint8_t FTM0_WAIT() {
 	// if timer has overflown return 1
-	if(FTM0_SC & FTM_SC_TOF_MASK){ // flag will be set to 1 if overflown
+	if (FTM0_SC & FTM_SC_TOF_MASK) { // flag will be set to 1 if overflown
 		return 1;
 	}
 
 	// else return 1
-	else{
+	else {
 		return 0;
 	}
 }

@@ -56,7 +56,7 @@ const uint8_t start_command[PACKET_SIZE] = "start packet transmission"; // might
 // for testing purposes
 const uint8_t test_data[PACKET_SIZE] = "abcdefghijklmnopqrstuvwxyz1234567890";
 
-void master_init(){
+void master_init() {
 	UART0_Init();
 	UART1_putty_init();
 	SPI0_Init(16);
@@ -65,7 +65,7 @@ void master_init(){
 	FTM0_init();
 }
 
-int main(void){
+int main(void) {
 	int i, mode_select;
 	uint8_t *p;
 	p = (uint8_t *) calloc(MAX_PACKET_SIZE, sizeof(uint8_t));
@@ -84,10 +84,10 @@ int main(void){
 	mode_select = 7;
 
 	//start as transmitter /////////////////////////////////////////////////////////////////////////////////////////
-	while(mode_select == 1){
+	while (mode_select == 1) {
 
 		// clean the buffer
-		memset(p, 0, sizeof(uint8_t)*PACKET_SIZE);
+		memset(p, 0, sizeof(uint8_t) * PACKET_SIZE);
 
 		// copy in the data of interest, all other data is null
 		//memcpy((uint8_t *) p, "abcdefghijklmnopqrstuvwxyz", sizeof("abcdefghijklmnopqrstuvwxyz"));
@@ -96,7 +96,7 @@ int main(void){
 
 		RFM69_SEND(p);
 
-		for(i = 0; i < PACKET_SIZE; i++){
+		for (i = 0; i < PACKET_SIZE; i++) {
 			putty_putchar(p[i]);
 		}
 
@@ -104,41 +104,41 @@ int main(void){
 		//putty_putchar('\r');
 
 		// clean the buffer
-		memset(p, 0, sizeof(uint8_t)*PACKET_SIZE);
+		memset(p, 0, sizeof(uint8_t) * PACKET_SIZE);
 	}
 
 	//start as receiver /////////////////////////////////////////////////////////////////////////////////////////
-	while(mode_select == 2){
+	while (mode_select == 2) {
 		uint8_t packet_request = 0;
 
-		memset(p, 0, sizeof(uint8_t)*PACKET_SIZE);
+		memset(p, 0, sizeof(uint8_t) * PACKET_SIZE);
 		RFM69_RECEIVE(p);
 
-		if((strcmp(&start_command, p) == 0)){
+		if ((strcmp(&start_command, p) == 0)) {
 			packet_request = 1;
 		}
 
-		for(i = 0; i < PACKET_SIZE; i++){
+		for (i = 0; i < PACKET_SIZE; i++) {
 			putty_putchar(p[i]);
 		}
 
 		putty_putchar('\n');
 		putty_putchar('\r');
 
-		memset(p, 0, sizeof(uint8_t)*PACKET_SIZE);
+		memset(p, 0, sizeof(uint8_t) * PACKET_SIZE);
 	}
 
 	// setup for ground station /////////////////////////////////////////////////////////////////////////////////////////
-	while(mode_select == 3){
+	while (mode_select == 3) {
 
 		uint8_t handshake = 0; // 0 when no contact, 1 when contacted by satellite
 		uint8_t timeout = 0; // will be 0 if timeout, 1 if no timeout
 
 		// clean buffer to prevent false results
-		memset(p, 0, sizeof(uint8_t)*PACKET_SIZE);
+		memset(p, 0, sizeof(uint8_t) * PACKET_SIZE);
 
 		///*// wait for contact to be made with the satellite
-		while(!handshake){
+		while (!handshake) {
 			// transmit start sequence
 			memcpy((uint8_t *) p, &start_command, sizeof(start_command));
 
@@ -147,25 +147,25 @@ int main(void){
 			//putty_putchar('t');
 
 			// clear buffer
-			memset(p, 0, sizeof(uint8_t)*PACKET_SIZE);
+			memset(p, 0, sizeof(uint8_t) * PACKET_SIZE);
 
 			// receive confirmation signal, able to timeout
 			timeout = RFM69_RECEIVE_TIMEOUT(p);
 
 			// check if packet was the start reception command and no timeout occurred...
-			if(timeout == 1){ // if no timeout occurred
+			if (timeout == 1) { // if no timeout occurred
 				handshake = 1;
 			}
 
 			// if timed out
-			else{
+			else {
 				handshake = 0;
 			}
 		}
 		//*/ ability to comment out the above portion of code
 
 		// push image to putty log file
-		for(i = 0; i < PACKET_SIZE; i++){
+		for (i = 0; i < PACKET_SIZE; i++) {
 			putty_putchar(p[i]);
 		}
 
@@ -174,23 +174,23 @@ int main(void){
 	}
 
 	// setup for satellite /////////////////////////////////////////////////////////////////////////////////////////
-	while(mode_select == 4){
+	while (mode_select == 4) {
 
 		uint8_t packet_request = 0; // 0 when no request, 1 when contacted by ground station
 		//uint8_t timeout;
 
 		// clean buffer
-		memset(p, 0, sizeof(uint8_t)*PACKET_SIZE);
+		memset(p, 0, sizeof(uint8_t) * PACKET_SIZE);
 
 		///*// wait for packet to be requested
-		while(!packet_request){
+		while (!packet_request) {
 			// receive packet request
 			//timeout = RFM69_RECEIVE_TIMEOUT(p);
 			RFM69_RECEIVE(p);
 
 			// check is packet is start signal, ensure no timeout
 			//if((strcmp(&start_command, p) == 0) && timeout == 1){
-			if((strcmp(&start_command, p) == 0)){
+			if ((strcmp(&start_command, p) == 0)) {
 				packet_request = 1;
 			}
 		}
@@ -200,7 +200,7 @@ int main(void){
 		//RFM69_RECEIVE(p);
 
 		// prepare packet
-		memset(p, 0, sizeof(uint8_t)*PACKET_SIZE);
+		memset(p, 0, sizeof(uint8_t) * PACKET_SIZE);
 		memcpy((uint8_t *) p, &test_data, sizeof(test_data));
 
 		// transmit packet multiple times
@@ -208,13 +208,13 @@ int main(void){
 	}
 
 	// start as text relay /////////////////////////////////////////////////////////////////////////////////////////
-	while(mode_select == 5){
+	while (mode_select == 5) {
 		// clear the buffer
-		memset(p, 0, sizeof(uint8_t)*PACKET_SIZE);
+		memset(p, 0, sizeof(uint8_t) * PACKET_SIZE);
 
 		// read in data
 		i = 0;
-		while(i < PACKET_SIZE && p[i-1] != '\r'){ // this makes me feel dirty inside
+		while (i < PACKET_SIZE && p[i - 1] != '\r') { // this makes me feel dirty inside
 			p[i] = putty_getchar();
 			putty_putchar(p[i]);
 			i++;
@@ -228,18 +228,19 @@ int main(void){
 	}
 
 	// FTM0 TEST
-	while(mode_select == 6){
+	while (mode_select == 6) {
 
 		// reset counter to 0;
 		FTM0_CNT_RESET();
 
 		// run through loop until timeout occurs
-		while(!FTM0_WAIT());
+		while (!FTM0_WAIT())
+			;
 		putty_putchar('s');
 	}
 
 	// txStart test
-	while(mode_select == 7){
+	while (mode_select == 7) {
 		uint16_t block_num = 0;
 
 		txStart(p);
@@ -248,7 +249,7 @@ int main(void){
 	}
 
 	// imageSize test
-	while(mode_select == 8){
+	while (mode_select == 8) {
 		imageSize(p, 0xFFFF);
 	}
 }

@@ -34,5 +34,4 @@ void RFM69_RECEIVE(uint8_t *buffer);
 // timeout variable will be 0 when no timeout, 1 when timed out
 uint8_t RFM69_RECEIVE_TIMEOUT(uint8_t *buffer);
 
-
 #endif // SOURCES_RFM69_RFM69_H
