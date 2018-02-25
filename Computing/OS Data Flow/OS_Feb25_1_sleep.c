@@ -39,15 +39,16 @@ int main(){
 
 
 int reset=0;
-
+int request=0;
 int tumb = 1;// State 2 Condition for tumbling
 int count2=0;
+int count3=0;
 int Tracker=0;
 
 float batraw=0;
 float bat=0;
 
-
+bat = 4;
 ADC0_Init();
 
 while(1){
@@ -57,8 +58,8 @@ batraw=ADC0_Convert();//Print the Read ADC value in the num
 //bat=(batraw*3.3f)/(1024.0f);
 //----------------------------------------------------------
 
-//Test case 
-bat = 4;
+//Test case
+
 
 if (Tracker){
     check_bat_flag=0;
@@ -73,10 +74,10 @@ else check_bat_flag=1;
 
         int BatS1=1;
         Tracker++;//1
-		
-		
+
+
         if(!check_bat(bat)){
-                
+
                 sleep_flag=1;
                 BatS1=0;
                 check_bat_flag=reset;
@@ -92,47 +93,50 @@ else check_bat_flag=1;
 //Sleep Mode Condition
 	while(sleep_flag==1){
 
-		
+
 		if (Tracker == 1){
 			check_bat_flag = 1;
 			sleep_flag=reset;  // State 1
 		}
-			
-			
-		if(Check_bat(bat)){
+
+bat=3;
+		if(check_bat(bat)){
 				if (Tracker == 2){
 					image_iden_flag = 1; // State 2
-					sleep_flag=reset; 
-				}
-					
-				else if (Tracker == 3){
-					image_cap_flag = 1; // State 3
-					sleep_flag=reset; 
-				}
-					
-				else if (Tracker == 4){
-					prep_Tx_flag = 0; 	// State 4
-					sleep_flag=reset; 
-				}
-					
-				else if (Tracker == 5){
-					listen_flag =1;  	// State 5
-					sleep_flag=reset; 
-				}
-					
-				else if (Tracker == 6){
-					tx_flag = 1;     	// State 6
+					Tracker--;
 					sleep_flag=reset;
 				}
-					
-			
+
+				else if (Tracker == 3){
+					image_cap_flag = 1; // State 3
+					Tracker--;
+					sleep_flag=reset;
+				}
+
+				else if (Tracker == 4){
+					prep_Tx_flag = 0; 	// State 4
+					Tracker--;
+					sleep_flag=reset;
+				}
+
+				else if (Tracker == 5){
+					listen_flag =1;  	// State 5
+					Tracker--;
+					sleep_flag=reset;
+				}
+
+				else if (Tracker == 6){
+					tx_flag = 1;     	// State 6
+					Tracker--;
+					sleep_flag=reset;
+				}
+
+
 		else {Tracker=0; sleep_flag=reset; }
-		}	
-		
-	
+		}
+
+
 	}
-
-
 
 
 //--------------------------------------------------
@@ -141,6 +145,8 @@ else check_bat_flag=1;
 	while(image_iden_flag==1){
         int imageI=0;//State 2 Condition for image identification
         int BatS2=1;// State 2 condition for tumbling
+
+
 
         Tracker++;//2
 			if(!check_bat(bat)){
@@ -199,7 +205,7 @@ else check_bat_flag=1;
 			//GPIOC_PSOR = 0x01 << 1;//turn on tx
 			//printf("\n Image capture in State 3\n");
 			//GPIOC_PCOR=0x01 << 1;//turn off tx
-			
+
 			image_cap_flag=reset;
                 }
 
@@ -213,13 +219,10 @@ while(prep_Tx_flag==1){
         //bat=1;
         Tracker++;//4
 
-        printf("\n Enter current battery level for state 4: ");
-        scanf("%d", &bat);
 
-        //printf("\n <<<<<<<<<<< Check Point State 4 >>>>>>>>>>> \n");
         if(!check_bat(bat)){
 
-                printf("\n No GO STATE 4 \n");
+                //printf("\n No GO STATE 4 \n");
                 sleep_flag=1;
                 BatS4=0;
                 prep_Tx_flag=reset;
@@ -227,8 +230,8 @@ while(prep_Tx_flag==1){
                 }
             if(BatS4){
             listen_flag=1;
-            printf("\n Image ready for Transmit in State 4 \n");
-            
+            //printf("\n Image ready for Transmit in State 4 \n");
+
             prep_Tx_flag=reset;
 
                 }
@@ -238,12 +241,13 @@ while(prep_Tx_flag==1){
             //Listen state 5
 	while(listen_flag ==1){
         int BatS5=1;// State 2 condition for tumbling
-        //bat=1;
+
+        bat=1;
         Tracker++;//5
 
 			if(!check_bat(bat)){
 
-                printf("\n No GO STATE 5  \n");
+                //printf("\n No GO STATE 5  \n");
                 sleep_flag=1;
                 BatS5=0;
                 listen_flag=reset;
@@ -251,8 +255,8 @@ while(prep_Tx_flag==1){
                 }
             if(BatS5){
             tx_flag=1;
-            printf("\n Waiting for packet request in state 5\n");
-            
+            //printf("\n Waiting for packet request in state 5\n");
+
             listen_flag=reset;
                 }
         }
@@ -267,10 +271,10 @@ while(prep_Tx_flag==1){
 
   //Packet request check condition
 
-
+        /*
         count3++;
         if (count3==2) request=1;
-
+*/
                 if(!check_bat(bat)){
                     printf("\n No GO STATE 6  \n");
                     sleep_flag=1;
@@ -279,11 +283,8 @@ while(prep_Tx_flag==1){
 
                     }
 
-                if(BatS6&&request){
-                printf("\n Packet trasmitting in state 6 \n");
-                delay();
-                printf("\n Transmitation is completed in state 6 \n");
-                printf("\n >>>>>>>>>> Clear the captatured Image in the SD card <<<<<<<<<< \n");
+                if(BatS6){
+
                 Tracker=0;
                 tx_flag=reset;
                     }
