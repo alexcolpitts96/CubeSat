@@ -9,7 +9,8 @@ Project: OS data flow Rev 1.0
 Author: Hsuan-Wei Lo 3476309
 Created Feb 14, 2018
 
-Updated Feb 24,2018
+Updated Feb 25,2018
+Sleep Flag Fixed
 Coutinuos ADC reading on the battery/GPIO on and off switch for cam and trasmiter
 */
 
@@ -93,18 +94,20 @@ else check_bat_flag=1;
 //Sleep Mode Condition
 	while(sleep_flag==1){
 
-
+		//Tracker is to keep in track which state has been entered from 1 to 6 state
 		if (Tracker == 1){
 			check_bat_flag = 1;
 			sleep_flag=reset;  // State 1
 		}
 
-bat=3;
+//bat=3;
+		//Check the battery once it take up from sleep
 		if(check_bat(bat)){
 				if (Tracker == 2){
 					image_iden_flag = 1; // State 2
-					Tracker--;
-					sleep_flag=reset;
+					Tracker--;//To keep the tracker consistent since it will increment twice
+							  // once it return to the currently state
+					sleep_flag=reset;//exit the sleep flag loop
 				}
 
 				else if (Tracker == 3){
@@ -132,7 +135,7 @@ bat=3;
 				}
 
 
-		else {Tracker=0; sleep_flag=reset; }
+		else {Tracker=0; sleep_flag=reset; }//if bat still low return to the state 1
 		}
 
 
@@ -242,7 +245,7 @@ while(prep_Tx_flag==1){
 	while(listen_flag ==1){
         int BatS5=1;// State 2 condition for tumbling
 
-        bat=1;
+        //bat=1;
         Tracker++;//5
 
 			if(!check_bat(bat)){
@@ -276,7 +279,7 @@ while(prep_Tx_flag==1){
         if (count3==2) request=1;
 */
                 if(!check_bat(bat)){
-                    printf("\n No GO STATE 6  \n");
+
                     sleep_flag=1;
                     BatS6=0;
                     tx_flag=reset;
@@ -285,7 +288,7 @@ while(prep_Tx_flag==1){
 
                 if(BatS6){
 
-                Tracker=0;
+                Tracker=0;//reset the tracker to start again once all 6 state has finished
                 tx_flag=reset;
                     }
                 else {listen_flag=1;tx_flag=reset;}
