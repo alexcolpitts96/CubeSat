@@ -10,18 +10,18 @@
 
 ////////////////////////////////// GroundStation Functions //////////////////////////////////
 
-// request packet number for satellite to transmit
-void packetRequest(uint8_t *p, int block);
+// request packet number for satellite to transmit, p[0] is LSB, p[1] is MSB for request -------------------- UNTESTED
+void packetRequest(uint8_t *p, uint16_t block);
 
 // get satellite to start transmitting from p, receives image block count into p
 void txStart(uint8_t *p);
 
 //////////////////////////////////// Satellite Functions ////////////////////////////////////
 
-// transmit block n
-void transmitPacket(uint8_t *p, int block);
+// transmit requested block from storage (s) using buffer (p) to transmit -------------------------------- UNTESTED
+void transmitPacket(uint8_t *p, uint8_t **s);
 
-// transmit image size in blocks
+// transmit image size in blocks to the ground station
 void imageSize(uint8_t *p, uint16_t image_size);
 
 #endif // SOURCES_COMMS_H

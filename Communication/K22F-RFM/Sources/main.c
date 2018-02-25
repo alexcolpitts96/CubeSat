@@ -54,7 +54,11 @@
 const uint8_t start_command[PACKET_SIZE] = "start packet transmission"; // might need to be changed for packet length
 
 // for testing purposes
-const uint8_t test_data[PACKET_SIZE] = "abcdefghijklmnopqrstuvwxyz1234567890";
+const uint8_t test_data[PACKET_SIZE] = "test data from block number 0";
+const uint8_t test_data2[PACKET_SIZE] = "test data from block number 1";
+const uint8_t test_data3[PACKET_SIZE] = "test data from block number 2";
+const uint8_t test_data4[PACKET_SIZE] = "test data from block number 3";
+const uint8_t test_data5[PACKET_SIZE] = "test data from block number 4";
 
 void master_init() {
 	UART0_Init();
@@ -66,9 +70,27 @@ void master_init() {
 }
 
 int main(void) {
-	int i, mode_select;
+	int i, mode_select, image_bytes = 4;
 	uint8_t *p;
+	uint8_t **s;
+
+	// allocate the memory for packet transmission
 	p = (uint8_t *) calloc(MAX_PACKET_SIZE, sizeof(uint8_t));
+
+	// allocate memory for the image buffer
+	s = (uint8_t **) calloc(image_bytes, sizeof(uint8_t));
+
+	// allocate memory for the packets
+	for (i = 0; i < image_bytes; i++) {
+		s[i] = calloc(PACKET_SIZE, sizeof(uint8_t));
+	}
+
+	// load pseudo image into image buffer
+	memcpy((uint8_t *) s[0], &test_data, sizeof(test_data));
+	memcpy((uint8_t *) s[1], &test_data2, sizeof(test_data2));
+	memcpy((uint8_t *) s[2], &test_data3, sizeof(test_data3));
+	memcpy((uint8_t *) s[3], &test_data4, sizeof(test_data4));
+	//memcpy((uint8_t *) s[4], &test_data5, sizeof(test_data5));
 
 	// init all the modules needed
 	master_init();
@@ -81,7 +103,9 @@ int main(void) {
 	// 6 is FTM0 test
 	// 7 is txStart test (G)
 	// 8 is imageSize test (S)
-	mode_select = 7;
+	// 9 is packetRequest test (G)
+	// 10 is transmitPacket test (S)
+	mode_select = 9;
 
 	//start as transmitter /////////////////////////////////////////////////////////////////////////////////////////
 	while (mode_select == 1) {
@@ -239,17 +263,28 @@ int main(void) {
 		putty_putchar('s');
 	}
 
-	// txStart test
+	// txStart test - ground station
 	while (mode_select == 7) {
-		uint16_t block_num = 0;
+		uint16_t block_num;
 
+		// request image size
 		txStart(p);
 
 		block_num = (p[1] << 8) + p[0];
 	}
 
-	// imageSize test
+	// imageSize test - satellite
 	while (mode_select == 8) {
-		imageSize(p, 0xFFFF);
+		imageSize(p, 0xAAAA);
+	}
+
+	// packetRequest test - ground station
+	while (mode_select == 9) {
+		packetRequest(p, 3); // request 4th block (remember 0 indexing)
+	}
+
+	// transmitPacket test - satellite
+	while (mode_select == 10) {
+		transmitPacket(p, s);
 	}
 }

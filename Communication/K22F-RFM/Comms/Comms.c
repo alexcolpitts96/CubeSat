@@ -58,8 +58,8 @@ void packetRequest(uint8_t *p, uint16_t block) {
 	}
 
 	// print the block number first to the data sheet
-	sprintf(temp, "block number %d", block); // warning is since it is uint8_t not char (equivalent)
-	for(i = 0; i < PACKET_SIZE; i++){
+	sprintf((char *) temp, "block number %d", block); // warning is since it is uint8_t not char (equivalent)
+	for (i = 0; i < PACKET_SIZE; i++) {
 		putty_putchar(temp[i]);
 	}
 
@@ -93,7 +93,7 @@ void txStart(uint8_t *p) {
 		// receive confirmation signal, able to timeout
 		timeout = RFM69_RECEIVE_TIMEOUT(p);
 
-		// ensure timeout hasn't occured
+		// ensure timeout hasn't occurred
 		if (timeout == 1) {
 			handshake = 1;
 		}
@@ -108,7 +108,7 @@ void txStart(uint8_t *p) {
 //////////////////////////////////// Satellite Functions ////////////////////////////////////
 
 // transmit requested block from storage (s) using buffer (p) to transmit -------------------------------- UNTESTED
-void transmitPacket(uint8_t *p, uint8_t *s) {
+void transmitPacket(uint8_t *p, uint8_t **s) {
 	uint8_t packet_request = 0; // 0 when no request, 1 when contacted by ground station
 	uint8_t i;
 	uint8_t packet_zeros;
@@ -141,7 +141,7 @@ void transmitPacket(uint8_t *p, uint8_t *s) {
 
 	// read block from s into p
 	memset(p, 0, sizeof(uint8_t) * PACKET_SIZE);
-	memcpy(p, &s[block_number], sizeof(uint8_t) * PACKET_SIZE);
+	memcpy(p, s[block_number], sizeof(uint8_t) * PACKET_SIZE);
 
 	// transmit packet multiple times
 	RFM69_SEND_TIMEOUT(p);
@@ -151,7 +151,6 @@ void transmitPacket(uint8_t *p, uint8_t *s) {
 void imageSize(uint8_t *p, uint16_t image_size) {
 	uint8_t packet_request = 0; // 0 when no request, 1 when contacted by ground station
 	uint8_t block_number[2]; // 2 uint8_t will give 16 bits effectively
-	uint8_t i;
 
 	// clean buffer
 	memset(p, 0, sizeof(uint8_t) * PACKET_SIZE);
@@ -162,7 +161,7 @@ void imageSize(uint8_t *p, uint16_t image_size) {
 		RFM69_RECEIVE(p);
 
 		// check if packet is start signal, ensure no timeout
-		if ((strcmp(&start_command, p) == 0)) {
+		if ((strcmp((char *) &start_command, (char *) p) == 0)) {
 			packet_request = 1;
 		}
 	}

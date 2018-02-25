@@ -278,7 +278,7 @@ void RFM69_RECEIVE(uint8_t *buffer){
 }
 
 // try to receive a packet, return 0 and clear buffer if no packet received after some time T
-// timeout variable will be 0 when no timeout, 1 when timed out
+// timeout variable will be 1 when no timeout, 0 when timed out
 uint8_t RFM69_RECEIVE_TIMEOUT(uint8_t *buffer){
 	uint8_t i, timeout = 0; // no timeout initially
 
