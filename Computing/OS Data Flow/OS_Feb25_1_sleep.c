@@ -9,8 +9,8 @@ Project: OS data flow Rev 1.0
 Author: Hsuan-Wei Lo 3476309
 Created Feb 14, 2018
 
-Updated Feb 25,2018
-Sleep Flag Fixed
+Updated Feb 26,2018
+Sleep Flag Fixed rev. 1
 Coutinuos ADC reading on the battery/GPIO on and off switch for cam and trasmiter
 */
 
@@ -44,12 +44,11 @@ int request=0;
 int tumb = 1;// State 2 Condition for tumbling
 int count2=0;
 int count3=0;
-int Tracker=0;
 
 float batraw=0;
 float bat=0;
 
-bat = 4;
+bat = 4;//Test value 
 ADC0_Init();
 
 while(1){
@@ -60,238 +59,159 @@ batraw=ADC0_Convert();//Print the Read ADC value in the num
 //----------------------------------------------------------
 
 //Test case
-
-
-if (Tracker){
-    check_bat_flag=0;
-}
-else check_bat_flag=1;
-
-
 //-------------------------------------------------
-            //Check battery state 1
-
-	while(check_bat_flag==1){
-
-        int BatS1=1;
-        Tracker++;//1
-
-
+//Check battery state 1
+			
         if(!check_bat(bat)){
-
-                sleep_flag=1;
-                BatS1=0;
-                check_bat_flag=reset;
+			sleep_flag=1;
         }
-
-        if (BatS1){
-        		image_iden_flag=1;
-                check_bat_flag=reset;
-        }
+		else 
+			image_iden_flag=1;//If battery level is good, go to state 2
 
 	}
-
+//----------------------------------------------------
 //Sleep Mode Condition
 	while(sleep_flag==1){
-
-		//Tracker is to keep in track which state has been entered from 1 to 6 state
-		if (Tracker == 1){
-			check_bat_flag = 1;
-			sleep_flag=reset;  // State 1
-		}
-
+		//1. Put the System into sleep
+		//2. Set a delay block function
+		//3. Wakes up after the duration
 //bat=3;
 		//Check the battery once it take up from sleep
 		if(check_bat(bat)){
-				if (Tracker == 2){
-					image_iden_flag = 1; // State 2
-					Tracker--;//To keep the tracker consistent since it will increment twice
-							  // once it return to the currently state
-					sleep_flag=reset;//exit the sleep flag loop
+				sleep_flag=reset;
 				}
-
-				else if (Tracker == 3){
-					image_cap_flag = 1; // State 3
-					Tracker--;
-					sleep_flag=reset;
-				}
-
-				else if (Tracker == 4){
-					prep_Tx_flag = 0; 	// State 4
-					Tracker--;
-					sleep_flag=reset;
-				}
-
-				else if (Tracker == 5){
-					listen_flag =1;  	// State 5
-					Tracker--;
-					sleep_flag=reset;
-				}
-
-				else if (Tracker == 6){
-					tx_flag = 1;     	// State 6
-					Tracker--;
-					sleep_flag=reset;
-				}
-
-
-		else {Tracker=0; sleep_flag=reset; }//if bat still low return to the state 1
-		}
-
-
+		//If the battery still low put into sleep again
 	}
 
 
 //--------------------------------------------------
 	//image identification state 2
 
-	while(image_iden_flag==1){
+	while(image_iden_flag==1&&!sleep_flag){
         int imageI=0;//State 2 Condition for image identification
         int BatS2=1;// State 2 condition for tumbling
 
 
-
-        Tracker++;//2
-			if(!check_bat(bat)){
-
-                //printf("\n No GO STATE 2  \n");
-                sleep_flag=1;
-                BatS2=0;
-                image_iden_flag=reset;
-
-			}
-
+			//Camera Task for identification:
 			while((tumb>2)&&BatS2){
                if (count2==2){
                     tumb=1;//force to continue
                     imageI=1;
                         }
-                //delay();
-               // printf("\n Tumbling too fast \n");
-                count2++;
+				//delay();
+				//Tumbling too fast
+				count2++;
                 }
-
-            imageI=1;//No Tumbling has occurred
-
-            if (imageI&&BatS2){
-            //printf("\n Checking cycle excced, exit the tumbling check! \n");
-            //delay();
-			image_cap_flag=1;
-			//printf("\n ready for capture in State 2\n");
-			//Tracker=0;//Restart the Main program again
-
-			image_iden_flag=reset;
+				//Set the next flag ready
+				if (imageI){
+					image_cap_flag=1;
                 }
+			
+			//-------------------------------
+			if(!check_bat(bat)){
+                sleep_flag=1;
+                image_iden_flag=reset;
+			else 
+				image_iden_flag=reset;//exit the state go to next state
 
-            }
+			}
+
+        }
 
 //--------------------------------------------------
         //Capture Image state 3
-	while(image_cap_flag==1){
-    int BatS3=1;// State 2 condition for tumbling
+	while(image_cap_flag==1&&!sleep_flag){
         //bat=1;
-
-
-        Tracker++;//3
-
+			
+			//Capture the camera Task:
+			
+			//GPIOC_PSOR = 0x01 << 1;//turn on Camera via MOSFET switch
+			//Capture the image 
+			//GPIOC_PCOR=0x01 << 1;//turn off the Camera via MOSFET switch
+			
+			 prep_Tx_flag =1;//Set the Next flag ready 
+			 
 			if(!check_bat(bat)){
-
-                //printf("\n No GO STATE 3  \n");
                 sleep_flag=1;
-                BatS3=0;
                 image_cap_flag=reset;
-
                 }
-            if(BatS3){
-            prep_Tx_flag =1;
-
-			//GPIOC_PSOR = 0x01 << 1;//turn on tx
-			//printf("\n Image capture in State 3\n");
-			//GPIOC_PCOR=0x01 << 1;//turn off tx
-
-			image_cap_flag=reset;
-                }
+			else 
+				image_cap_flag=reset;//exit the state go to next state
 
         }
 
 
 //--------------------------------------------------
         //Transmit Preparation state 4
-while(prep_Tx_flag==1){
-    int BatS4=1;// State 2 condition for tumbling
+		
+	while(prep_Tx_flag==1&&!sleep_flag){
         //bat=1;
-        Tracker++;//4
-
-
+		
+		//Transmit Preparation:
+			//Setup the Transmition in SPI module ready
+			//Check the image size or location in the flash memory
+		
+		  listen_flag=1;//Set the next flag ready
+		  
         if(!check_bat(bat)){
-
-                //printf("\n No GO STATE 4 \n");
-                sleep_flag=1;
-                BatS4=0;
-                prep_Tx_flag=reset;
-
-                }
-            if(BatS4){
-            listen_flag=1;
-            //printf("\n Image ready for Transmit in State 4 \n");
-
-            prep_Tx_flag=reset;
-
+               sleep_flag=1;
+               prep_Tx_flag=reset;
+		}
+		else 
+			prep_Tx_flag=reset;//exit the state go to next state
+  
                 }
         }
 
 //--------------------------------------------------
             //Listen state 5
-	while(listen_flag ==1){
-        int BatS5=1;// State 2 condition for tumbling
+	while(listen_flag ==1&&!sleep_flag){
 
-        //bat=1;
-        Tracker++;//5
-
+    //bat=1;
+			//Listen Mode:
+				//Listen to the ground station for packet request
+				//If (packet_request == 1){
+				  tx_flag=1;//If ground station is heard set the next flag ready
+				// }
+				
+			
 			if(!check_bat(bat)){
-
                 //printf("\n No GO STATE 5  \n");
                 sleep_flag=1;
-                BatS5=0;
                 listen_flag=reset;
-
                 }
-            if(BatS5){
-            tx_flag=1;
-            //printf("\n Waiting for packet request in state 5\n");
-
-            listen_flag=reset;
-                }
+			else
+				listen_flag=reset;
+             
         }
 
 //--------------------------------------------------
         //Transmit state 6
-	while(tx_flag==1){
-        int BatS6=1;// State 2 condition for tumbling
+	while(tx_flag==1&&!sleep_flag){
         request=0;//requestion from ground station
         //bat=1;
-        Tracker++;//6
-
-  //Packet request check condition
-
-        /*
+		 /*
+		//Packet request check condition
+       
         count3++;
         if (count3==2) request=1;
-*/
-                if(!check_bat(bat)){
-
-                    sleep_flag=1;
-                    BatS6=0;
-                    tx_flag=reset;
-
-                    }
-
-                if(BatS6){
-
-                Tracker=0;//reset the tracker to start again once all 6 state has finished
-                tx_flag=reset;
-                    }
-                else {listen_flag=1;tx_flag=reset;}
+		*/
+		
+		//Transmit mode:
+			//While the ground station still heard, then transmit the image
+			//If (packet_request==1){
+				//Transmit the image to the ground station function
+				//Clear the image
+				
+			// }
+			
+			//else {listen_flag=1;tx_flag=reset;}// go back to the listen mode again if ground station lost communication
+        if(!check_bat(bat)){
+            sleep_flag=1;
+            tx_flag=reset;
+            }
+		else 
+			tx_flag=reset;//Start again from the beginning
         }
 
 //---------------------------End Of Line ----------------------------------
@@ -347,11 +267,16 @@ float ADC0_Convert() {
 
 
 int check_bat(int bat){
-
-		if (bat<3){
-        //printf("\n -----------Low Battery Detected----------- \n");
-        return 0;
+	
+	//Set the All SIM Moudule to default or turn off
+	
+	//Check the Battery level without the load.
+	if (bat<3){
+		
+	//Reinitialized All the SIM module clock back
+	return 0;
 	}
+	//Reinitialized All the SIM module clock back
 }
 
 
