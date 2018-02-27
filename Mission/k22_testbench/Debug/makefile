@@ -14,6 +14,7 @@ RM := rm -rf
 -include Project_Settings/Startup_Code/subdir.mk
 -include I2C/subdir.mk
 -include GPIO/subdir.mk
+-include FTM/subdir.mk
 -include Camera/subdir.mk
 -include subdir.mk
 -include objects.mk

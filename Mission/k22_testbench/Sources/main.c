@@ -9,25 +9,34 @@
 #include "../GPIO/gpio.h"
 #include "../UART/uart.h"
 #include "../Camera/camera.h"
+#include "../I2C/i2c.h"
+#include "../FTM/ftm.h"
 #include <stdio.h>
 
 int main(){
+	FTM0_init();
+	i2c_init();
 	GPIO_init();
 	UART1_putty_init();
-	SPI1_Init(16);
+	//SPI1_Init(16);
 	redLED(0);
 	greenLED(0);
-	blueLED(0);
+	//blueLED(1);
 	char mychr;
-	// uint8_t rec;
+	uint8_t rec;
 	while(1){
-		mychr = putty_getchar();
-		putty_putchar(mychr);
-		if(mychr == 'c'){
-			putty_putstr("c\n\r");
-			capture();
+		int i;
+		while(1){
+			i2c_write(0xff,0x01);
 		}
-
+		putty_putstr("a");
+		//i2c_write(0xFF, 0x01); // write 0x01 to register 0xFF
+		//putty_putchar('a');
+		//SPI1_TX(0x80FA);
+		//rec = SPI1_read(0x00);
+		//char buf[8];
+		//sprintf(buf,"0x%X\n\r",rec);
+		//putty_putstr(buf);
 	}
 	return 0;
 }
