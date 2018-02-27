@@ -11,8 +11,9 @@
 
 #include "fsl_device_registers.h"
 
-void UART1_putty_init(){
-	uint32_t ubd, temp;
+void UART1_putty_init() {
+	uint16_t temp;
+	uint16_t ubd;
 
 	SIM_SCGC5 |= SIM_SCGC5_PORTE_MASK; // enable clock to PORTE
 	SIM_SCGC4 |= SIM_SCGC4_UART1_MASK; // enable clock to UART1
@@ -24,29 +25,34 @@ void UART1_putty_init(){
 
 	UART1_C1 = 0; // set 8 bits
 
-	UART1_BDH = 0; // upper four bits set to zero
-	UART1_BDL = 0b10001001; // lower four bits set to baud rate ~ 9600
+	// calculate and set the baud rate
+	ubd = ((21000 * 1000) / (115200 * 16)); // set baudrate
+	temp = UART0_BDH & ~(UART_BDH_SBR(0x1F)); // save existing values in register
+	UART1_BDH = temp | ((ubd >> 8) & 0x1F);
+	UART1_BDL = ubd & UART_BDL_SBR_MASK;
 
 	UART1_C2 |= (UART_C2_TE_MASK | UART_C2_RE_MASK); // enable receive/transfer
 }
 
 //Sends a character to PuTTY interface
-void putty_putchar(char c){
-	while(!(UART1_S1 & 0x80)); // check if the transmit buffer is full, do nothing if so
+void putty_putchar(char c) {
+	while (!(UART1_S1 & 0x80))
+		; // check if the transmit buffer is full, do nothing if so
 	UART1_D = c; // if not, write 8 bits to the UART0 data register
 	return;
 }
 
 //Waits for a character from the PuTTY interface
-char putty_getchar(void){
-	while(!(UART1_S1 & 0x20)); // check if the receive buffer is empty, do nothing if so
+char putty_getchar(void) {
+	while (!(UART1_S1 & 0x20))
+		; // check if the receive buffer is empty, do nothing if so
 	return UART1_D; // returns the gotten char
 }
 
 //Sends a NUL-terminated string to the PuTTY interface
-void putty_putstr(char *str){
+void putty_putstr(char *str) {
 	int n = 0;
-	while(str[n]){ // is the character a NULL?
+	while (str[n]) { // is the character a NULL?
 		putty_putchar(str[n]); // if not, use putChar to output it
 		n++;
 	}
