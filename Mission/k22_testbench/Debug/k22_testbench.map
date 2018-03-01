@@ -11,6 +11,13 @@ Archive member included because of file (symbol)
 /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/../../../../arm-none-eabi/lib/armv7e-m/fpu/libnosys.a(_exit.o)
                               /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/../../../../arm-none-eabi/lib/armv7e-m/fpu/libg_s.a(lib_a-exit.o) (_exit)
 
+Allocating common symbols
+Common symbol       size              file
+
+SlaveID             0x1               ./I2C/i2c.o
+MasterTransmission  0x1               ./I2C/i2c.o
+result              0x14              ./I2C/i2c.o
+
 Discarded input sections
 
  .text          0x00000000        0x0 /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/armv7e-m/fpu/crti.o
@@ -56,6 +63,7 @@ Discarded input sections
                 0x00000000       0x2c ./UART/uart.o
  .text.putty_putstr
                 0x00000000       0x38 ./UART/uart.o
+ .group         0x00000000        0x8 ./Sources/main.o
  .group         0x00000000        0x8 ./Sources/main.o
  .group         0x00000000        0x8 ./Sources/main.o
  .group         0x00000000        0x8 ./Sources/main.o
@@ -344,11 +352,14 @@ Discarded input sections
  .group         0x00000000        0x8 ./I2C/i2c.o
  .group         0x00000000        0x8 ./I2C/i2c.o
  .group         0x00000000        0x8 ./I2C/i2c.o
+ .group         0x00000000        0x8 ./I2C/i2c.o
  .text          0x00000000        0x0 ./I2C/i2c.o
  .data          0x00000000        0x0 ./I2C/i2c.o
  .bss           0x00000000        0x0 ./I2C/i2c.o
- .text.i2c_read
-                0x00000000       0x10 ./I2C/i2c.o
+ .text.I2CReadRegister
+                0x00000000      0x110 ./I2C/i2c.o
+ .text.I2CReadMultiRegisters
+                0x00000000      0x1bc ./I2C/i2c.o
  .debug_macro   0x00000000      0x856 ./I2C/i2c.o
  .debug_macro   0x00000000       0x11 ./I2C/i2c.o
  .debug_macro   0x00000000       0x16 ./I2C/i2c.o
@@ -466,10 +477,6 @@ Discarded input sections
  .text          0x00000000        0x0 ./FTM/ftm.o
  .data          0x00000000        0x0 ./FTM/ftm.o
  .bss           0x00000000        0x0 ./FTM/ftm.o
- .text.FTM0_CNT_RESET
-                0x00000000       0x24 ./FTM/ftm.o
- .text.delay_us
-                0x00000000       0x3c ./FTM/ftm.o
  .debug_macro   0x00000000      0x856 ./FTM/ftm.o
  .debug_macro   0x00000000       0x11 ./FTM/ftm.o
  .debug_macro   0x00000000       0x16 ./FTM/ftm.o
@@ -666,7 +673,7 @@ LOAD /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/armv7e-m
  .FlashConfig   0x00000400       0x10 ./Project_Settings/Startup_Code/startup_MK22F51212.o
                 0x00000410                . = ALIGN (0x4)
 
-.text           0x00000410      0x624
+.text           0x00000410      0x6f8
                 0x00000410                . = ALIGN (0x4)
  *(.text)
  .text          0x00000410       0x54 /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/armv7e-m/fpu/crtbegin.o
@@ -782,118 +789,129 @@ LOAD /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/armv7e-m
  .text.SystemInit
                 0x00000678       0x3c ./Project_Settings/Startup_Code/system_MK22F51212.o
                 0x00000678                SystemInit
- .text.i2c_init
-                0x000006b4       0x84 ./I2C/i2c.o
-                0x000006b4                i2c_init
  .text.I2C0_IRQHandler
-                0x00000738       0x34 ./I2C/i2c.o
-                0x00000738                I2C0_IRQHandler
- .text.i2c_write
-                0x0000076c       0xac ./I2C/i2c.o
-                0x0000076c                i2c_write
+                0x000006b4       0x34 ./I2C/i2c.o
+                0x000006b4                I2C0_IRQHandler
+ .text.init_I2C
+                0x000006e8       0x4c ./I2C/i2c.o
+                0x000006e8                init_I2C
+ .text.Pause    0x00000734       0x24 ./I2C/i2c.o
+                0x00000734                Pause
+ .text.IIC_StartTransmission
+                0x00000758       0x68 ./I2C/i2c.o
+                0x00000758                IIC_StartTransmission
+ .text.I2CWriteRegister
+                0x000007c0       0xcc ./I2C/i2c.o
+                0x000007c0                I2CWriteRegister
  .text.GPIO_init
-                0x00000818       0xd0 ./GPIO/gpio.o
-                0x00000818                GPIO_init
+                0x0000088c       0xd0 ./GPIO/gpio.o
+                0x0000088c                GPIO_init
  .text.greenLED
-                0x000008e8       0x2c ./GPIO/gpio.o
-                0x000008e8                greenLED
- .text.redLED   0x00000914       0x2c ./GPIO/gpio.o
-                0x00000914                redLED
+                0x0000095c       0x2c ./GPIO/gpio.o
+                0x0000095c                greenLED
+ .text.redLED   0x00000988       0x2c ./GPIO/gpio.o
+                0x00000988                redLED
  .text.FTM0_init
-                0x00000940       0x4c ./FTM/ftm.o
-                0x00000940                FTM0_init
- .text.exit     0x0000098c       0x28 /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/../../../../arm-none-eabi/lib/armv7e-m/fpu/libg_s.a(lib_a-exit.o)
-                0x0000098c                exit
+                0x000009b4       0x4c ./FTM/ftm.o
+                0x000009b4                FTM0_init
+ .text.FTM0_CNT_RESET
+                0x00000a00       0x24 ./FTM/ftm.o
+                0x00000a00                FTM0_CNT_RESET
+ .text.delay_us
+                0x00000a24       0x3c ./FTM/ftm.o
+                0x00000a24                delay_us
+ .text.exit     0x00000a60       0x28 /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/../../../../arm-none-eabi/lib/armv7e-m/fpu/libg_s.a(lib_a-exit.o)
+                0x00000a60                exit
  .text.__libc_init_array
-                0x000009b4       0x4c /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/../../../../arm-none-eabi/lib/armv7e-m/fpu/libg_s.a(lib_a-init.o)
-                0x000009b4                __libc_init_array
- .text.memset   0x00000a00       0x10 /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/../../../../arm-none-eabi/lib/armv7e-m/fpu/libg_s.a(lib_a-memset.o)
-                0x00000a00                memset
- .text._exit    0x00000a10        0x4 /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/../../../../arm-none-eabi/lib/armv7e-m/fpu/libnosys.a(_exit.o)
-                0x00000a10                _exit
+                0x00000a88       0x4c /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/../../../../arm-none-eabi/lib/armv7e-m/fpu/libg_s.a(lib_a-init.o)
+                0x00000a88                __libc_init_array
+ .text.memset   0x00000ad4       0x10 /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/../../../../arm-none-eabi/lib/armv7e-m/fpu/libg_s.a(lib_a-memset.o)
+                0x00000ad4                memset
+ .text._exit    0x00000ae4        0x4 /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/../../../../arm-none-eabi/lib/armv7e-m/fpu/libnosys.a(_exit.o)
+                0x00000ae4                _exit
  *(.rodata)
  *(.rodata*)
  .rodata.str1.1
-                0x00000a14        0x2 /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/../../../../arm-none-eabi/lib/armv7e-m/fpu/libg_s.a(lib_a-impure.o)
- *fill*         0x00000a16        0x2 
+                0x00000ae8        0x2 /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/../../../../arm-none-eabi/lib/armv7e-m/fpu/libg_s.a(lib_a-impure.o)
+ *fill*         0x00000aea        0x2 
  .rodata._global_impure_ptr
-                0x00000a18        0x4 /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/../../../../arm-none-eabi/lib/armv7e-m/fpu/libg_s.a(lib_a-impure.o)
-                0x00000a18                _global_impure_ptr
+                0x00000aec        0x4 /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/../../../../arm-none-eabi/lib/armv7e-m/fpu/libg_s.a(lib_a-impure.o)
+                0x00000aec                _global_impure_ptr
  *(.glue_7)
  .glue_7        0x00000000        0x0 linker stubs
  *(.glue_7t)
  .glue_7t       0x00000000        0x0 linker stubs
  *(.eh_frame)
- .eh_frame      0x00000a1c        0x0 /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/armv7e-m/fpu/crtbegin.o
+ .eh_frame      0x00000af0        0x0 /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/armv7e-m/fpu/crtbegin.o
  *(.init)
- .init          0x00000a1c        0x4 /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/armv7e-m/fpu/crti.o
-                0x00000a1c                _init
- .init          0x00000a20        0x8 /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/armv7e-m/fpu/crtn.o
+ .init          0x00000af0        0x4 /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/armv7e-m/fpu/crti.o
+                0x00000af0                _init
+ .init          0x00000af4        0x8 /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/armv7e-m/fpu/crtn.o
  *(.fini)
- .fini          0x00000a28        0x4 /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/armv7e-m/fpu/crti.o
-                0x00000a28                _fini
- .fini          0x00000a2c        0x8 /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/armv7e-m/fpu/crtn.o
-                0x00000a34                . = ALIGN (0x4)
+ .fini          0x00000afc        0x4 /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/armv7e-m/fpu/crti.o
+                0x00000afc                _fini
+ .fini          0x00000b00        0x8 /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/armv7e-m/fpu/crtn.o
+                0x00000b08                . = ALIGN (0x4)
 
-.vfp11_veneer   0x00000a34        0x0
+.vfp11_veneer   0x00000b08        0x0
  .vfp11_veneer  0x00000000        0x0 linker stubs
 
-.v4_bx          0x00000a34        0x0
+.v4_bx          0x00000b08        0x0
  .v4_bx         0x00000000        0x0 linker stubs
 
-.iplt           0x00000a34        0x0
+.iplt           0x00000b08        0x0
  .iplt          0x00000000        0x0 /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/armv7e-m/fpu/crtbegin.o
 
 .ARM.extab
  *(.ARM.extab* .gnu.linkonce.armextab.*)
 
-.ARM            0x00000a34        0x8
-                0x00000a34                __exidx_start = .
+.ARM            0x00000b08        0x8
+                0x00000b08                __exidx_start = .
  *(.ARM.exidx*)
- .ARM.exidx     0x00000a34        0x8 /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/../../../../arm-none-eabi/lib/armv7e-m/fpu/crt0.o
-                0x00000a3c                __exidx_end = .
+ .ARM.exidx     0x00000b08        0x8 /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/../../../../arm-none-eabi/lib/armv7e-m/fpu/crt0.o
+                0x00000b10                __exidx_end = .
 
-.rel.dyn        0x00000a3c        0x0
+.rel.dyn        0x00000b10        0x0
  .rel.iplt      0x00000000        0x0 /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/armv7e-m/fpu/crtbegin.o
 
-.ctors          0x00000a3c        0x0
-                0x00000a3c                __CTOR_LIST__ = .
+.ctors          0x00000b10        0x0
+                0x00000b10                __CTOR_LIST__ = .
  *crtbegin.o(.ctors)
  *crtbegin?.o(.ctors)
  *(EXCLUDE_FILE(*crtend.o *crtend?.o) .ctors)
  *(SORT(.ctors.*))
  *(.ctors)
-                0x00000a3c                __CTOR_END__ = .
+                0x00000b10                __CTOR_END__ = .
 
-.dtors          0x00000a3c        0x0
-                0x00000a3c                __DTOR_LIST__ = .
+.dtors          0x00000b10        0x0
+                0x00000b10                __DTOR_LIST__ = .
  *crtbegin.o(.dtors)
  *crtbegin?.o(.dtors)
  *(EXCLUDE_FILE(*crtend.o *crtend?.o) .dtors)
  *(SORT(.dtors.*))
  *(.dtors)
-                0x00000a3c                __DTOR_END__ = .
+                0x00000b10                __DTOR_END__ = .
 
-.preinit_array  0x00000a3c        0x0
-                0x00000a3c                PROVIDE (__preinit_array_start, .)
+.preinit_array  0x00000b10        0x0
+                0x00000b10                PROVIDE (__preinit_array_start, .)
  *(.preinit_array*)
-                0x00000a3c                PROVIDE (__preinit_array_end, .)
+                0x00000b10                PROVIDE (__preinit_array_end, .)
 
-.init_array     0x00000a3c        0x4
-                0x00000a3c                PROVIDE (__init_array_start, .)
+.init_array     0x00000b10        0x4
+                0x00000b10                PROVIDE (__init_array_start, .)
  *(SORT(.init_array.*))
  *(.init_array*)
- .init_array    0x00000a3c        0x4 /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/armv7e-m/fpu/crtbegin.o
-                0x00000a40                PROVIDE (__init_array_end, .)
+ .init_array    0x00000b10        0x4 /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/armv7e-m/fpu/crtbegin.o
+                0x00000b14                PROVIDE (__init_array_end, .)
 
-.fini_array     0x00000a40        0x4
-                0x00000a40                PROVIDE (__fini_array_start, .)
+.fini_array     0x00000b14        0x4
+                0x00000b14                PROVIDE (__fini_array_start, .)
  *(SORT(.fini_array.*))
  *(.fini_array*)
- .fini_array    0x00000a40        0x4 /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/armv7e-m/fpu/crtbegin.o
-                0x00000a44                PROVIDE (__fini_array_end, .)
-                0x00000a44                __etext = .
-                0x00000a44                __DATA_ROM = .
+ .fini_array    0x00000b14        0x4 /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/armv7e-m/fpu/crtbegin.o
+                0x00000b18                PROVIDE (__fini_array_end, .)
+                0x00000b18                __etext = .
+                0x00000b18                __DATA_ROM = .
 
 .interrupts_ram
                 0x1fff0000        0x0
@@ -907,7 +925,7 @@ LOAD /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/armv7e-m
                 0x00000000                __VECTOR_RAM = DEFINED (__ram_vector_table__)?__VECTOR_RAM__:ORIGIN (m_interrupts)
                 0x00000000                __RAM_VECTOR_TABLE_SIZE_BYTES = DEFINED (__ram_vector_table__)?(__interrupts_ram_end__ - __interrupts_ram_start__):0x0
 
-.data           0x1fff0000       0x64 load address 0x00000a44
+.data           0x1fff0000       0x64 load address 0x00000b18
                 0x1fff0000                . = ALIGN (0x4)
                 0x1fff0000                __DATA_RAM = .
                 0x1fff0000                __data_start__ = .
@@ -920,14 +938,14 @@ LOAD /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/armv7e-m
  .jcr           0x1fff0060        0x4 /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/armv7e-m/fpu/crtend.o
                 0x1fff0064                . = ALIGN (0x4)
                 0x1fff0064                __data_end__ = .
-                0x00000aa8                __DATA_END = (__DATA_ROM + (__data_end__ - __data_start__))
+                0x00000b7c                __DATA_END = (__DATA_ROM + (__data_end__ - __data_start__))
                 0x00080000                text_end = (ORIGIN (m_text) + 0x7fbf0)
                 0x00000001                ASSERT ((__DATA_END <= text_end), region m_text overflowed with text and data)
 
-.igot.plt       0x1fff0064        0x0 load address 0x00000aa8
+.igot.plt       0x1fff0064        0x0 load address 0x00000b7c
  .igot.plt      0x00000000        0x0 /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/armv7e-m/fpu/crtbegin.o
 
-.bss            0x1fff0064       0x1c load address 0x00000aa8
+.bss            0x1fff0064       0x34 load address 0x00000b7c
                 0x1fff0064                . = ALIGN (0x4)
                 0x1fff0064                __START_BSS = .
                 0x1fff0064                __bss_start__ = .
@@ -935,9 +953,13 @@ LOAD /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/armv7e-m
  .bss           0x1fff0064       0x1c /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/armv7e-m/fpu/crtbegin.o
  *(.bss*)
  *(COMMON)
-                0x1fff0080                . = ALIGN (0x4)
-                0x1fff0080                __bss_end__ = .
-                0x1fff0080                __END_BSS = .
+ COMMON         0x1fff0080       0x18 ./I2C/i2c.o
+                0x1fff0080                SlaveID
+                0x1fff0081                MasterTransmission
+                0x1fff0084                result
+                0x1fff0098                . = ALIGN (0x4)
+                0x1fff0098                __bss_end__ = .
+                0x1fff0098                __END_BSS = .
 
 .heap           0x20000000      0x400
                 0x20000000                . = ALIGN (0x8)
@@ -998,27 +1020,27 @@ LOAD /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/armv7e-m
                 0x00000001                ASSERT ((__StackLimit >= __HeapLimit), region m_data_2 overflowed with stack and heap)
 OUTPUT(k22_testbench.elf elf32-littlearm)
 
-.debug_info     0x00000000     0x1ea6
+.debug_info     0x00000000     0x1f7e
  .debug_info    0x00000000      0x642 ./UART/uart.o
- .debug_info    0x00000642      0x165 ./Sources/main.o
- .debug_info    0x000007a7      0x3a7 ./Project_Settings/Startup_Code/startup.o
- .debug_info    0x00000b4e       0x8c ./Project_Settings/Startup_Code/startup_MK22F51212.o
- .debug_info    0x00000bda      0x5f2 ./Project_Settings/Startup_Code/system_MK22F51212.o
- .debug_info    0x000011cc      0x453 ./I2C/i2c.o
- .debug_info    0x0000161f      0x434 ./GPIO/gpio.o
- .debug_info    0x00001a53      0x453 ./FTM/ftm.o
+ .debug_info    0x00000642      0x137 ./Sources/main.o
+ .debug_info    0x00000779      0x3a7 ./Project_Settings/Startup_Code/startup.o
+ .debug_info    0x00000b20       0x8c ./Project_Settings/Startup_Code/startup_MK22F51212.o
+ .debug_info    0x00000bac      0x5f2 ./Project_Settings/Startup_Code/system_MK22F51212.o
+ .debug_info    0x0000119e      0x559 ./I2C/i2c.o
+ .debug_info    0x000016f7      0x434 ./GPIO/gpio.o
+ .debug_info    0x00001b2b      0x453 ./FTM/ftm.o
 
-.debug_abbrev   0x00000000      0x7c2
+.debug_abbrev   0x00000000      0x802
  .debug_abbrev  0x00000000      0x176 ./UART/uart.o
- .debug_abbrev  0x00000176       0xd0 ./Sources/main.o
- .debug_abbrev  0x00000246       0xfa ./Project_Settings/Startup_Code/startup.o
- .debug_abbrev  0x00000340       0x14 ./Project_Settings/Startup_Code/startup_MK22F51212.o
- .debug_abbrev  0x00000354      0x11a ./Project_Settings/Startup_Code/system_MK22F51212.o
- .debug_abbrev  0x0000046e      0x11f ./I2C/i2c.o
- .debug_abbrev  0x0000058d      0x11f ./GPIO/gpio.o
- .debug_abbrev  0x000006ac      0x116 ./FTM/ftm.o
+ .debug_abbrev  0x00000176       0xab ./Sources/main.o
+ .debug_abbrev  0x00000221       0xfa ./Project_Settings/Startup_Code/startup.o
+ .debug_abbrev  0x0000031b       0x14 ./Project_Settings/Startup_Code/startup_MK22F51212.o
+ .debug_abbrev  0x0000032f      0x11a ./Project_Settings/Startup_Code/system_MK22F51212.o
+ .debug_abbrev  0x00000449      0x184 ./I2C/i2c.o
+ .debug_abbrev  0x000005cd      0x11f ./GPIO/gpio.o
+ .debug_abbrev  0x000006ec      0x116 ./FTM/ftm.o
 
-.debug_aranges  0x00000000      0x168
+.debug_aranges  0x00000000      0x180
  .debug_aranges
                 0x00000000       0x38 ./UART/uart.o
  .debug_aranges
@@ -1030,22 +1052,22 @@ OUTPUT(k22_testbench.elf elf32-littlearm)
  .debug_aranges
                 0x00000098       0x28 ./Project_Settings/Startup_Code/system_MK22F51212.o
  .debug_aranges
-                0x000000c0       0x38 ./I2C/i2c.o
+                0x000000c0       0x50 ./I2C/i2c.o
  .debug_aranges
-                0x000000f8       0x40 ./GPIO/gpio.o
+                0x00000110       0x40 ./GPIO/gpio.o
  .debug_aranges
-                0x00000138       0x30 ./FTM/ftm.o
+                0x00000150       0x30 ./FTM/ftm.o
 
-.debug_ranges   0x00000000       0xd8
+.debug_ranges   0x00000000       0xf0
  .debug_ranges  0x00000000       0x28 ./UART/uart.o
  .debug_ranges  0x00000028       0x10 ./Sources/main.o
  .debug_ranges  0x00000038       0x10 ./Project_Settings/Startup_Code/startup.o
  .debug_ranges  0x00000048       0x18 ./Project_Settings/Startup_Code/system_MK22F51212.o
- .debug_ranges  0x00000060       0x28 ./I2C/i2c.o
- .debug_ranges  0x00000088       0x30 ./GPIO/gpio.o
- .debug_ranges  0x000000b8       0x20 ./FTM/ftm.o
+ .debug_ranges  0x00000060       0x40 ./I2C/i2c.o
+ .debug_ranges  0x000000a0       0x30 ./GPIO/gpio.o
+ .debug_ranges  0x000000d0       0x20 ./FTM/ftm.o
 
-.debug_macro    0x00000000    0x219f3
+.debug_macro    0x00000000    0x21a87
  .debug_macro   0x00000000      0x167 ./UART/uart.o
  .debug_macro   0x00000167      0x856 ./UART/uart.o
  .debug_macro   0x000009bd       0x11 ./UART/uart.o
@@ -1074,46 +1096,48 @@ OUTPUT(k22_testbench.elf elf32-littlearm)
  .debug_macro   0x0001109f       0x16 ./UART/uart.o
  .debug_macro   0x000110b5     0xeb95 ./UART/uart.o
  .debug_macro   0x0001fc4a     0x118f ./UART/uart.o
- .debug_macro   0x00020dd9      0x1e7 ./Sources/main.o
- .debug_macro   0x00020fc0       0x1c ./Sources/main.o
- .debug_macro   0x00020fdc       0x35 ./Sources/main.o
- .debug_macro   0x00021011       0x10 ./Sources/main.o
- .debug_macro   0x00021021       0x10 ./Sources/main.o
- .debug_macro   0x00021031       0x22 ./Sources/main.o
- .debug_macro   0x00021053       0xbd ./Sources/main.o
- .debug_macro   0x00021110       0x16 ./Sources/main.o
- .debug_macro   0x00021126      0x14a ./Sources/main.o
- .debug_macro   0x00021270      0x171 ./Project_Settings/Startup_Code/startup.o
- .debug_macro   0x000213e1      0x162 ./Project_Settings/Startup_Code/system_MK22F51212.o
- .debug_macro   0x00021543       0x67 ./Project_Settings/Startup_Code/system_MK22F51212.o
- .debug_macro   0x000215aa      0x171 ./I2C/i2c.o
- .debug_macro   0x0002171b      0x167 ./GPIO/gpio.o
- .debug_macro   0x00021882      0x171 ./FTM/ftm.o
+ .debug_macro   0x00020dd9      0x1e6 ./Sources/main.o
+ .debug_macro   0x00020fbf       0x46 ./Sources/main.o
+ .debug_macro   0x00021005       0x1c ./Sources/main.o
+ .debug_macro   0x00021021       0x35 ./Sources/main.o
+ .debug_macro   0x00021056       0x10 ./Sources/main.o
+ .debug_macro   0x00021066       0x10 ./Sources/main.o
+ .debug_macro   0x00021076       0x22 ./Sources/main.o
+ .debug_macro   0x00021098       0xbd ./Sources/main.o
+ .debug_macro   0x00021155       0x16 ./Sources/main.o
+ .debug_macro   0x0002116b      0x14a ./Sources/main.o
+ .debug_macro   0x000212b5      0x171 ./Project_Settings/Startup_Code/startup.o
+ .debug_macro   0x00021426      0x162 ./Project_Settings/Startup_Code/system_MK22F51212.o
+ .debug_macro   0x00021588       0x67 ./Project_Settings/Startup_Code/system_MK22F51212.o
+ .debug_macro   0x000215ef      0x180 ./I2C/i2c.o
+ .debug_macro   0x0002176f       0x40 ./I2C/i2c.o
+ .debug_macro   0x000217af      0x167 ./GPIO/gpio.o
+ .debug_macro   0x00021916      0x171 ./FTM/ftm.o
 
-.debug_line     0x00000000     0x19da
+.debug_line     0x00000000     0x1b70
  .debug_line    0x00000000      0x38c ./UART/uart.o
  .debug_line    0x0000038c      0x411 ./Sources/main.o
  .debug_line    0x0000079d      0x36f ./Project_Settings/Startup_Code/startup.o
  .debug_line    0x00000b0c       0x6d ./Project_Settings/Startup_Code/startup_MK22F51212.o
  .debug_line    0x00000b79      0x3a5 ./Project_Settings/Startup_Code/system_MK22F51212.o
- .debug_line    0x00000f1e      0x3af ./I2C/i2c.o
- .debug_line    0x000012cd      0x395 ./GPIO/gpio.o
- .debug_line    0x00001662      0x378 ./FTM/ftm.o
+ .debug_line    0x00000f1e      0x545 ./I2C/i2c.o
+ .debug_line    0x00001463      0x395 ./GPIO/gpio.o
+ .debug_line    0x000017f8      0x378 ./FTM/ftm.o
 
-.debug_str      0x00000000   0x116804
+.debug_str      0x00000000   0x116a4c
  .debug_str     0x00000000   0x11599d ./UART/uart.o
                              0x115b9e (size before relaxing)
- .debug_str     0x0011599d      0xa86 ./Sources/main.o
-                             0x116408 (size before relaxing)
- .debug_str     0x00116423      0x15e ./Project_Settings/Startup_Code/startup.o
+ .debug_str     0x0011599d      0xc48 ./Sources/main.o
+                             0x1165ca (size before relaxing)
+ .debug_str     0x001165e5      0x15e ./Project_Settings/Startup_Code/startup.o
                              0x115af4 (size before relaxing)
- .debug_str     0x00116581       0xf8 ./Project_Settings/Startup_Code/system_MK22F51212.o
+ .debug_str     0x00116743       0xf8 ./Project_Settings/Startup_Code/system_MK22F51212.o
                              0x115bb1 (size before relaxing)
- .debug_str     0x00116679       0x4c ./I2C/i2c.o
-                             0x115adb (size before relaxing)
- .debug_str     0x001166c5       0x68 ./GPIO/gpio.o
+ .debug_str     0x0011683b       0xd2 ./I2C/i2c.o
+                             0x115d35 (size before relaxing)
+ .debug_str     0x0011690d       0x68 ./GPIO/gpio.o
                              0x115ae4 (size before relaxing)
- .debug_str     0x0011672d       0xd7 ./FTM/ftm.o
+ .debug_str     0x00116975       0xd7 ./FTM/ftm.o
                              0x115b41 (size before relaxing)
 
 .comment        0x00000000       0x70
@@ -1126,15 +1150,15 @@ OUTPUT(k22_testbench.elf elf32-littlearm)
  .comment       0x00000000       0x71 ./GPIO/gpio.o
  .comment       0x00000000       0x71 ./FTM/ftm.o
 
-.debug_frame    0x00000000      0x314
+.debug_frame    0x00000000      0x37c
  .debug_frame   0x00000000       0x7c ./UART/uart.o
  .debug_frame   0x0000007c       0x2c ./Sources/main.o
  .debug_frame   0x000000a8       0x2c ./Project_Settings/Startup_Code/startup.o
  .debug_frame   0x000000d4       0x44 ./Project_Settings/Startup_Code/system_MK22F51212.o
- .debug_frame   0x00000118       0x74 ./I2C/i2c.o
- .debug_frame   0x0000018c       0x94 ./GPIO/gpio.o
- .debug_frame   0x00000220       0x60 ./FTM/ftm.o
- .debug_frame   0x00000280       0x28 /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/../../../../arm-none-eabi/lib/armv7e-m/fpu/libg_s.a(lib_a-exit.o)
- .debug_frame   0x000002a8       0x2c /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/../../../../arm-none-eabi/lib/armv7e-m/fpu/libg_s.a(lib_a-init.o)
- .debug_frame   0x000002d4       0x20 /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/../../../../arm-none-eabi/lib/armv7e-m/fpu/libg_s.a(lib_a-memset.o)
- .debug_frame   0x000002f4       0x20 /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/../../../../arm-none-eabi/lib/armv7e-m/fpu/libnosys.a(_exit.o)
+ .debug_frame   0x00000118       0xdc ./I2C/i2c.o
+ .debug_frame   0x000001f4       0x94 ./GPIO/gpio.o
+ .debug_frame   0x00000288       0x60 ./FTM/ftm.o
+ .debug_frame   0x000002e8       0x28 /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/../../../../arm-none-eabi/lib/armv7e-m/fpu/libg_s.a(lib_a-exit.o)
+ .debug_frame   0x00000310       0x2c /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/../../../../arm-none-eabi/lib/armv7e-m/fpu/libg_s.a(lib_a-init.o)
+ .debug_frame   0x0000033c       0x20 /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/../../../../arm-none-eabi/lib/armv7e-m/fpu/libg_s.a(lib_a-memset.o)
+ .debug_frame   0x0000035c       0x20 /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/../../../../arm-none-eabi/lib/armv7e-m/fpu/libnosys.a(_exit.o)
