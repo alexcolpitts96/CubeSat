@@ -203,7 +203,7 @@ Discarded input sections
  .debug_macro   0x00000000     0xeb95 ./SPI_SD/SPI0.o
  .debug_macro   0x00000000     0x118f ./SPI_SD/SPI0.o
  .debug_line    0x00000000      0x39d ./SPI_SD/SPI0.o
- .debug_str     0x00000000   0x115b42 ./SPI_SD/SPI0.o
+ .debug_str     0x00000000   0x115b4a ./SPI_SD/SPI0.o
  .comment       0x00000000       0x71 ./SPI_SD/SPI0.o
  .ARM.attributes
                 0x00000000       0x39 ./SPI_SD/SPI0.o
@@ -581,7 +581,7 @@ Discarded input sections
  .debug_macro   0x00000000     0xeb95 ./Camera/camera.o
  .debug_macro   0x00000000     0x118f ./Camera/camera.o
  .debug_line    0x00000000      0x3ec ./Camera/camera.o
- .debug_str     0x00000000   0x115b7d ./Camera/camera.o
+ .debug_str     0x00000000   0x115b85 ./Camera/camera.o
  .comment       0x00000000       0x71 ./Camera/camera.o
  .ARM.attributes
                 0x00000000       0x39 ./Camera/camera.o
@@ -1020,15 +1020,15 @@ LOAD /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/armv7e-m
                 0x00000001                ASSERT ((__StackLimit >= __HeapLimit), region m_data_2 overflowed with stack and heap)
 OUTPUT(k22_testbench.elf elf32-littlearm)
 
-.debug_info     0x00000000     0x1f7e
+.debug_info     0x00000000     0x1f86
  .debug_info    0x00000000      0x642 ./UART/uart.o
  .debug_info    0x00000642      0x137 ./Sources/main.o
  .debug_info    0x00000779      0x3a7 ./Project_Settings/Startup_Code/startup.o
- .debug_info    0x00000b20       0x8c ./Project_Settings/Startup_Code/startup_MK22F51212.o
- .debug_info    0x00000bac      0x5f2 ./Project_Settings/Startup_Code/system_MK22F51212.o
- .debug_info    0x0000119e      0x559 ./I2C/i2c.o
- .debug_info    0x000016f7      0x434 ./GPIO/gpio.o
- .debug_info    0x00001b2b      0x453 ./FTM/ftm.o
+ .debug_info    0x00000b20       0x94 ./Project_Settings/Startup_Code/startup_MK22F51212.o
+ .debug_info    0x00000bb4      0x5f2 ./Project_Settings/Startup_Code/system_MK22F51212.o
+ .debug_info    0x000011a6      0x559 ./I2C/i2c.o
+ .debug_info    0x000016ff      0x434 ./GPIO/gpio.o
+ .debug_info    0x00001b33      0x453 ./FTM/ftm.o
 
 .debug_abbrev   0x00000000      0x802
  .debug_abbrev  0x00000000      0x176 ./UART/uart.o
@@ -1124,21 +1124,21 @@ OUTPUT(k22_testbench.elf elf32-littlearm)
  .debug_line    0x00001463      0x395 ./GPIO/gpio.o
  .debug_line    0x000017f8      0x378 ./FTM/ftm.o
 
-.debug_str      0x00000000   0x116a4c
- .debug_str     0x00000000   0x11599d ./UART/uart.o
-                             0x115b9e (size before relaxing)
- .debug_str     0x0011599d      0xc48 ./Sources/main.o
-                             0x1165ca (size before relaxing)
- .debug_str     0x001165e5      0x15e ./Project_Settings/Startup_Code/startup.o
-                             0x115af4 (size before relaxing)
- .debug_str     0x00116743       0xf8 ./Project_Settings/Startup_Code/system_MK22F51212.o
-                             0x115bb1 (size before relaxing)
- .debug_str     0x0011683b       0xd2 ./I2C/i2c.o
-                             0x115d35 (size before relaxing)
- .debug_str     0x0011690d       0x68 ./GPIO/gpio.o
-                             0x115ae4 (size before relaxing)
- .debug_str     0x00116975       0xd7 ./FTM/ftm.o
-                             0x115b41 (size before relaxing)
+.debug_str      0x00000000   0x116a54
+ .debug_str     0x00000000   0x1159a5 ./UART/uart.o
+                             0x115ba6 (size before relaxing)
+ .debug_str     0x001159a5      0xc48 ./Sources/main.o
+                             0x1165d2 (size before relaxing)
+ .debug_str     0x001165ed      0x15e ./Project_Settings/Startup_Code/startup.o
+                             0x115afc (size before relaxing)
+ .debug_str     0x0011674b       0xf8 ./Project_Settings/Startup_Code/system_MK22F51212.o
+                             0x115bb9 (size before relaxing)
+ .debug_str     0x00116843       0xd2 ./I2C/i2c.o
+                             0x115d3d (size before relaxing)
+ .debug_str     0x00116915       0x68 ./GPIO/gpio.o
+                             0x115aec (size before relaxing)
+ .debug_str     0x0011697d       0xd7 ./FTM/ftm.o
+                             0x115b49 (size before relaxing)
 
 .comment        0x00000000       0x70
  .comment       0x00000000       0x70 ./UART/uart.o

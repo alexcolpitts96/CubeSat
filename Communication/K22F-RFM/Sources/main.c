@@ -66,21 +66,31 @@ void master_init() {
 	FTM1_init();
 }
 
+// allocate image_bytes of storage for image
+uint8_t **image_allocation(int image_bytes) {
+	uint8_t **s;
+
+	// allocate memory for the image buffer
+	s = (uint8_t **) calloc(image_bytes, sizeof(uint8_t *));
+
+	// allocate memory for the packets
+	for (int i = 0; i < image_bytes; i++) {
+		s[i] = calloc(PACKET_SIZE, sizeof(uint8_t));
+	}
+
+	return s;
+}
+
 int main(void) {
-	int i, mode_select, image_bytes = 4546;
+	int i, mode_select;
 	uint8_t *p;
 	uint8_t **s;
 
 	// allocate the memory for packet transmission
 	p = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
 
-	// allocate memory for the image buffer
-	s = (uint8_t **) calloc(image_bytes, sizeof(uint8_t *));
-
-	// allocate memory for the packets
-	for (i = 0; i < image_bytes; i++) {
-		s[i] = calloc(PACKET_SIZE, sizeof(uint8_t));
-	}
+	// approximate number of packets required for 300 KB image
+	s = image_allocation(4546);
 
 	// load pseudo image into image buffer
 	memcpy((uint8_t *) s[0], &test_data, sizeof(test_data));
@@ -102,7 +112,7 @@ int main(void) {
 	// 8 is imageSize test (S)
 	// 9 is packetRequest test (G)
 	// 10 is transmitPacket test (S)
-	mode_select = 7;
+	mode_select = 5;
 
 	//start as transmitter /////////////////////////////////////////////////////////////////////////////////////////
 	while (mode_select == 1) {
@@ -274,7 +284,7 @@ int main(void) {
 
 	// packetRequest test - ground station
 	while (mode_select == 9) {
-		packetRequest(p, 4-1); // request 4th block (remember 0 indexing)
+		packetRequest(p, 4 - 1); // request 4th block (remember 0 indexing)
 	}
 
 	// transmitPacket test - satellite

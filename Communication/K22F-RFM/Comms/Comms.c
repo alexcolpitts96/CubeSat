@@ -107,7 +107,7 @@ void txStart(uint8_t *p) {
 
 //////////////////////////////////// Satellite Functions ////////////////////////////////////
 
-// transmit requested block from storage (s) using buffer (p) to transmit -------------------------------- UNTESTED
+// transmit requested block from storage (s) using buffer (p) to transmit
 void transmitPacket(uint8_t *p, uint8_t **s) {
 	uint8_t packet_request = 0; // 0 when no request, 1 when contacted by ground station
 	uint8_t i;
