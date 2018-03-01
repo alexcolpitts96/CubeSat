@@ -32,5 +32,6 @@ SPI_SD \
 Project_Settings/Startup_Code \
 I2C \
 GPIO \
+FTM \
 Camera \
 

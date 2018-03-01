@@ -67,10 +67,11 @@ void master_init() {
 	RFM69_DIO0_Init();
 	RFM69_Init(); // must always be after the SPI interface has been enabled
 	FTM0_init();
+	FTM1_init();
 }
 
 int main(void) {
-	int i, mode_select, image_bytes = 4;
+	int i, mode_select, image_bytes = 4546;
 	uint8_t *p;
 	uint8_t **s;
 
@@ -78,7 +79,7 @@ int main(void) {
 	p = (uint8_t *) calloc(MAX_PACKET_SIZE, sizeof(uint8_t));
 
 	// allocate memory for the image buffer
-	s = (uint8_t **) calloc(image_bytes, sizeof(uint8_t));
+	s = (uint8_t **) calloc(image_bytes, sizeof(uint8_t *));
 
 	// allocate memory for the packets
 	for (i = 0; i < image_bytes; i++) {
@@ -90,7 +91,7 @@ int main(void) {
 	memcpy((uint8_t *) s[1], &test_data2, sizeof(test_data2));
 	memcpy((uint8_t *) s[2], &test_data3, sizeof(test_data3));
 	memcpy((uint8_t *) s[3], &test_data4, sizeof(test_data4));
-	//memcpy((uint8_t *) s[4], &test_data5, sizeof(test_data5));
+	memcpy((uint8_t *) s[4], &test_data5, sizeof(test_data5));
 
 	// init all the modules needed
 	master_init();
@@ -105,7 +106,7 @@ int main(void) {
 	// 8 is imageSize test (S)
 	// 9 is packetRequest test (G)
 	// 10 is transmitPacket test (S)
-	mode_select = 9;
+	mode_select = 6;
 
 	//start as transmitter /////////////////////////////////////////////////////////////////////////////////////////
 	while (mode_select == 1) {
@@ -254,12 +255,9 @@ int main(void) {
 	// FTM0 TEST
 	while (mode_select == 6) {
 
-		// reset counter to 0;
-		FTM0_CNT_RESET();
+		// delay for a known amount of time
+		FTM1_delay(10); // delay 1 s
 
-		// run through loop until timeout occurs
-		while (!FTM0_WAIT())
-			;
 		putty_putchar('s');
 	}
 
@@ -280,7 +278,7 @@ int main(void) {
 
 	// packetRequest test - ground station
 	while (mode_select == 9) {
-		packetRequest(p, 3); // request 4th block (remember 0 indexing)
+		packetRequest(p, 4-1); // request 4th block (remember 0 indexing)
 	}
 
 	// transmitPacket test - satellite
