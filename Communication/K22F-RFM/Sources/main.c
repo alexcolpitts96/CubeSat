@@ -44,11 +44,7 @@
 #include "../Comms/Comms.h"
 
 // definitions
-#define RFM_WRITE 0x80
-#define RFM_READ 0x00
-#define RFM_SAFE_BTYE 0xFF // this is a safe register to address as it doesn't exist
-#define PACKET_SIZE 66
-#define MAX_PACKET_SIZE 66 // limited by RFM69HCW FIFO
+#define PACKET_SIZE 66 // limited by RFM69HCW FIFO
 
 // cubesat commands
 const uint8_t start_command[PACKET_SIZE] = "start packet transmission"; // might need to be changed for packet length
@@ -76,7 +72,7 @@ int main(void) {
 	uint8_t **s;
 
 	// allocate the memory for packet transmission
-	p = (uint8_t *) calloc(MAX_PACKET_SIZE, sizeof(uint8_t));
+	p = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
 
 	// allocate memory for the image buffer
 	s = (uint8_t **) calloc(image_bytes, sizeof(uint8_t *));
@@ -106,7 +102,7 @@ int main(void) {
 	// 8 is imageSize test (S)
 	// 9 is packetRequest test (G)
 	// 10 is transmitPacket test (S)
-	mode_select = 6;
+	mode_select = 7;
 
 	//start as transmitter /////////////////////////////////////////////////////////////////////////////////////////
 	while (mode_select == 1) {
