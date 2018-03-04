@@ -103,7 +103,7 @@ uint8_t SPI1_read(uint8_t regaddr){
 }
 
 void cam_cfg(struct ov2640_reg_cfg *vals){
-	while(((vals->reg)!=0xff) && ((vals->val)!=0xff)){ // both values aren't 0xff
+	while(((vals->reg)!=0xff) || ((vals->val)!=0xff)){ // both values aren't 0xff
 		I2CWriteRegister(vals->reg,vals->val);
 		vals++;
 	}
