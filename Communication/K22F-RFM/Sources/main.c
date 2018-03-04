@@ -42,9 +42,11 @@
 #include "../SPI0/SPI0_driver.h"
 #include "../GPIO/gpio.h" // included in RFM69 driver
 #include "../Comms/Comms.h"
+#include "image.h"
 
 // definitions
 #define PACKET_SIZE 66 // limited by RFM69HCW FIFO
+#define IMAGE_PACKETS 4546
 
 // cubesat commands
 const uint8_t start_command[PACKET_SIZE] = "start packet transmission"; // might need to be changed for packet length
@@ -81,6 +83,22 @@ uint8_t **image_allocation(int image_bytes) {
 	return s;
 }
 
+// capture and store the image in the data structure
+void capture_store(uint8_t *p, uint8_t **s) {
+	// send capture image command
+
+	// do any other pre collection actions
+
+	for (int i = 0; i < IMAGE_PACKETS; i++) { // i is packet number
+		for (int j = 0; j < PACKET_SIZE; j++) { // j is byte number
+			// read in byte from camera
+
+			// dummy write
+			s[i][j] = 0;
+		}
+	}
+}
+
 int main(void) {
 	int i, mode_select;
 	uint8_t *p;
@@ -90,7 +108,7 @@ int main(void) {
 	p = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
 
 	// approximate number of packets required for 300 KB image
-	s = image_allocation(4546);
+	s = image_allocation(IMAGE_PACKETS);
 
 	// load pseudo image into image buffer
 	memcpy((uint8_t *) s[0], &test_data, sizeof(test_data));
@@ -112,7 +130,7 @@ int main(void) {
 	// 8 is imageSize test (S)
 	// 9 is packetRequest test (G)
 	// 10 is transmitPacket test (S)
-	mode_select = 5;
+	mode_select = 9;
 
 	//start as transmitter /////////////////////////////////////////////////////////////////////////////////////////
 	while (mode_select == 1) {
@@ -284,7 +302,7 @@ int main(void) {
 
 	// packetRequest test - ground station
 	while (mode_select == 9) {
-		packetRequest(p, 4 - 1); // request 4th block (remember 0 indexing)
+		packetRequest(p, 3); // request 4th block (remember 0 indexing)
 	}
 
 	// transmitPacket test - satellite

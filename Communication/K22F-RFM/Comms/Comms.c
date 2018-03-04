@@ -57,11 +57,12 @@ void packetRequest(uint8_t *p, uint16_t block) {
 		}
 	}
 
-	// print the block number first to the data sheet
+	/* print the block number first to the data sheet
 	sprintf((char *) temp, "block number %d", block); // warning is since it is uint8_t not char (equivalent)
 	for (i = 0; i < PACKET_SIZE; i++) {
 		putty_putchar(temp[i]);
 	}
+	//*/
 
 	putty_putstr("\r\n");
 

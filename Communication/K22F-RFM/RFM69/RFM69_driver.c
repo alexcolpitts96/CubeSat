@@ -322,7 +322,7 @@ uint8_t RFM69_RECEIVE_TIMEOUT(uint8_t *buffer){
 		return 1;
 	}
 
-	// clear buffer and return -1 (error)
+	// clear buffer and return 0 (error)
 	else{
 		// clear the buffer
 		memset(buffer, 0, sizeof(uint8_t)*PACKET_SIZE);
