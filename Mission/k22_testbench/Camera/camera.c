@@ -10,6 +10,8 @@
  */
 
 #include "fsl_device_registers.h"
+#include "camera.h"
+#include "../I2C/i2c.h"
 
 void SPI1_Init(int frame_size){
 	// taken from reference manual and https://community.nxp.com/thread/372146#comment-562567 (For FRDM-K64F)
@@ -40,7 +42,7 @@ void SPI1_Init(int frame_size){
 	SPI1_CTAR0 = 0;
 
 	// configure SPI1
-	SPI1_CTAR0 |= SPI_CTAR_FMSZ(frame_size-1) | SPI_CTAR_BR(0x1) | SPI_CTAR_PBR(0) | SPI_CTAR_DBR_MASK; // CPHA = 0, CPOL = 0, BR can be changed with parameter in brackets
+	SPI1_CTAR0 |= SPI_CTAR_FMSZ(frame_size-1) | SPI_CTAR_BR(0xC); // CPHA = 0, CPOL = 0, BR can be changed with parameter in brackets
 	SPI1_MCR |= SPI_MCR_MSTR_MASK | SPI_MCR_PCSIS_MASK; // master, CS active low
 	SPI1_MCR &= (~SPI_MCR_DIS_RXF_MASK) | (~SPI_MCR_DIS_TXF_MASK); // enable rx and tx FIFOs
 	SPI1_MCR &= (~SPI_MCR_MDIS_MASK) & (~SPI_MCR_HALT_MASK); // enable module clock and start transfers
@@ -100,22 +102,70 @@ uint8_t SPI1_read(uint8_t regaddr){
 	return (SPI1_RX() & 0x00FF);
 }
 
-// currently: JPEG format, 320x240
-void camera_init(){
-
-}
-
-// writes val to address given by reg over I2C bus
-void cam_reg_wr(uint8_t reg, uint8_t val){
-	uint16_t txval = reg<<8 | val;
-
-}
-
-// all this does so far is just set it to burst mode and spit out the whole fifo
-// (I think)
-void capture(){
-	SPI1_TX(0x8401);
-	SPI1_PUSHR = SPI_PUSHR_PCS(1) | SPI_PUSHR_CONT_MASK;
-	SPI1_TX(0x3C00);
+void cam_cfg(struct ov2640_reg_cfg *vals){
+	while(((vals->reg)!=0xff) && ((vals->val)!=0xff)){ // both values aren't 0xff
+		I2CWriteRegister(vals->reg,vals->val);
+		vals++;
+	}
 	return;
+}
+
+// currently: JPEG format, 1600x1200
+void camera_init(){
+	I2CWriteRegister(0xff,0x01);
+	I2CWriteRegister(0x12,0x80);
+	cam_cfg(JPEG_INIT); // jpeg init
+	cam_cfg(YUV_422); // yuv color select
+	cam_cfg(JPEG); // jpeg select
+	I2CWriteRegister(0xff,0x01);
+	I2CWriteRegister(0x15,0x00);
+	cam_cfg(JPEG_LARGE); // 1600x1200 select
+	return;
+}
+
+uint8_t cam_reg_read(uint8_t regaddr){
+	SPI1_TX(regaddr<<8);
+	return SPI1_RX() & 0x7F;
+}
+
+uint32_t fifo_len(){
+	uint32_t len1 = cam_reg_read(0x42); // bits 7-0
+	uint32_t len2 = cam_reg_read(0x43); // bits 15-8
+	uint32_t len3 = cam_reg_read(0x44); // bits 18-16
+	return ((len3<<16) | (len2<<8) | len1) & 0x07fffff; // combine them, return length of fifo in
+}
+
+int capture_done(){
+	return (cam_reg_read(0x41) & 0x08)>>3; // return 1 for capture done, 0 otherwise
+}
+
+// read in the entire fifo and return a pointer to it in memory
+uint8_t *fifo_read(){
+	// check fifo length for errors
+	uint32_t len = fifo_len();
+	if((len == 0) || (len > MAX_FIFO_LENGTH)){
+		return NULL; // ERROR
+	}
+	int read_count = 0;
+	uint8_t *write;
+	uint8_t *img;
+	write = malloc(len*sizeof(uint8_t)); // allocate the entire image
+	img = write; // image start is where write pointer currently is
+	while(read_count<len){
+		*write = cam_reg_read(0x3D);
+		write++;
+	}
+	return img;
+}
+
+// sends capture command and returns pointer to start of image byte array (quite large)
+uint8_t *capture(){
+	flush_fifo(); // clear fifo flag/flush fifo
+	start_capture();
+	uint8_t *img = NULL;
+	while(!(capture_done())); // check flag for capture complete
+	img = fifo_read(); // read entire fifo in
+
+	flush_fifo(); // finished reading, so empty fifo
+	return img; // NULL if error
 }

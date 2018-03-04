@@ -14,30 +14,33 @@
 #include <stdio.h>
 
 int main(){
-
 	FTM0_init();
-	//i2c_init();
 	GPIO_init();
 	UART1_putty_init();
 	init_I2C();
-	//SPI1_Init(16);
+	SPI1_Init(16);
 	redLED(0);
 	greenLED(0);
 	//blueLED(1);
+	camera_init();
+	enable_fifo();
+	//capture();
 	while(1){
+//		flush_fifo(); // clear fifo flag/flush fifo
+//		start_capture();
 
-		while(1){
-			I2CWriteRegister(0xff,0x00);
+//		char buf[10];
+//		int cap = 0;
+//		int len = 0;
+//		while(!cap){
+//			sprintf(buf, "capture: %d\t fifo: %d\r\n",cap, len);
+//			putty_putstr(buf);
+//			cap = capture_done();
+//			len = fifo_len();
+//		}
+		capture();
 
-		}
-		putty_putstr("a");
-		//i2c_write(0xFF, 0x01); // write 0x01 to register 0xFF
-		//putty_putchar('a');
-		//SPI1_TX(0x80FA);
-		//rec = SPI1_read(0x00);
-		//char buf[8];
-		//sprintf(buf,"0x%X\n\r",rec);
-		//putty_putstr(buf);
+
 	}
 	return 0;
 }
