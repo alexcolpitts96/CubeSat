@@ -57,11 +57,12 @@ void packetRequest(uint8_t *p, uint16_t block) {
 		}
 	}
 
-	// print the block number first to the data sheet
+	/* print the block number first to the data sheet
 	sprintf((char *) temp, "block number %d", block); // warning is since it is uint8_t not char (equivalent)
 	for (i = 0; i < PACKET_SIZE; i++) {
 		putty_putchar(temp[i]);
 	}
+	//*/
 
 	putty_putstr("\r\n");
 
@@ -107,7 +108,7 @@ void txStart(uint8_t *p) {
 
 //////////////////////////////////// Satellite Functions ////////////////////////////////////
 
-// transmit requested block from storage (s) using buffer (p) to transmit -------------------------------- UNTESTED
+// transmit requested block from storage (s) using buffer (p) to transmit
 void transmitPacket(uint8_t *p, uint8_t **s) {
 	uint8_t packet_request = 0; // 0 when no request, 1 when contacted by ground station
 	uint8_t i;
