@@ -28,6 +28,9 @@
  * rising directly or indirectly as a result of the advise or assistance
  * supplied CUSTOMER in connectionwith product, services or goods supplied
  * under this Agreement.
+ *
+ * Modified by Quinn Selby based on Freescale i2c libraries for k64f.
+ *
  */
 
 
@@ -55,6 +58,10 @@ void init_I2C(void)
 	/* configure GPIO for I2C0 function */
 	PORTB_PCR2 = PORT_PCR_MUX(2);
 	PORTB_PCR3 = PORT_PCR_MUX(2);
+
+	// REALLY IMPORTANT: SET PINS TO OPEN DRAIN
+	PORTB_PCR2 |= PORT_PCR_ODE_MASK;
+	PORTB_PCR3 |= PORT_PCR_ODE_MASK;
 
 	I2C0_F = 0x1E;					/* set MULT and ICR */
 	I2C0_C1 = I2C_C1_IICEN_MASK;	/* enable IIC */
@@ -152,15 +159,12 @@ void I2CWriteRegister(unsigned char u8RegisterAddress, unsigned char u8Data)
 	/* send data to slave */
 	IIC_StartTransmission(SlaveID, MWSR);
 	i2c_Wait();
-	delay_us(1);
 
 	I2C0_D = u8RegisterAddress;
 	i2c_Wait();
-	delay_us(1);
 
 	I2C0_D = u8Data;
 	i2c_Wait();
-	delay_us(1);
 
 	i2c_Stop();
 

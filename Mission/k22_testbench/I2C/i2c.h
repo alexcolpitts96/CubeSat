@@ -28,6 +28,8 @@
  * rising directly or indirectly as a result of the advise or assistance
  * supplied CUSTOMER in connectionwith product, services or goods supplied
  * under this Agreement.
+ *
+ * Modified by Quinn Selby based on Freescale i2c libraries for k64f.
  */
 
 #ifndef __I2C_H

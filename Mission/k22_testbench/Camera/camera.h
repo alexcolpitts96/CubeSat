@@ -8,6 +8,13 @@
 #ifndef CAMERA__CAMERA_H_
 #define CAMERA__CAMERA_H_
 
+#define MAX_FIFO_LENGTH 0x5FFFF // 384 kB
+
+#define flush_fifo() SPI1_TX(0x8401)
+#define start_capture() SPI1_TX(8101);\
+						SPI1_TX(0x8402)
+#define enable_fifo() SPI1_TX(0x8312) // enable fifo mode, vsync active low
+
 struct ov2640_reg_cfg{
 	uint8_t reg;
 	uint8_t val;
@@ -23,11 +30,19 @@ void SPI1_TX(uint16_t tx_data);
 
 uint8_t SPI1_read(uint8_t regaddr);
 
+void cam_cfg(struct ov2640_reg_cfg *vals);
+
 void camera_init();
 
-void cam_reg_wr(uint8_t reg, uint8_t val);
+uint8_t cam_reg_read(uint8_t regaddr);
 
-void capture();
+uint32_t fifo_len();
+
+int capture_done();
+
+uint8_t *fifo_read();
+
+uint8_t *capture();
 
 /* #######################################################
  * #############BEGIN REGISTER DEFINITIONS################
@@ -231,8 +246,38 @@ struct ov2640_reg_cfg JPEG_INIT[] =
 		{ 0xff, 0xff },
 };
 
-// 320x240 JPEG
-struct ov2640_reg_cfg JPEG_SMALL[] =
+// YUV
+struct ov2640_reg_cfg YUV_422[] =
+{
+		  { 0xFF, 0x00 },
+		  { 0x05, 0x00 },
+		  { 0xDA, 0x10 },
+		  { 0xD7, 0x03 },
+		  { 0xDF, 0x00 },
+		  { 0x33, 0x80 },
+		  { 0x3C, 0x40 },
+		  { 0xe1, 0x77 },
+		  { 0x00, 0x00 },
+		  { 0xff, 0xff },
+};
+
+
+// JPEG select
+struct ov2640_reg_cfg JPEG[] =
+{
+		  { 0xe0, 0x14 },
+		  { 0xe1, 0x77 },
+		  { 0xe5, 0x1f },
+		  { 0xd7, 0x03 },
+		  { 0xda, 0x10 },
+		  { 0xe0, 0x00 },
+		  { 0xFF, 0x01 },
+		  { 0x04, 0x08 },
+		  { 0xff, 0xff },
+};
+
+// 1600x1200 JPEG
+struct ov2640_reg_cfg JPEG_LARGE[] =
 {
 		{ 0xff, 0x01 },
 		{ 0x12, 0x40 },
