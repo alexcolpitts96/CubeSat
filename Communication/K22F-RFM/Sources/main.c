@@ -45,18 +45,22 @@
 #include "image.h"
 
 // definitions
-#define PACKET_SIZE 66 // limited by RFM69HCW FIFO
-#define IMAGE_PACKETS 4546
+//#define PACKET_SIZE 66 // limited by RFM69HCW FIFO
+#define PACKET_SIZE 10 // also in Comms.c
+//#define IMAGE_PACKETS 4546
+#define IMAGE_PACKETS 859
+#define IMAGE_SIZE 8590
 
 // cubesat commands
 const uint8_t start_command[PACKET_SIZE] = "start packet transmission"; // might need to be changed for packet length
 
-// for testing purposes
+/*// for testing purposes
 const uint8_t test_data[PACKET_SIZE] = "test data from block number 0";
 const uint8_t test_data2[PACKET_SIZE] = "test data from block number 1";
 const uint8_t test_data3[PACKET_SIZE] = "test data from block number 2";
 const uint8_t test_data4[PACKET_SIZE] = "test data from block number 3";
 const uint8_t test_data5[PACKET_SIZE] = "test data from block number 4";
+//*/
 
 void master_init() {
 	UART0_Init();
@@ -84,7 +88,8 @@ uint8_t **image_allocation(int image_bytes) {
 }
 
 // capture and store the image in the data structure
-void capture_store(uint8_t *p, uint8_t **s) {
+void capture_store(uint8_t **s) {
+	int image_i = 0;
 	// send capture image command
 
 	// do any other pre collection actions
@@ -93,8 +98,9 @@ void capture_store(uint8_t *p, uint8_t **s) {
 		for (int j = 0; j < PACKET_SIZE; j++) { // j is byte number
 			// read in byte from camera
 
-			// dummy write
-			s[i][j] = 0;
+			// read dummy image
+			s[i][j] = test_image[image_i];
+			image_i++;
 		}
 	}
 }
@@ -107,15 +113,19 @@ int main(void) {
 	// allocate the memory for packet transmission
 	p = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
 
-	// approximate number of packets required for 300 KB image
+	// approximate number of packets required for image
 	s = image_allocation(IMAGE_PACKETS);
 
-	// load pseudo image into image buffer
+	// read in fake image
+	capture_store(s);
+
+	/*// load pseudo image into image buffer
 	memcpy((uint8_t *) s[0], &test_data, sizeof(test_data));
 	memcpy((uint8_t *) s[1], &test_data2, sizeof(test_data2));
 	memcpy((uint8_t *) s[2], &test_data3, sizeof(test_data3));
 	memcpy((uint8_t *) s[3], &test_data4, sizeof(test_data4));
 	memcpy((uint8_t *) s[4], &test_data5, sizeof(test_data5));
+	//*/
 
 	// init all the modules needed
 	master_init();
@@ -250,7 +260,7 @@ int main(void) {
 
 		// prepare packet
 		memset(p, 0, sizeof(uint8_t) * PACKET_SIZE);
-		memcpy((uint8_t *) p, &test_data, sizeof(test_data));
+		//memcpy((uint8_t *) p, &test_data, sizeof(test_data)); //------------------------ UNCOMMENT FOR IT TO WORK
 
 		// transmit packet multiple times
 		RFM69_SEND_TIMEOUT(p);
@@ -302,8 +312,17 @@ int main(void) {
 
 	// packetRequest test - ground station
 	while (mode_select == 9) {
-		packetRequest(p, 3); // request 4th block (remember 0 indexing)
+
+		// retreive all of the packets
+		for(int i = 0; i < IMAGE_PACKETS; i++){
+			packetRequest(p, i);
+		}
+
+		mode_select = 11; // do nothing once sent
 	}
+
+	// do nothing
+/	while(mode_select == 11);
 
 	// transmitPacket test - satellite
 	while (mode_select == 10) {
