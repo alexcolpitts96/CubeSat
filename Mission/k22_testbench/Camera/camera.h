@@ -40,9 +40,9 @@ uint32_t fifo_len();
 
 int capture_done();
 
-uint8_t *fifo_read();
+void fifo_read();
 
-uint8_t *capture();
+void capture();
 
 /* #######################################################
  * #############BEGIN REGISTER DEFINITIONS################

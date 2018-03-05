@@ -10,8 +10,9 @@ int main(){
 	long i;
 	char *buffer;
 	
-	log = fopen("2018-03-04-120029.log", "r");
-	image = fopen("test.jpeg", "w");
+	//log = fopen("2018-03-04-120029.log", "r");
+	log = fopen("img.log", "r");
+	image = fopen("camera.jpeg", "w");
 
 	// read log into buffer
 	fseek(log, 0, SEEK_END);          
@@ -21,10 +22,10 @@ int main(){
 	fread(buffer, filelen, 1, log);
 	fclose(log);
 	
-	printf("Image Size: %ld\n", filelen);
-	printf("Removing %ld char", filelen - IMAGE_SIZE);
-	
-	for(i = filelen-IMAGE_SIZE; i < filelen; i++){
+	printf("Log Size: %ld\n", filelen);	
+
+    // header has 80 bytes of junk to remove
+	for(i = 79; i < filelen; i++){
 		fprintf(image, "%c", buffer[i]);
 	}
 	

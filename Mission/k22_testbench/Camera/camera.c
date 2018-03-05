@@ -12,6 +12,7 @@
 #include "fsl_device_registers.h"
 #include "camera.h"
 #include "../I2C/i2c.h"
+#include "../UART/uart.h"
 
 void SPI1_Init(int frame_size){
 	// taken from reference manual and https://community.nxp.com/thread/372146#comment-562567 (For FRDM-K64F)
@@ -140,32 +141,34 @@ int capture_done(){
 }
 
 // read in the entire fifo and return a pointer to it in memory
-uint8_t *fifo_read(){
+void fifo_read(){
 	// check fifo length for errors
 	uint32_t len = fifo_len();
 	if((len == 0) || (len > MAX_FIFO_LENGTH)){
-		return NULL; // ERROR
+		return; // ERROR
 	}
 	int read_count = 0;
-	uint8_t *write;
-	uint8_t *img;
-	write = malloc(len*sizeof(uint8_t)); // allocate the entire image
-	img = write; // image start is where write pointer currently is
+	uint8_t imgbyte;
+//	uint8_t *write;
+//	uint8_t *img;
+//	write = malloc(len*sizeof(uint8_t)); // allocate the entire image
+//	img = write; // image start is where write pointer currently is
 	while(read_count<len){
-		*write = cam_reg_read(0x3D);
-		write++;
+		imgbyte = cam_reg_read(0x3D);
+		putty_putchar(imgbyte);
+		read_count++;
 	}
-	return img;
+	return;
 }
 
 // sends capture command and returns pointer to start of image byte array (quite large)
-uint8_t *capture(){
+void capture(){
 	flush_fifo(); // clear fifo flag/flush fifo
 	start_capture();
 	uint8_t *img = NULL;
 	while(!(capture_done())); // check flag for capture complete
-	img = fifo_read(); // read entire fifo in
+	fifo_read(); // read entire fifo in
 
 	flush_fifo(); // finished reading, so empty fifo
-	return img; // NULL if error
+	return; // NULL if error
 }
