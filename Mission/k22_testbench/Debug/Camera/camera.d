@@ -10,7 +10,7 @@ Camera/camera.o: ../Camera/camera.c \
  ../SDK/platform/devices/MK22F51212/include/MK22F51212.h \
  ../SDK/platform/devices/MK22F51212/include/fsl_bitaccess.h \
  ../SDK/platform/devices/MK22F51212/include/MK22F51212_features.h \
- ../Camera/camera.h ../Camera/../I2C/i2c.h
+ ../Camera/camera.h ../Camera/../I2C/i2c.h ../Camera/../UART/uart.h
 
 ../SDK/platform/devices/fsl_device_registers.h:
 
@@ -37,3 +37,5 @@ Camera/camera.o: ../Camera/camera.c \
 ../Camera/camera.h:
 
 ../Camera/../I2C/i2c.h:
+
+../Camera/../UART/uart.h:
