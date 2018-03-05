@@ -11,9 +11,10 @@ int main(){
 	char *buffer;
 	
 	//log = fopen("2018-03-04-120029.log", "r");
-	log = fopen("img.log", "r");
-	image = fopen("camera.jpeg", "w");
-	image_txt = fopen("camera.txt", "w");
+	log = fopen("quinn_image3.log", "r");
+	//log = fopen("img.log", "r");
+	image = fopen("test.jpeg", "w");
+	image_txt = fopen("test.txt", "w");
 
 	// read log into buffer
 	fseek(log, 0, SEEK_END);          
@@ -26,7 +27,7 @@ int main(){
 	printf("Log Size: %ld\n", filelen);	
 
     // header has 80 bytes of junk to remove
-	for(i = 80; i < filelen; i++){
+	for(i = 79; i < filelen; i++){		
 		fprintf(image, "%c", buffer[i]);
 		fprintf(image_txt, "%c", buffer[i]);
 	}
