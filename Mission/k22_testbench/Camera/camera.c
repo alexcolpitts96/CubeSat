@@ -120,13 +120,17 @@ void camera_init(){
 	cam_cfg(JPEG); // jpeg select
 	I2CWriteRegister(0xff,0x01);
 	I2CWriteRegister(0x15,0x00);
+	//cam_cfg(JPEG_SMALL); // 320x240 init
 	cam_cfg(JPEG_LARGE); // 1600x1200 select
 	return;
 }
 
 uint8_t cam_reg_read(uint8_t regaddr){
+	uint8_t tmp;
 	SPI1_TX(regaddr<<8);
-	return SPI1_RX() & 0x7F;
+	tmp = SPI1_RX();
+	Pause();
+	return tmp;
 }
 
 uint32_t fifo_len(){
@@ -144,28 +148,30 @@ int capture_done(){
 void fifo_read(){
 	// check fifo length for errors
 	uint32_t len = fifo_len();
-	if((len == 0) || (len > MAX_FIFO_LENGTH)){
+	if((len == 0) || (len >= MAX_FIFO_LENGTH)){
 		return; // ERROR
 	}
 	int read_count = 0;
-	uint8_t imgbyte;
-//	uint8_t *write;
-//	uint8_t *img;
-//	write = malloc(len*sizeof(uint8_t)); // allocate the entire image
-//	img = write; // image start is where write pointer currently is
+	uint8_t *write;
+	uint8_t *img;
+	uint8_t *vomit = calloc(len, sizeof(uint8_t)); // allocate the entire image
+	img = write; // image start is where write pointer currently is
+	uint8_t bleh;
+
 	while(read_count<len){
-		imgbyte = cam_reg_read(0x3D);
-		putty_putchar(imgbyte);
-		read_count++;
+		 bleh = cam_reg_read(0x3D);
+		 vomit[read_count] = bleh;
+		 read_count++;
+		 putty_putchar(bleh);
 	}
 	return;
 }
 
 // sends capture command and returns pointer to start of image byte array (quite large)
 void capture(){
+	enable_fifo();
 	flush_fifo(); // clear fifo flag/flush fifo
 	start_capture();
-	uint8_t *img = NULL;
 	while(!(capture_done())); // check flag for capture complete
 	fifo_read(); // read entire fifo in
 
