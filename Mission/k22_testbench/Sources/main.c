@@ -14,6 +14,7 @@
 #include <stdio.h>
 
 int main(){
+
 	FTM0_init();
 	GPIO_init();
 	UART1_putty_init();
