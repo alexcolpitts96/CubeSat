@@ -55,12 +55,12 @@
 const uint8_t start_command[PACKET_SIZE] = "start packet transmission"; // might need to be changed for packet length
 
 /*// for testing purposes
-const uint8_t test_data[PACKET_SIZE] = "test data from block number 0";
-const uint8_t test_data2[PACKET_SIZE] = "test data from block number 1";
-const uint8_t test_data3[PACKET_SIZE] = "test data from block number 2";
-const uint8_t test_data4[PACKET_SIZE] = "test data from block number 3";
-const uint8_t test_data5[PACKET_SIZE] = "test data from block number 4";
-//*/
+ const uint8_t test_data[PACKET_SIZE] = "test data from block number 0";
+ const uint8_t test_data2[PACKET_SIZE] = "test data from block number 1";
+ const uint8_t test_data3[PACKET_SIZE] = "test data from block number 2";
+ const uint8_t test_data4[PACKET_SIZE] = "test data from block number 3";
+ const uint8_t test_data5[PACKET_SIZE] = "test data from block number 4";
+ //*/
 
 void master_init() {
 	UART0_Init();
@@ -120,12 +120,12 @@ int main(void) {
 	capture_store(s);
 
 	/*// load pseudo image into image buffer
-	memcpy((uint8_t *) s[0], &test_data, sizeof(test_data));
-	memcpy((uint8_t *) s[1], &test_data2, sizeof(test_data2));
-	memcpy((uint8_t *) s[2], &test_data3, sizeof(test_data3));
-	memcpy((uint8_t *) s[3], &test_data4, sizeof(test_data4));
-	memcpy((uint8_t *) s[4], &test_data5, sizeof(test_data5));
-	//*/
+	 memcpy((uint8_t *) s[0], &test_data, sizeof(test_data));
+	 memcpy((uint8_t *) s[1], &test_data2, sizeof(test_data2));
+	 memcpy((uint8_t *) s[2], &test_data3, sizeof(test_data3));
+	 memcpy((uint8_t *) s[3], &test_data4, sizeof(test_data4));
+	 memcpy((uint8_t *) s[4], &test_data5, sizeof(test_data5));
+	 //*/
 
 	// init all the modules needed
 	master_init();
@@ -140,7 +140,9 @@ int main(void) {
 	// 8 is imageSize test (S)
 	// 9 is packetRequest test (G)
 	// 10 is transmitPacket test (S)
-	mode_select = 9;
+	// 11 is an empty state
+	// 12 is printing image to putty
+	mode_select = 12;
 
 	//start as transmitter /////////////////////////////////////////////////////////////////////////////////////////
 	while (mode_select == 1) {
@@ -314,7 +316,7 @@ int main(void) {
 	while (mode_select == 9) {
 
 		// retreive all of the packets
-		for(int i = 0; i < IMAGE_PACKETS; i++){
+		for (int i = 0; i < IMAGE_PACKETS; i++) {
 			packetRequest(p, i);
 		}
 
@@ -322,7 +324,16 @@ int main(void) {
 	}
 
 	// do nothing
-/	while(mode_select == 11);
+	while (mode_select == 11)
+		;
+
+	while (mode_select == 12) {
+		for (i = 0; i < sizeof(test_image); i++) {
+			putty_putchar(test_image[i]);
+		}
+
+		mode_select = 11;
+	}
 
 	// transmitPacket test - satellite
 	while (mode_select == 10) {

@@ -1,20 +1,17 @@
 #include "stdio.h"
 #include "stdlib.h"
-#include "stdint.h"
 
-#define IMAGE_SIZE 8590
+void putty2jpeg(char *, char *);
 
-int main(){
-	FILE *log, *image, *image_txt;
+// take the log name and convert to image
+void putty2jpeg(char *filename, char *jpeg_name){
+	FILE *log, *image;
 	long filelen;
 	long i;
 	char *buffer;
 	
-	//log = fopen("2018-03-04-120029.log", "r");
-	log = fopen("quinn_image3.log", "r");
-	//log = fopen("img.log", "r");
-	image = fopen("test.jpeg", "w");
-	image_txt = fopen("test.txt", "w");
+	log = fopen(filename, "r");
+	image = fopen(jpeg_name, "w");
 
 	// read log into buffer
 	fseek(log, 0, SEEK_END);          
@@ -23,15 +20,13 @@ int main(){
 	buffer = (char *)malloc((filelen+1)*sizeof(char)); // Enough memory for file + \0
 	fread(buffer, filelen, 1, log);
 	fclose(log);
-	
-	printf("Log Size: %ld\n", filelen);	
 
     // header has 80 bytes of junk to remove
 	for(i = 79; i < filelen; i++){		
 		fprintf(image, "%c", buffer[i]);
-		fprintf(image_txt, "%c", buffer[i]);
 	}
 	
 	fclose(image);
-	return 0;	
+
+	return;
 }

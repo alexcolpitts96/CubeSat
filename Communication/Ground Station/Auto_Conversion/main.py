@@ -2,26 +2,23 @@
 # Author: Alex Colpitts
 # Date: March 5, 2018
 
-import os
+# NOTE: User must be part of dialout user group
+#       Check using the following: $id -Gn <username>
+#       Add using the following: $sudo usermod -a -G dialout <username>
+#       User must logout and back in to gain access
 
-# get current working directory (cwd)
-cwd = os.getcwd()
+import sys
+import subprocess
+import time
+from putty2jpeg import *
 
-# create log directory if not already in existence -------------------------------------
-log_dir = cwd + "/logs/"
-dir_exist = os.path.exists(log_dir)
+# open putty and collect data
+# first time run: the next line uncommented and save configuration as K22F
+#os.system("gksudo putty")
+#os.system("putty -load K22F")  # create putty configuration and save
+#time.sleep(5)
 
-if not dir_exist:
-    os.mkdir(log_dir)
-
-# create a directory called images is it doesn't already exist -------------------------
-image_dir = cwd + "/images/"
-dir_exist = os.path.exists(image_dir)
-
-if not dir_exist:
-    os.mkdir(image_dir)
-
-# check if any log files exist ---------------------------------------------------------
-for FILE in os.listdir(log_dir):
-    if FILE.endswith(".log"):
-        # call conversion function
+# convert logs to images every second
+while 1:
+    p2j(79) # 79 for camera images, 80 for test.jpeg
+    time.sleep(1)
