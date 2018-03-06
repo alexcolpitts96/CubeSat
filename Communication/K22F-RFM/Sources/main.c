@@ -77,23 +77,6 @@ uint8_t **image_allocation(int image_bytes) {
 	return s;
 }
 
-// capture and store the image in the data structure
-void capture_store(uint8_t **s) {
-	int image_i = 0;
-	// send capture image command
-
-	// do any other pre collection actions
-
-	for (int i = 0; i < IMAGE_PACKETS; i++) { // i is packet number
-		for (int j = 0; j < PACKET_SIZE; j++) { // j is byte number
-			// read in byte from camera
-
-			// read dummy image
-			s[i][j] = test_image[image_i];
-			image_i++;
-		}
-	}
-}
 
 int main(void) {
 	int i, mode_select;
@@ -104,10 +87,10 @@ int main(void) {
 	p = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
 
 	// approximate number of packets required for image
-	s = image_allocation(IMAGE_PACKETS);
+	s = image_allocation(10000);
 
 	// read in fake image
-	capture_store(s);
+	//capture_store(s);
 
 	/*// load pseudo image into image buffer
 	 memcpy((uint8_t *) s[0], &test_data, sizeof(test_data));
@@ -132,7 +115,7 @@ int main(void) {
 	// 10 is transmitPacket test (S)
 	// 11 is an empty state
 	// 12 is printing image to putty
-	mode_select = 12;
+	mode_select = 9;
 
 	//start as transmitter /////////////////////////////////////////////////////////////////////////////////////////
 	while (mode_select == 1) {
@@ -306,7 +289,7 @@ int main(void) {
 	while (mode_select == 9) {
 
 		// retreive all of the packets
-		for (int i = 0; i < IMAGE_PACKETS; i++) {
+		for (int i = 0; i < 10000; i++) {
 			packetRequest(p, i);
 		}
 
