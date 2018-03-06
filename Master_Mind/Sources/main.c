@@ -61,24 +61,15 @@ void master_init() {
 
 int main() {
 	uint8_t *buffer = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
-
-	uint8_t **storage = (uint8_t **) calloc(10000, sizeof(uint8_t *));
-	for(int i = 0; i < 10000; i++){
-		storage[i] = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
-	}
+	uint8_t **storage;
 
 	master_init();
 
 	// take image
 	capture(storage);
 
-	// transmit image
-	for (int i = 0; i < 10000; i++) {
-		transmitPacket(buffer, storage);
-	}
-
-	// free image
 	free(storage);
+	free(buffer);
 
 	return 0;
 }

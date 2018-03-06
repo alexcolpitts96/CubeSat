@@ -161,17 +161,8 @@ void fifo_read(uint8_t **s) {
 	int read_count = 0;
 	int packet_number = (int) ceil((float) len / (float) PACKET_SIZE);
 
-	// allocate memory for packet arrays
-	//s = (uint8_t **) calloc(packet_number, sizeof(uint8_t *));
-
-	/*// allocate memory for each array
-	for(int i = 0; i < packet_number; i++){
-		s[i] = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
-	}
-	//*/
-
-	for (int j = 0; j < packet_number; j++) {
-		for (int i = 0; i < PACKET_SIZE; i++) {
+	for (int i = 0; i < packet_number; i++) {
+		for (int j = 0; j < PACKET_SIZE; j++) {
 
 			// if all bytes have been read return
 			if (read_count >= len) {
@@ -179,7 +170,7 @@ void fifo_read(uint8_t **s) {
 			}
 
 			// read into memory
-			s[j][i] = cam_reg_read(0x3D);
+			s[i][j] = cam_reg_read(0x3D);
 			read_count++;
 		}
 	}
@@ -197,5 +188,5 @@ void capture(uint8_t **image) {
 	fifo_read(image); // read entire fifo in
 
 	flush_fifo(); // finished reading, so empty fifo
-	return image; // NULL if error
+	return;
 }
