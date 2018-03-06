@@ -27,7 +27,7 @@ void UART1_putty_init() {
 
 	// calculate and set the baud rate
 	ubd = ((21000 * 1000) / (115200 * 16)); // set baudrate
-	temp = UART0_BDH & ~(UART_BDH_SBR(0x1F)); // save existing values in register
+	temp = UART1_BDH & ~(UART_BDH_SBR(0x1F)); // save existing values in register
 	UART1_BDH = temp | ((ubd >> 8) & 0x1F);
 	UART1_BDL = ubd & UART_BDL_SBR_MASK;
 

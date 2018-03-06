@@ -12,6 +12,9 @@
 #include "fsl_device_registers.h"
 
 void UART1_putty_init(){
+	uint16_t temp;
+	uint16_t ubd;
+
 	SIM_SCGC5 |= SIM_SCGC5_PORTE_MASK; // enable clock to PORTE
 	SIM_SCGC4 |= SIM_SCGC4_UART1_MASK; // enable clock to UART1
 
@@ -22,8 +25,11 @@ void UART1_putty_init(){
 
 	UART1_C1 = 0; // set 8 bits
 
-	UART1_BDH = 0; // upper four bits set to zero
-	UART1_BDL = 0b10001001; // lower four bits set to baud rate ~ 9600
+	// calculate and set the baud rate
+	ubd = ((21000 * 1000) / (115200 * 16)); // set baudrate
+	temp = UART1_BDH & ~(UART_BDH_SBR(0x1F)); // save existing values in register
+	UART1_BDH = temp | ((ubd >> 8) & 0x1F);
+	UART1_BDL = ubd & UART_BDL_SBR_MASK;
 
 	UART1_C2 |= (UART_C2_TE_MASK | UART_C2_RE_MASK); // enable receive/transfer
 }

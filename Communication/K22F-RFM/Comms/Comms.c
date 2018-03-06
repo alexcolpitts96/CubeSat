@@ -16,7 +16,7 @@
 #include "../GPIO/gpio.h" // included in RFM69 driver
 #include "../UART1/UART1_driver.h"
 
-#define PACKET_SIZE 66
+#define PACKET_SIZE 10
 #define MAX_PACKET_SIZE 66 // limited by RFM69HCW FIFO
 
 const uint8_t start_command[PACKET_SIZE] = "start packet transmission";
@@ -64,7 +64,7 @@ void packetRequest(uint8_t *p, uint16_t block) {
 	}
 	//*/
 
-	putty_putstr("\r\n");
+	//putty_putstr("\r\n");
 
 	// vomit the data over UART
 	for (i = 0; i < PACKET_SIZE; i++) {
@@ -145,7 +145,8 @@ void transmitPacket(uint8_t *p, uint8_t **s) {
 	memcpy(p, s[block_number], sizeof(uint8_t) * PACKET_SIZE);
 
 	// transmit packet multiple times
-	RFM69_SEND_TIMEOUT(p);
+	//RFM69_SEND_TIMEOUT(p);
+	RFM69_SEND(p);
 }
 
 // transmit image size in blocks to the ground station

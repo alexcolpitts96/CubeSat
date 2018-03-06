@@ -14,6 +14,7 @@
 #include <stdio.h>
 
 int main(){
+
 	FTM0_init();
 	GPIO_init();
 	UART1_putty_init();
@@ -24,7 +25,7 @@ int main(){
 	//blueLED(1);
 	camera_init();
 	enable_fifo();
-	//capture();
+	capture();
 	while(1){
 //		flush_fifo(); // clear fifo flag/flush fifo
 //		start_capture();
@@ -38,7 +39,7 @@ int main(){
 //			cap = capture_done();
 //			len = fifo_len();
 //		}
-		capture();
+
 
 
 	}

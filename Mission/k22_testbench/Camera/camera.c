@@ -12,6 +12,7 @@
 #include "fsl_device_registers.h"
 #include "camera.h"
 #include "../I2C/i2c.h"
+#include "../UART/uart.h"
 
 void SPI1_Init(int frame_size){
 	// taken from reference manual and https://community.nxp.com/thread/372146#comment-562567 (For FRDM-K64F)
@@ -103,7 +104,7 @@ uint8_t SPI1_read(uint8_t regaddr){
 }
 
 void cam_cfg(struct ov2640_reg_cfg *vals){
-	while(((vals->reg)!=0xff) && ((vals->val)!=0xff)){ // both values aren't 0xff
+	while(((vals->reg)!=0xff) || ((vals->val)!=0xff)){ // both values aren't 0xff
 		I2CWriteRegister(vals->reg,vals->val);
 		vals++;
 	}
@@ -119,13 +120,17 @@ void camera_init(){
 	cam_cfg(JPEG); // jpeg select
 	I2CWriteRegister(0xff,0x01);
 	I2CWriteRegister(0x15,0x00);
+	//cam_cfg(JPEG_SMALL); // 320x240 init
 	cam_cfg(JPEG_LARGE); // 1600x1200 select
 	return;
 }
 
 uint8_t cam_reg_read(uint8_t regaddr){
+	uint8_t tmp;
 	SPI1_TX(regaddr<<8);
-	return SPI1_RX() & 0x7F;
+	tmp = SPI1_RX();
+	Pause();
+	return tmp;
 }
 
 uint32_t fifo_len(){
@@ -140,32 +145,36 @@ int capture_done(){
 }
 
 // read in the entire fifo and return a pointer to it in memory
-uint8_t *fifo_read(){
+void fifo_read(){
 	// check fifo length for errors
 	uint32_t len = fifo_len();
-	if((len == 0) || (len > MAX_FIFO_LENGTH)){
-		return NULL; // ERROR
+	if((len == 0) || (len >= MAX_FIFO_LENGTH)){
+		return; // ERROR
 	}
 	int read_count = 0;
 	uint8_t *write;
 	uint8_t *img;
-	write = malloc(len*sizeof(uint8_t)); // allocate the entire image
+	uint8_t *vomit = calloc(len, sizeof(uint8_t)); // allocate the entire image
 	img = write; // image start is where write pointer currently is
+	uint8_t bleh;
+
 	while(read_count<len){
-		*write = cam_reg_read(0x3D);
-		write++;
+		 bleh = cam_reg_read(0x3D);
+		 vomit[read_count] = bleh;
+		 read_count++;
+		 putty_putchar(bleh);
 	}
-	return img;
+	return;
 }
 
 // sends capture command and returns pointer to start of image byte array (quite large)
-uint8_t *capture(){
+void capture(){
+	enable_fifo();
 	flush_fifo(); // clear fifo flag/flush fifo
 	start_capture();
-	uint8_t *img = NULL;
 	while(!(capture_done())); // check flag for capture complete
-	img = fifo_read(); // read entire fifo in
+	fifo_read(); // read entire fifo in
 
 	flush_fifo(); // finished reading, so empty fifo
-	return img; // NULL if error
+	return; // NULL if error
 }
