@@ -42,7 +42,7 @@ int capture_done();
 
 void fifo_read();
 
-uint8_t **capture();
+void capture();
 
 
 /* #######################################################

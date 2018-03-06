@@ -162,12 +162,13 @@ void fifo_read(uint8_t **s) {
 	int packet_number = (int) ceil((float) len / (float) PACKET_SIZE);
 
 	// allocate memory for packet arrays
-	s = (uint8_t **) calloc(packet_number, sizeof(uint8_t *));
+	//s = (uint8_t **) calloc(packet_number, sizeof(uint8_t *));
 
-	// allocate memory for each array
+	/*// allocate memory for each array
 	for(int i = 0; i < packet_number; i++){
 		s[i] = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
 	}
+	//*/
 
 	for (int j = 0; j < packet_number; j++) {
 		for (int i = 0; i < PACKET_SIZE; i++) {
@@ -183,15 +184,11 @@ void fifo_read(uint8_t **s) {
 		}
 	}
 
-	// store image byte in data structure
-	//img_array[read_count] = cam_reg_read(0x3D);
-
 	return;
 }
 
 // sends capture command and returns pointer to start of image byte array (quite large)
-uint8_t **capture() {
-	uint8_t **image;
+void capture(uint8_t **image) {
 
 	enable_fifo();
 	flush_fifo(); // clear fifo flag/flush fifo

@@ -137,7 +137,12 @@ void transmitPacket(uint8_t *p, uint8_t **s) {
 
 	// read block from s into p
 	memset(p, 0, sizeof(uint8_t) * PACKET_SIZE);
-	memcpy(p, s[block_number], sizeof(uint8_t) * PACKET_SIZE);
+	//memcpy(p, s[block_number], sizeof(uint8_t) * PACKET_SIZE);
+
+	for(int loc = 0; loc < PACKET_SIZE; loc++){
+		p[loc] = s[block_number][loc];
+	}
+
 
 	// transmit packet multiple times
 	//RFM69_SEND_TIMEOUT(p);
