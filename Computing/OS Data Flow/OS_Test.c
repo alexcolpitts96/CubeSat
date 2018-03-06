@@ -9,13 +9,13 @@ Project: OS data flow Rev 1.0
 Author: Hsuan-Wei Lo 3476309
 Created Feb 14, 2018
 
-Updated March 4,2018
+Updated March 6,2018
 Sleep Flag Fixed rev. 2
 Continue on ADC reading on the battery/GPIO on and off switch for camera and transmitter
-GPIO LED indication for low battery level and solar power
 /+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++/
 log:
 Feb 28 Combine ADC reading with check bat into one function
+March 6 add an check solar function with dual LED status 
 /+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++/
 */
 
@@ -23,11 +23,16 @@ Feb 28 Combine ADC reading with check bat into one function
 void init_sys_module();
 void sleep_now();
 void check_bat();
+void check_solar();
 void deinit_sys_module();
 void LED();
+void LED1();
 
 void  ADC0_Init ();
 float ADC0_Convert();
+
+void ADC1_Init();
+float ADC1_Convert();
 
 //----------------------------------------//
 //Global Flag Register
@@ -48,10 +53,9 @@ int main(){
 
 //----------------------Global_Variable-------------//
 int reset=0;
-int request=0;
+//int request=0;
 
 
-ADC0_Init();
 
 check_bat_flag=1;//Start the first state in the while 1 loop
 LED();
@@ -72,6 +76,7 @@ while(check_bat_flag==1){
 while(1){
 init_sys_module();
 
+check_solar();
 //Test case
 
 //----------------------------------------------------
@@ -165,7 +170,7 @@ init_sys_module();
 //--------------------------------------------------
         //Transmit state 6
 	while(tx_flag==1&&!sleep_flag){
-        request=0;//request from ground station
+        //request=0;//request from ground station
         //bat=1;
 		 /*
 		//Packet request check condition
@@ -233,15 +238,19 @@ void ADC0_Init (){
 
 	SIM_SCGC6 |= SIM_SCGC6_ADC0_MASK;//0x08000000
 
-	ADC0_CFG1 |= 0b00111100;// Set the Mode in 16 as it to have 10-bit conversion, with long sample time
+	ADC0_SC1A = 0b0000000;
+	//ADC0_SC1A = 0b0001111; //Mask the ADCH selection ADC0_SE14
+
+	ADC0_CFG1 |= 0b00011100;// Set the Mode in 16 as it to have 10-bit conversion, with long sample time
 							// Set the ADIV (clock Divide Select) ratio is 1
 	ADC0_CFG2 |= 0x00;
 	ADC0_SC2 |= 0x00;// ADTRG software triiger, DMA disabled, Voltage Refereence (REFSEL) default voltage reference =1.207
 					  // ACREN Range function disabled
 	ADC0_SC3 |= 0x00;
-	ADC0_SC1A = 0b0000000; //Mask the ADCH selection
+
 
 }
+
 
 float ADC0_Convert() {
 
@@ -255,21 +264,67 @@ float ADC0_Convert() {
 
 	}
 
+void ADC1_Init (){
+//PTB1/ADC0_SE9/ADC1_SE9
+	//Pick Port ADC0_DP0 for the testing
+	SIM_SCGC5 |= SIM_SCGC5_PORTB_MASK;
+	PORTB_PCR1 |= PORT_PCR_MUX(0) | PORT_PCR_DSE_MASK;
+
+	SIM_SCGC6 |= SIM_SCGC6_ADC1_MASK;//0x08000000
+	ADC1_SC1A = 0b0001001; //Mask the ADCH selection
+	ADC1_CFG1 |= 0b00111100;// Set the Mode in 16 as it to have 10-bit conversion, with long sample time
+							// Set the ADIV (clock Divide Select) ratio is 1
+	ADC1_CFG2|= 0x00;
+	ADC1_SC2 |= 0x00;// ADTRG software triiger, DMA disabled, Voltage Refereence (REFSEL) default voltage reference =1.207
+					  // ACREN Range function disabled
+	ADC1_SC3 |= 0x00;
+
+
+}
+
+float ADC1_Convert() {
+
+	ADC1_SC1A &= ADC_SC1_ADCH(0); //Mask the ADCH selection
+	while(1) {
+		if ((ADC1_SC1A&0x80)==0x80) {
+			break;
+		}
+	}
+	return ADC1_RA;//Return the value read from the ADC register
+
+	}
+
+void check_solar(){
+	float solraw=0;
+	float sol=0;
+
+	ADC1_Init();
+	//----------------------------------------------------------
+	solraw=ADC1_Convert();//Print the Read ADC value in the num
+	sol=(solraw*3.3f)/(65536.0f);
+	//----------------------------------------------------------
+	if (sol>1.6){
+		LED1();
+	}
+	else
+		GPIOC_PCOR=0x01 << 2;
+
+
+}
+
 
 void LED(){
 	//PTA1 Red LED
 	//PTD5 Blue LED
-
 			SIM_SCGC5 |= SIM_SCGC5_PORTC_MASK;
 			PORTC_PCR1 |= PORT_PCR_MUX(1) | PORT_PCR_DSE_MASK;
-
 			GPIOC_PSOR = 0x01 << 1;//turn on Camera via MOSFET switch
+}
 
-
-			//GPIOD_PDDR = 0x01 << 5;
-			//GPIOD_PSOR = 0x01 << 5;
-			//GPIOD_PSOR = 0x01 << 5;
-
+void LED1(){
+			SIM_SCGC5 |= SIM_SCGC5_PORTC_MASK;
+			PORTC_PCR2 |= PORT_PCR_MUX(1) | PORT_PCR_DSE_MASK;
+			GPIOC_PSOR = 0x01 << 2;//turn on Camera via MOSFET switch
 
 }
 
@@ -277,6 +332,7 @@ void check_bat(){
 	float batraw=0;
 	float bat=0;
 
+	ADC0_Init();
 	//Set the All SIM Module to default or turn off expect ADC module
 
 	//-------------------------ADC_Convert----------------------
@@ -284,13 +340,12 @@ void check_bat(){
 	bat=(batraw*3.3f)/(65536.0f);
 	//----------------------------------------------------------
 	//Check the Battery level without the load.
-	if (bat<2.5)
+	if (bat<2.6)
 		sleep_flag=1;
 	else
 		{sleep_flag=0;
 		GPIOC_PCOR=0x01 << 1;
-		//GPIOD_PSOR = 0x01 << 5;
-		//GPIOD_PCOR = 0x01 << 5;
+
 		}
 
 	//Reinitialized All the SIM module clock back
