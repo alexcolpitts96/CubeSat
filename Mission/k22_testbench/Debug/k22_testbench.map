@@ -1241,22 +1241,22 @@ OUTPUT(k22_testbench.elf elf32-littlearm)
  .debug_line    0x000017ee      0x378 ./FTM/ftm.o
  .debug_line    0x00001b66      0x4b5 ./Camera/camera.o
 
-.debug_str      0x00000000   0x116c2d
- .debug_str     0x00000000   0x1159ad ./UART/uart.o
-                             0x115bb7 (size before relaxing)
- .debug_str     0x001159ad      0xce8 ./Sources/main.o
-                             0x11666a (size before relaxing)
- .debug_str     0x00116695      0x15e ./Project_Settings/Startup_Code/startup.o
+.debug_str      0x00000000   0x116c63
+ .debug_str     0x00000000   0x1159b5 ./UART/uart.o
+                             0x115bbf (size before relaxing)
+ .debug_str     0x001159b5      0xce8 ./Sources/main.o
+                             0x116672 (size before relaxing)
+ .debug_str     0x0011669d      0x18c ./Project_Settings/Startup_Code/startup.o
                              0x115af4 (size before relaxing)
- .debug_str     0x001167f3       0xed ./Project_Settings/Startup_Code/system_MK22F51212.o
+ .debug_str     0x00116829       0xed ./Project_Settings/Startup_Code/system_MK22F51212.o
                              0x115bb1 (size before relaxing)
- .debug_str     0x001168e0       0xd2 ./I2C/i2c.o
-                             0x115d35 (size before relaxing)
- .debug_str     0x001169b2       0x68 ./GPIO/gpio.o
+ .debug_str     0x00116916       0xd2 ./I2C/i2c.o
+                             0x115d3d (size before relaxing)
+ .debug_str     0x001169e8       0x68 ./GPIO/gpio.o
                              0x115ae4 (size before relaxing)
- .debug_str     0x00116a1a       0xd7 ./FTM/ftm.o
+ .debug_str     0x00116a50       0xd7 ./FTM/ftm.o
                              0x115b41 (size before relaxing)
- .debug_str     0x00116af1      0x13c ./Camera/camera.o
+ .debug_str     0x00116b27      0x13c ./Camera/camera.o
                              0x115e90 (size before relaxing)
 
 .comment        0x00000000       0x70

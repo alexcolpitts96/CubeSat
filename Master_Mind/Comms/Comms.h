@@ -10,10 +10,8 @@
 
 #define PACKET_SIZE 10
 #define MAX_PACKET_SIZE 66 // limited by RFM69HCW FIFO
-#define IMAGE_PACKETS 900
-#define IMAGE_SIZE 9000
 
-const uint8_t start_command[PACKET_SIZE] = "start packet transmission";
+const uint8_t start_command[PACKET_SIZE] = "start";
 
 ////////////////////////////////// GroundStation Functions //////////////////////////////////
 

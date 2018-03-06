@@ -7,16 +7,8 @@
 #       Add using the following: $sudo usermod -a -G dialout <username>
 #       User must logout and back in to gain access
 
-import sys
-import subprocess
 import time
 from putty2jpeg import *
-
-# open putty and collect data
-# first time run: the next line uncommented and save configuration as K22F
-#os.system("gksudo putty")
-#os.system("putty -load K22F")  # create putty configuration and save
-#time.sleep(5)
 
 # convert logs to images every second
 while 1:

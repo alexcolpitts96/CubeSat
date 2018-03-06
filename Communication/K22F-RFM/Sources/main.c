@@ -44,16 +44,6 @@
 #include "../Comms/Comms.h"
 #include "image.h"
 
-// definitions
-//#define PACKET_SIZE 66 // limited by RFM69HCW FIFO
-#define PACKET_SIZE 10 // also in Comms.c
-//#define IMAGE_PACKETS 4546
-#define IMAGE_PACKETS 859
-#define IMAGE_SIZE 8590
-
-// cubesat commands
-const uint8_t start_command[PACKET_SIZE] = "start packet transmission"; // might need to be changed for packet length
-
 /*// for testing purposes
  const uint8_t test_data[PACKET_SIZE] = "test data from block number 0";
  const uint8_t test_data2[PACKET_SIZE] = "test data from block number 1";

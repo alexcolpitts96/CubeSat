@@ -23,7 +23,6 @@
 void packetRequest(uint8_t *p, uint16_t block) {
 	uint8_t handshake = 0;
 	uint8_t timeout = 0, i;
-	uint8_t temp[20]; // for printing block number
 
 	///*// wait for contact to be made with the satellite
 	while (!handshake) {
