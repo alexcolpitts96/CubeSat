@@ -9,13 +9,13 @@ Project: OS data flow Rev 1.0
 Author: Hsuan-Wei Lo 3476309
 Created Feb 14, 2018
 
-Updated March 6,2018
+Updated March 6 ,2018
 Sleep Flag Fixed rev. 2
-Continue on ADC reading on the battery/GPIO on and off switch for camera and transmitter
+Continue working on the Low Power mode / WDTa
 /+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++/
 log:
 Feb 28 Combine ADC reading with check bat into one function
-March 6 add an check solar function with dual LED status 
+March 6 added ADC reading for the solar battery with dual LED status
 /+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++/
 */
 
@@ -216,29 +216,38 @@ void init_sys_module(){
     //--------------------------SIM_MASK----------------------------//
 	//SIM_SCGC5 |= SIM_SCGC5_PORTA_MASK;
 	//SIM_SCGC5 |= SIM_SCGC5_PORTB_MASK;
-	SIM_SCGC5 |= SIM_SCGC5_PORTC_MASK; // Enable port C
+	//SIM_SCGC5 |= SIM_SCGC5_PORTC_MASK; // Enable port C
 
 
 	//--------------------------PORT_MASK---------------------------//
-	PORTC_PCR1 |= PORT_PCR_MUX(1) | PORT_PCR_DSE_MASK; // Use PTC1 as GPIO for camerma  switch
-	PORTC_PCR2 |= PORT_PCR_MUX(1) | PORT_PCR_DSE_MASK; // Use PTC2 as GPIO for RFM69 switch
+	//PORTC_PCR1 |= PORT_PCR_MUX(1) | PORT_PCR_DSE_MASK; // Use PTC1 as GPIO for camera  switch
+	//PORTC_PCR2 |= PORT_PCR_MUX(1) | PORT_PCR_DSE_MASK; // Use PTC2 as GPIO for RFM69 switch
 	//PORTD_PCR5 |= PORT_PCR_MUX(1) | PORT_PCR_DSE_MASK;//PTD5 Blue LED
 	//PORTA_PCR1 |= PORT_PCR_MUX(1) | PORT_PCR_DSE_MASK;//PTA1 Red LED
 	//-------------------------GPIO_MAP-----------------------------//
-	GPIOC_PDDR = 0x01 << 1; //PTC1
-	//GPIOD_PDDR = 0x01 << 5; //PTD5 Blue LED
-	//GPIOA_PDDR = 0x01 << 1; //PTA1 Red LED
+
+}
+/*
+void Camera_ON(){
+
 }
 
+void Camera_OFF(){
 
 
+}
+*/
 void ADC0_Init (){
 
 	//Pick Port ADC0_DP0 for the testing
 
-	SIM_SCGC6 |= SIM_SCGC6_ADC0_MASK;//0x08000000
+	//Pick Port PTB0 ADC0_SE8/ADC1_SE8 ALT0 pg219
 
-	ADC0_SC1A = 0b0000000;
+	SIM_SCGC6 |= SIM_SCGC6_ADC0_MASK;//0x08000000
+	SIM_SCGC5 |= SIM_SCGC5_PORTB_MASK;
+	PORTB_PCR0 |= PORT_PCR_MUX(0) | PORT_PCR_DSE_MASK;
+
+	ADC0_SC1A = 0b0001000;
 	//ADC0_SC1A = 0b0001111; //Mask the ADCH selection ADC0_SE14
 
 	ADC0_CFG1 |= 0b00011100;// Set the Mode in 16 as it to have 10-bit conversion, with long sample time
@@ -254,7 +263,7 @@ void ADC0_Init (){
 
 float ADC0_Convert() {
 
-	ADC0_SC1A &= ADC_SC1_ADCH(0); //Mask the ADCH selection
+	ADC0_SC1A &= ADC_SC1_ADCH(8); //Mask the ADCH selection
 	while(1) {
 		if ((ADC0_SC1A&0x80)==0x80) {
 			break;
@@ -265,17 +274,18 @@ float ADC0_Convert() {
 	}
 
 void ADC1_Init (){
-//PTB1/ADC0_SE9/ADC1_SE9
-	//Pick Port ADC0_DP0 for the testing
+	//Pick Port ADC0_DP3 for the testing
+	//PTB1/ADC0_SE9/ADC1_SE9
 	SIM_SCGC5 |= SIM_SCGC5_PORTB_MASK;
 	PORTB_PCR1 |= PORT_PCR_MUX(0) | PORT_PCR_DSE_MASK;
 
 	SIM_SCGC6 |= SIM_SCGC6_ADC1_MASK;//0x08000000
-	ADC1_SC1A = 0b0001001; //Mask the ADCH selection
-	ADC1_CFG1 |= 0b00111100;// Set the Mode in 16 as it to have 10-bit conversion, with long sample time
+	ADC1_SC1A  = 0b0001001; //Mask the ADCH selection
+
+	ADC1_CFG1 |= 0b00011100;// Set the Mode in 16 as it to have 10-bit conversion, with long sample time
 							// Set the ADIV (clock Divide Select) ratio is 1
 	ADC1_CFG2|= 0x00;
-	ADC1_SC2 |= 0x00;// ADTRG software triiger, DMA disabled, Voltage Refereence (REFSEL) default voltage reference =1.207
+	ADC1_SC2 |= 0x00; // ADTRG software trigger, DMA disabled, Voltage Refereence (REFSEL) default voltage reference =1.207
 					  // ACREN Range function disabled
 	ADC1_SC3 |= 0x00;
 
@@ -284,7 +294,7 @@ void ADC1_Init (){
 
 float ADC1_Convert() {
 
-	ADC1_SC1A &= ADC_SC1_ADCH(0); //Mask the ADCH selection
+	ADC1_SC1A  &= ADC_SC1_ADCH(9); //Mask the ADCH selection
 	while(1) {
 		if ((ADC1_SC1A&0x80)==0x80) {
 			break;
@@ -303,7 +313,8 @@ void check_solar(){
 	solraw=ADC1_Convert();//Print the Read ADC value in the num
 	sol=(solraw*3.3f)/(65536.0f);
 	//----------------------------------------------------------
-	if (sol>1.6){
+	//1.6
+	if (sol>2.4){
 		LED1();
 	}
 	else
@@ -318,12 +329,14 @@ void LED(){
 	//PTD5 Blue LED
 			SIM_SCGC5 |= SIM_SCGC5_PORTC_MASK;
 			PORTC_PCR1 |= PORT_PCR_MUX(1) | PORT_PCR_DSE_MASK;
+			GPIOC_PDDR = 0x01 << 1; //PTC1
 			GPIOC_PSOR = 0x01 << 1;//turn on Camera via MOSFET switch
 }
 
 void LED1(){
 			SIM_SCGC5 |= SIM_SCGC5_PORTC_MASK;
 			PORTC_PCR2 |= PORT_PCR_MUX(1) | PORT_PCR_DSE_MASK;
+			GPIOC_PDDR = 0x01 << 2; //PTC2
 			GPIOC_PSOR = 0x01 << 2;//turn on Camera via MOSFET switch
 
 }
