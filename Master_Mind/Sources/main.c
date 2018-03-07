@@ -65,22 +65,31 @@ int main() {
 	uint8_t *buffer = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
 	uint8_t *camera = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
 	//uint8_t **storage;
-	int packets;
+	int image_length;
 	uint32_t last_packet;
 
 	master_init();
 
 	// take image
 	capture();
-	packets = (int) ceil((float) fifo_len() / (float) PACKET_SIZE);
+	//image_length = (int) ceil((float) fifo_len() / (float) PACKET_SIZE);
+	image_length = fifo_len();
 
 	// transmit size of the image and wait for the start command
-	imageSize(buffer, fifo_len());
+	imageSize(buffer, image_length);
 
+	///*
 	last_packet = 0;
-	while((strcmp((char *) &stop_command, (char *) buffer) != 0)){
+	while ((strcmp((char *) &stop_command, (char *) buffer) != 0)) {
 		last_packet = transmitPacket(buffer, camera, last_packet);
 	}
+	//*/
+
+	/*// read in next packet from camera
+	 for (int i = 0; i < fifo_len(); i++) {
+	 putty_putchar(cam_reg_read(0x3D));
+	 }
+	 //*/
 
 	free(camera);
 	free(buffer);

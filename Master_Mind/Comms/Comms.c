@@ -155,7 +155,7 @@ uint32_t transmitPacket(uint8_t *p, uint8_t *camera, int last_packet) {
 	// transmit packet multiple times
 	//RFM69_SEND_TIMEOUT(p);
 	RFM69_SEND(p);
-	RFM69_SEND(p);
+	//RFM69_SEND(p);
 
 	// return block_number as it is now the last packet number
 	return block_number;
@@ -182,9 +182,9 @@ void imageSize(uint8_t *p, int fifo_length) {
 	}
 
 	// NOTE: block_number[0] is LSB, block_number[2] is MSB
-	block_number[0] = image_size & 0xFF;
-	block_number[1] = (image_size >> 8) & 0xFF;
-	block_number[2] = (image_size >> 16) & 0xFF;
+	block_number[0] = fifo_length & 0xFF;
+	block_number[1] = (fifo_length >> 8) & 0xFF;
+	block_number[2] = (fifo_length >> 16) & 0xFF;
 
 	// prepare packet
 	memset(p, 0, sizeof(uint8_t) * PACKET_SIZE);

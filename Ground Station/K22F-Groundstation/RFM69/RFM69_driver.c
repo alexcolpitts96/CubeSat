@@ -14,7 +14,7 @@
 #define RFM_READ 0x00
 #define LISTEN_ABORT_IGNORE 0xE3
 //#define PACKET_SIZE 66
-#define PACKET_SIZE 10
+#define PACKET_SIZE 66
 #define MAX_PACKET_SIZE 66
 
 // configuration structure and drivers have been modified from https://github.com/LowPowerLab/RFM69/blob/master/RFM69.cpp
