@@ -46,6 +46,8 @@
 #include "../Camera/camera.h"
 #include "../I2C/i2c.h"
 
+#define MAX_IMAGE_SIZE 0x5FFFF
+
 void master_init() {
 	UART0_Init();
 	UART1_putty_init();
@@ -61,14 +63,26 @@ void master_init() {
 
 int main() {
 	uint8_t *buffer = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
-	uint8_t **storage;
+	uint8_t *camera = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
+	//uint8_t **storage;
+	int packets;
+	uint32_t last_packet;
 
 	master_init();
 
 	// take image
-	capture(storage);
+	capture();
+	packets = (int) ceil((float) fifo_len() / (float) PACKET_SIZE);
 
-	free(storage);
+	// transmit size of the image and wait for the start command
+	imageSize(buffer, fifo_len());
+
+	last_packet = 0;
+	while((strcmp((char *) &stop_command, (char *) buffer) != 0)){
+		last_packet = transmitPacket(buffer, camera, last_packet);
+	}
+
+	free(camera);
 	free(buffer);
 
 	return 0;
