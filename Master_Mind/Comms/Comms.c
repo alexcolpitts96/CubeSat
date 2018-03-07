@@ -141,12 +141,12 @@ uint32_t transmitPacket(uint8_t *p, uint8_t *camera, int last_packet) {
 	block_number = (p[2] << 16) | (p[1] << 8) | (p[0]);
 
 	// if the ground station is requesting the next packet
-	if (block_number == last_packet + 1 || (last_packet == 0 && block_number == 0)) {
+	//if (block_number == last_packet + 1 || (last_packet == 0 && block_number == 0)) {
 		// read in next packet from camera
 		for (int i = 0; i < PACKET_SIZE; i++) {
 			camera[i] = cam_reg_read(0x3D);
 		}
-	}
+	//}
 
 	// read block from camera into p
 	//memset(p, 0, sizeof(uint8_t) * PACKET_SIZE);

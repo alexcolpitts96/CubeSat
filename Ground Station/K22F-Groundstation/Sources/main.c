@@ -73,10 +73,11 @@ int main(void) {
 	// packetRequest test - ground station
 	while (mode_select == 9) {
 
-		uint32_t packet_number = txStart(p);
+		uint32_t image_bytes = txStart(p);
+		uint32_t packet_number = (uint32_t) ceil((float)image_bytes/(float)PACKET_SIZE);
 
 		// retreive all of the packets
-		for (int i = 0; i < packet_number; i++) {
+		for (int i = 0; i < packet_number+1; i++) {
 			packetRequest(p, i);
 		}
 
