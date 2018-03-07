@@ -8,8 +8,9 @@
 #ifndef SOURCES_COMMS_H
 #define SOURCES_COMMS_H
 
-#define PACKET_SIZE 66
 #define MAX_PACKET_SIZE 66 // limited by RFM69HCW FIFO
+
+#include "../RFM69/RFM69_driver.h"
 
 const uint8_t start_command[PACKET_SIZE] = "start";
 const uint8_t stop_command[PACKET_SIZE] = "stop";

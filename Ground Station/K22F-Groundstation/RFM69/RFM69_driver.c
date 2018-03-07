@@ -2,6 +2,7 @@
 #include "fsl_device_registers.h"
 #include "../SPI0/SPI0_driver.h"
 #include "RFM69registers.h"
+#include "RFM69_driver.h"
 #include "../GPIO/gpio.h"
 #include "../FTM/FTM_driver.h" // needed for timeout capability
 
@@ -13,8 +14,6 @@
 #define RFM_WRITE 0x80
 #define RFM_READ 0x00
 #define LISTEN_ABORT_IGNORE 0xE3
-//#define PACKET_SIZE 66
-#define PACKET_SIZE 66
 #define MAX_PACKET_SIZE 66
 
 // configuration structure and drivers have been modified from https://github.com/LowPowerLab/RFM69/blob/master/RFM69.cpp
