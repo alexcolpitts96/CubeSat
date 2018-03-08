@@ -1,6 +1,6 @@
 import os
 
-def p2j(ignore):
+def p2j():
     # get current working directory (cwd)
     cwd = os.getcwd()
 
@@ -26,8 +26,11 @@ def p2j(ignore):
 
             # skip first 'ignore' bytes
             log = open(log_dir + FILE, 'rb')
-            log.seek(ignore)
-            remainder = log.read()
+            bytes = log.read()
+            start = bytes.find(b'\xFF\xD8')
+            end = bytes.find(b'\xFF\xD9') + 1
+
+            remainder = bytes[start:end]
 
             # store image in image_dir as .jpeg
             temp = FILE[:].replace('.log', '.jpeg')
