@@ -24,7 +24,7 @@
 // request packet number for satellite to transmit, p[0] is LSB, p[1] is MSB for request -------------------- UNTESTED
 void packetRequest(uint8_t *p, uint32_t block) {
 	uint8_t handshake = 0;
-	uint8_t timeout = 0, i;
+	uint8_t timeout = 0;
 
 	///*// wait for contact to be made with the satellite
 	while (!handshake) {
@@ -65,8 +65,8 @@ void packetRequest(uint8_t *p, uint32_t block) {
 
 	//putty_putstr("\r\n");
 	// vomit the data over UART
-	for (i = 0; i < PACKET_SIZE; i++) {
-		putty_putchar(p[i]);
+	for (int j = 0; j < PACKET_SIZE; j++) {
+		putty_putchar(p[j]);
 	}
 }
 
@@ -110,7 +110,8 @@ uint32_t txStart(uint8_t *p) {
 //////////////////////////////////// Satellite Functions ////////////////////////////////////
 
 // transmit requested block from buffer (camera) using buffer (p) to transmit
-uint32_t transmitPacket(uint8_t *p, uint8_t *camera, uint32_t last_block) {
+int transmitPacket(uint8_t *p, uint8_t **image) {
+//uint32_t transmitPacket(uint8_t *p, uint8_t *camera, uint32_t last_block) {
 	uint8_t packet_request = 0; // 0 when no request, 1 when contacted by ground station
 	uint32_t block_number;
 	int zero_counter = 0;
@@ -122,6 +123,11 @@ uint32_t transmitPacket(uint8_t *p, uint8_t *camera, uint32_t last_block) {
 	while (!packet_request) {
 		// receive packet request
 		RFM69_RECEIVE(p);
+
+		// if received end command return 0
+		if ((strcmp((char *) &stop_command, (char *) p) == 0)) {
+			return 0;
+		}
 
 		// start where the packet number isn't
 		for (int i = 3; i < PACKET_SIZE; i++) {
@@ -138,31 +144,31 @@ uint32_t transmitPacket(uint8_t *p, uint8_t *camera, uint32_t last_block) {
 		}
 	}
 
-// determine the block number
-	block_number = (p[2] << 16) | (p[1] << 8) | (p[0]);
+	// determine the block number
+	block_number = ((p[2] << 16) & 0xFF) | ((p[1] << 8) & 0xFF)
+			| ((p[0]) & 0xFF);
 
-// if the ground station is requesting the next packet
-//if ((strcmp((char *) &next_command, (char *) p) == 0)) {
-// if the next block needs a new set of information
-	if ((last_block == 0 && block_number == 0)
-			|| (block_number == last_block + 1)) {
-		// read in next packet from camera
-		for (int i = 0; i < PACKET_SIZE; i++) {
-			camera[i] = cam_reg_read(0x3D);
-		}
-	}
+	/*// if the next block needs a new set of information
+	 if ((last_block == 0 && block_number == 0) || (block_number == last_block + 1)) {
+	 // read in next packet from camera
+	 for (int i = 0; i < PACKET_SIZE; i++) {
+	 camera[i] = cam_reg_read(0x3D);
+	 }
+	 }
+	 //*/
 
-// read block from camera into p
-	memcpy(p, camera, sizeof(uint8_t) * PACKET_SIZE);
-//memcpy(p, "0123456789ABCDE", sizeof("0123456789ABCDE"));
+	// read block from image into p
+	memcpy(p, image[block_number], sizeof(uint8_t) * PACKET_SIZE);
 
-// transmit packet multiple times
-//RFM69_SEND_TIMEOUT(p);
+	// read block from camera into p
+	//memcpy(p, camera, sizeof(uint8_t) * PACKET_SIZE);
+	//memcpy(p, "0123456789ABCDE", sizeof("0123456789ABCDE"));
+
+	// transmit packet multiple times
+	//RFM69_SEND_TIMEOUT(p);
 	RFM69_SEND(p);
 
-// return the current block number to be the last block number
-	//return block_number;
-	return block_number;
+	return 1;
 }
 
 // transmit image size in blocks to the ground station

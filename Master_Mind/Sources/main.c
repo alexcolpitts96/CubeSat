@@ -62,52 +62,64 @@ void master_init() {
 }
 
 int main() {
-	int mode_select = 9; // 8 is satellite, 9 is ground station
+	int mode_select = 8; // 8 is satellite, 9 is ground station
 	uint8_t *buffer = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
-	uint8_t *camera = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
+	//uint8_t *camera = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
 
 	master_init();
 
 	while (mode_select == 8) {
 		int image_length, packets;
-		uint32_t last_packet;
 
 		// take image
 		capture();
 		image_length = fifo_len();
 
+		// determine how many packets are needed
 		packets = (int) ceil((float) image_length / (float) PACKET_SIZE);
+
+		// allocate memory for the image
+		uint8_t **image = (uint8_t **) malloc(packets * sizeof(uint8_t *));
+		for (int i = 0; i < packets; i++) {
+			image[i] = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
+		}
+
+		for(int i = 0; i < packets; i++){
+			for(int j = 0; j < PACKET_SIZE; j++){
+				image[i][j] = cam_reg_read(0x3D);
+				//putty_putchar(image[i][j]); // for debugging
+			}
+		}
 
 		// transmit size of the image and wait for the start command
 		imageSize(buffer, image_length);
 
-		///*
-		last_packet = 0;
-		while (last_packet < packets) {
-			last_packet = transmitPacket(buffer, camera, last_packet);
+		// transmit packets until stop command received
+		while (transmitPacket(buffer, image));
+
+		// free memory for the image
+		for (int i = 0; i < packets; i++) {
+			free(image[i]);
 		}
-		//*/
-
-		/*// read in next packet from camera
-		 for (int i = 0; i < fifo_len(); i++) {
-		 putty_putchar(cam_reg_read(0x3D));
-		 }
-		 //*/
-
-		//free(camera);
-		//free(buffer);
+		free(image);
 	}
 
 	// packetRequest test - ground station
 	while (mode_select == 9) {
 
 		uint32_t image_bytes = txStart(buffer);
-		uint32_t packet_number = (uint32_t) ceil((float) image_bytes / (float) PACKET_SIZE);
+		uint32_t packet_number = (uint32_t) ceil(
+				(float) image_bytes / (float) PACKET_SIZE);
 
 		// retrieve all of the packets
 		for (int i = 0; i < packet_number; i++) {
 			packetRequest(buffer, i);
 		}
+
+		// send the stop command
+		memset(buffer, 0, sizeof(uint8_t) * PACKET_SIZE);
+		memcpy((uint8_t *) buffer, &stop_command, sizeof(stop_command));
+		RFM69_SEND_TIMEOUT(buffer);
 	}
 
 	return 0;
