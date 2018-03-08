@@ -9,6 +9,9 @@
 
 import time
 from putty2jpeg import *
+from serial_read import *
+
+#readImage()
 
 # convert logs to images every second
 while 1:

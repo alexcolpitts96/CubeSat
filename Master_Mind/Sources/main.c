@@ -68,28 +68,23 @@ int main() {
 
 	master_init();
 
-	/*
-	 uint8_t **storage = (uint8_t **) calloc(10000, sizeof(uint8_t *));
-	 for(int i = 0; i < 10000; i++){
-	 storage[i] = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
-	 }
-	 //*/
-
 	while (mode_select == 8) {
-		int image_length;
-		//uint32_t last_packet;
+		int image_length, packets;
+		uint32_t last_packet;
 
 		// take image
 		capture();
 		image_length = fifo_len();
 
+		packets = (int) ceil((float) image_length / (float) PACKET_SIZE);
+
 		// transmit size of the image and wait for the start command
 		imageSize(buffer, image_length);
 
 		///*
-		//last_packet = 0;
-		while ((strcmp((char *) &stop_command, (char *) buffer) != 0)) {
-			transmitPacket(buffer, camera);
+		last_packet = 0;
+		while (last_packet < packets) {
+			last_packet = transmitPacket(buffer, camera, last_packet);
 		}
 		//*/
 
@@ -99,8 +94,8 @@ int main() {
 		 }
 		 //*/
 
-		free(camera);
-		free(buffer);
+		//free(camera);
+		//free(buffer);
 	}
 
 	// packetRequest test - ground station
