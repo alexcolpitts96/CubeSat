@@ -12,5 +12,5 @@ from putty2jpeg import *
 
 # convert logs to images every second
 while 1:
-    p2j() # 79 for camera images, 80 for test.jpeg
+    p2j()
     time.sleep(1)

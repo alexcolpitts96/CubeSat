@@ -30,11 +30,11 @@ void packetRequest(uint8_t *p, uint32_t block) {
 	while (!handshake) {
 
 		// load in block number
-		//memset(p, 0, sizeof(uint8_t) * PACKET_SIZE);
-		//p[0] = 0xFF & block; // simply mask
-		//p[1] = 0xFF & (block >> 8); // shift down and mask
-		//p[2] = 0xFF & (block >> 16);
-		memcpy((uint8_t *) p, &next_command, sizeof(next_command));
+		memset(p, 0, sizeof(uint8_t) * PACKET_SIZE);
+		p[0] = 0xFF & block; // simply mask
+		p[1] = 0xFF & (block >> 8); // shift down and mask
+		p[2] = 0xFF & (block >> 16);
+		//memcpy((uint8_t *) p, &next_command, sizeof(next_command));
 
 		// send block request packet
 		RFM69_SEND(p);

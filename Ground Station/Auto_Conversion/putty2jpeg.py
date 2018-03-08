@@ -1,4 +1,5 @@
 import os
+from shutil import copy2
 
 def p2j():
     # get current working directory (cwd)
@@ -18,13 +19,23 @@ def p2j():
     if not dir_exist:
         os.mkdir(image_dir)
 
+    # create a directory called backup_logs if it doesn't exist ---------------------------
+    backup_dir = cwd + "/backup_logs/"
+    dir_exist = os.path.exists(backup_dir)
+
+    if not dir_exist:
+        os.mkdir(backup_dir)
+
     # check if any log files exist ---------------------------------------------------------
     for FILE in os.listdir(log_dir):
 
         # if the file is a log file
         if FILE.endswith(".log"):
 
-            # skip first 'ignore' bytes
+            # copy log to backup folder
+            copy2(log_dir + FILE, backup_dir)
+
+            # find jpeg start and end
             log = open(log_dir + FILE, 'rb')
             bytes = log.read()
             start = bytes.find(b'\xFF\xD8')
