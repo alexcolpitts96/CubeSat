@@ -45,7 +45,7 @@ void SPI1_Init(int frame_size) {
 	SPI1_CTAR0 = 0;
 
 	// configure SPI1
-	SPI1_CTAR0 |= SPI_CTAR_FMSZ(frame_size-1) | SPI_CTAR_BR(0xC); // CPHA = 0, CPOL = 0, BR can be changed with parameter in brackets
+	SPI1_CTAR0 |= SPI_CTAR_FMSZ(frame_size-1) | SPI_CTAR_BR(0xB); // CPHA = 0, CPOL = 0, BR can be changed with parameter in brackets
 	SPI1_MCR |= SPI_MCR_MSTR_MASK | SPI_MCR_PCSIS_MASK; // master, CS active low
 	SPI1_MCR &= (~SPI_MCR_DIS_RXF_MASK) | (~SPI_MCR_DIS_TXF_MASK); // enable rx and tx FIFOs
 	SPI1_MCR &= (~SPI_MCR_MDIS_MASK) & (~SPI_MCR_HALT_MASK); // enable module clock and start transfers

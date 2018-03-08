@@ -55,49 +55,65 @@ void master_init() {
 	RFM69_DIO0_Init();
 	RFM69_Init(); // must always be after the SPI interface has been enabled
 	FTM0_init();
-	//FTM1_init();
+	FTM1_init();
 	init_I2C();
 	SPI1_Init(16);
 	camera_init();
 }
 
 int main() {
+	int mode_select = 9; // 8 is satellite, 9 is ground station
 	uint8_t *buffer = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
 	uint8_t *camera = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
 
-	uint8_t **storage = (uint8_t **) calloc(10000, sizeof(uint8_t *));
-	for(int i = 0; i < 10000; i++){
-		storage[i] = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
-	}
-
-	int image_length;
-	uint32_t last_packet;
-
 	master_init();
 
-	// take image
-	capture();
-	//image_length = (int) ceil((float) fifo_len() / (float) PACKET_SIZE);
-	image_length = fifo_len();
-
-	// transmit size of the image and wait for the start command
-	imageSize(buffer, image_length);
-
-	///*
-	last_packet = 0;
-	while ((strcmp((char *) &stop_command, (char *) buffer) != 0)) {
-		last_packet = transmitPacket(buffer, camera, last_packet);
-	}
-	//*/
-
-	/*// read in next packet from camera
-	 for (int i = 0; i < fifo_len(); i++) {
-	 putty_putchar(cam_reg_read(0x3D));
+	/*
+	 uint8_t **storage = (uint8_t **) calloc(10000, sizeof(uint8_t *));
+	 for(int i = 0; i < 10000; i++){
+	 storage[i] = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
 	 }
 	 //*/
 
-	free(camera);
-	free(buffer);
+	while (mode_select == 8) {
+		int image_length;
+		//uint32_t last_packet;
+
+		// take image
+		capture();
+		image_length = fifo_len();
+
+		// transmit size of the image and wait for the start command
+		imageSize(buffer, image_length);
+
+		///*
+		//last_packet = 0;
+		while ((strcmp((char *) &stop_command, (char *) buffer) != 0)) {
+			transmitPacket(buffer, camera);
+		}
+		//*/
+
+		/*// read in next packet from camera
+		 for (int i = 0; i < fifo_len(); i++) {
+		 putty_putchar(cam_reg_read(0x3D));
+		 }
+		 //*/
+
+		free(camera);
+		free(buffer);
+	}
+
+	// packetRequest test - ground station
+	while (mode_select == 9) {
+
+		uint32_t image_bytes = txStart(buffer);
+		uint32_t packet_number = (uint32_t) ceil((float) image_bytes / (float) PACKET_SIZE);
+
+		// retrieve all of the packets
+		for (int i = 0; i < packet_number; i++) {
+			packetRequest(buffer, i);
+		}
+	}
 
 	return 0;
 }

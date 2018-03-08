@@ -8,6 +8,7 @@
 #define SOURCES_RFM69_RFM69_H
 
 #define PACKET_SIZE 16
+#define MAX_PACKET_SIZE 66
 
 void RFM69_TX(uint8_t REG, uint8_t tx_byte);
 

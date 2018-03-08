@@ -109,7 +109,7 @@ uint32_t txStart(uint8_t *p) {
 //////////////////////////////////// Satellite Functions ////////////////////////////////////
 
 // transmit requested block from buffer (camera) using buffer (p) to transmit
-uint32_t transmitPacket(uint8_t *p, uint8_t *camera, int last_packet) {
+void transmitPacket(uint8_t *p, uint8_t *camera) {
 	uint8_t packet_request = 0; // 0 when no request, 1 when contacted by ground station
 	uint8_t i;
 	uint8_t packet_zeros;
@@ -123,25 +123,17 @@ uint32_t transmitPacket(uint8_t *p, uint8_t *camera, int last_packet) {
 		// receive packet request
 		RFM69_RECEIVE(p);
 
-		// check how many zeros are in the packet excluding the first three entries
-		packet_zeros = 0;
-		for (i = 3; i < PACKET_SIZE; i++) {
-			if (p[i] == 0) {
-				packet_zeros++;
-			}
-		}
-
-		// check if all bytes are 0 except for the first 3 (0, 1, 2)
-		if (packet_zeros == PACKET_SIZE - 3) {
+		// check if it is next packet or resend packet
+		if (((strcmp((char *) &next_command, (char *) p) == 0)) || ((strcmp((char *) &resend_command, (char *) p) == 0))) {
 			packet_request = 1;
 		}
 	}
 
 	// determine the block number
-	block_number = (p[2] << 16) | (p[1] << 8) | (p[0]);
+	//block_number = (p[2] << 16) | (p[1] << 8) | (p[0]);
 
 	// if the ground station is requesting the next packet
-	if (block_number == last_packet + 1 || (last_packet == 0 && block_number == 0)) {
+	if ((strcmp((char *) &next_command, (char *) p) == 0)) {
 		// read in next packet from camera
 		for (int i = 0; i < PACKET_SIZE; i++) {
 			camera[i] = cam_reg_read(0x3D);
@@ -149,22 +141,19 @@ uint32_t transmitPacket(uint8_t *p, uint8_t *camera, int last_packet) {
 	}
 
 	// read block from camera into p
-	//memset(p, 0, sizeof(uint8_t) * PACKET_SIZE);
 	memcpy(p, camera, sizeof(uint8_t) * PACKET_SIZE);
 
 	// transmit packet multiple times
 	//RFM69_SEND_TIMEOUT(p);
 	RFM69_SEND(p);
 
-	// return block_number as it is now the last packet number
-	return block_number;
+	return;
 }
 
 // transmit image size in blocks to the ground station
 void imageSize(uint8_t *p, int fifo_length) {
 	uint8_t packet_request = 0; // 0 when no request, 1 when contacted by ground station
 	uint8_t block_number[3]; // 3 uint8_t will give 24 bits
-	int image_size = (int) ceil((float) fifo_length / (float) PACKET_SIZE);
 
 	// clean buffer
 	memset(p, 0, sizeof(uint8_t) * PACKET_SIZE);
@@ -181,9 +170,9 @@ void imageSize(uint8_t *p, int fifo_length) {
 	}
 
 	// NOTE: block_number[0] is LSB, block_number[2] is MSB
-	block_number[0] = image_size & 0xFF;
-	block_number[1] = (image_size >> 8) & 0xFF;
-	block_number[2] = (image_size >> 16) & 0xFF;
+	block_number[0] = fifo_length & 0xFF;
+	block_number[1] = (fifo_length >> 8) & 0xFF;
+	block_number[2] = (fifo_length >> 16) & 0xFF;
 
 	// prepare packet
 	memset(p, 0, sizeof(uint8_t) * PACKET_SIZE);
