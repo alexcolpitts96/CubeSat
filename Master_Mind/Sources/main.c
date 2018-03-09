@@ -62,16 +62,18 @@ void master_init() {
 }
 
 int main() {
-	int mode_select = 9; // 8 is satellite, 9 is ground station
+	int mode_select = 8; // 8 is satellite, 9 is ground station
 	uint8_t *buffer = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
 	//uint8_t *camera = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
 
 	master_init();
 
 	while (mode_select == 8) {
-		int image_length, packets;
+		int image_length;
+		int packets = 0;
 
-		// take image
+		uint8_t **image;
+
 		capture();
 		image_length = fifo_len();
 
@@ -79,14 +81,16 @@ int main() {
 		packets = (int) ceil((float) image_length / (float) PACKET_SIZE);
 
 		// allocate memory for the image
-		uint8_t **image = (uint8_t **) malloc(packets * sizeof(uint8_t *));
+		image = (uint8_t **) malloc(packets * sizeof(uint8_t *));
 		for (int i = 0; i < packets; i++) {
 			image[i] = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
 		}
 
-		for(int i = 0; i < packets; i++){
-			for(int j = 0; j < PACKET_SIZE; j++){
+		// read image into memory
+		for (int i = 0; i < packets; i++) {
+			for (int j = 0; j < PACKET_SIZE; j++) {
 				image[i][j] = cam_reg_read(0x3D);
+				putty_putchar(image[i][j]);
 				//putty_putchar(image[i][j]); // for debugging
 			}
 		}
@@ -101,10 +105,11 @@ int main() {
 		for (int i = 0; i < packets; i++) {
 			free(image[i]);
 		}
-		free(image);
-	}
+		//free(image);
+		flush_fifo();
 
-	// packetRequest test - ground station
+	}
+// packetRequest test - ground station
 	while (mode_select == 9) {
 
 		uint32_t image_bytes = txStart(buffer);

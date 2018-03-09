@@ -133,19 +133,27 @@ int transmitPacket(uint8_t *p, uint8_t **image) {
 		// check if it is next packet or resend packet
 		//if (zero_counter == PACKET_SIZE - 3 && timeout) {
 		if (zero_counter == PACKET_SIZE - 3) {
-
 			packet_request = 1;
 		}
 	}
 
 	// determine the block number
+<<<<<<< HEAD
 	block_number = ((p[2] << 16) & 0xFF) | ((p[1] << 8) & 0xFF)
 			| ((p[0]) & 0xFF); //offset by 0x9 for testing
+=======
+	//block_number = ((p[2] << 16) & 0xFF) | ((p[1] << 8) & 0xFF)| ((p[0]) & 0xFF);
+	block_number = (p[2] << 16) | (p[1] << 8) | (p[0]);
+>>>>>>> 68ce725c9e1f1ab16ba2c9f243523eea11aa39f7
 
 	// read block from image into p
 	memcpy(p, image[block_number], sizeof(uint8_t) * PACKET_SIZE);
+	//for(int i = 0; i < PACKET_SIZE; i++){
+	//	p[i] = image[block_number][i];
+	//}
+	//memcpy(p, "0123456789ABCDEF", sizeof(uint8_t) * PACKET_SIZE);
 
-	// transmit packet multiple times
+	// transmit packet
 	//RFM69_SEND_TIMEOUT(p);
 	RFM69_SEND(p);
 
