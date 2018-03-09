@@ -144,7 +144,8 @@ int transmitPacket(uint8_t *p, uint8_t *camera, uint32_t last_block) {
 
 	// transmit packet
 	//RFM69_SEND_TIMEOUT(p);
-	RFM69_SEND(p);
+	//RFM69_SEND(p);
+	RFM69_SEND(camera);
 
 	return block_number;
 }

@@ -45,6 +45,7 @@
 #include "../Comms/Comms.h"
 #include "../Camera/camera.h"
 #include "../I2C/i2c.h"
+#include "sat_data.h"
 
 #define MAX_IMAGE_SIZE 0x5FFFF
 
@@ -81,11 +82,12 @@ int main() {
 		// determine how many packets are needed
 		packets = (int) ceil((float) image_length / (float) PACKET_SIZE);
 
-		// allocate memory for the image
+		/*// allocate memory for the image
 		image = (uint8_t **) malloc(packets * sizeof(uint8_t *));
 		for (int i = 0; i < packets; i++) {
 			image[i] = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
 		}
+		//*/
 
 		/*
 		// read image into memory
