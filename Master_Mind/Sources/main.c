@@ -64,8 +64,13 @@ void master_init() {
 
 int main() {
 	int mode_select = 9; // 8 is satellite, 9 is ground station
-	uint8_t *buffer = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
-	uint8_t *camera = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
+	//uint8_t *buffer = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
+	//uint8_t *camera = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
+
+	uint8_t buffer_arr[PACKET_SIZE];
+	uint8_t camera_arr[PACKET_SIZE];
+	uint8_t *buffer = &buffer_arr;
+	uint8_t *camera = &camera_arr;
 
 	master_init();
 

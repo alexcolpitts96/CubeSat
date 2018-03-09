@@ -140,7 +140,7 @@ int transmitPacket(uint8_t *p, uint8_t *camera, uint32_t last_block) {
 		}
 	}
 
-	memcpy(p, camera, sizeof(uint8_t) * PACKET_SIZE);
+	//memcpy(p, camera, sizeof(uint8_t) * PACKET_SIZE);
 
 	// transmit packet
 	//RFM69_SEND_TIMEOUT(p);
