@@ -112,12 +112,12 @@ int main() {
 				(float) image_bytes / (float) PACKET_SIZE);
 
 		// retrieve all of the packets
-		for (int i = 0; i < packet_number; i++) {
+		for (uint32_t i = 0; i < packet_number; i++) {
 			packetRequest(buffer, i);
 		}
 
 		// send the stop command
-		memset(buffer, 0, sizeof(uint8_t) * PACKET_SIZE);
+		memset(buffer, '\0', sizeof(uint8_t) * PACKET_SIZE);
 		memcpy((uint8_t *) buffer, &stop_command, sizeof(stop_command));
 		RFM69_SEND_TIMEOUT(buffer);
 	}

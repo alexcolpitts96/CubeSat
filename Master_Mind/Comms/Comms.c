@@ -30,22 +30,21 @@ void packetRequest(uint8_t *p, uint32_t block) {
 	while (!handshake) {
 
 		// load in block number
-		memset(p, 0, sizeof(uint8_t) * PACKET_SIZE);
+		memset(p, '\0', sizeof(uint8_t) * PACKET_SIZE);
 		p[0] = 0xFF & block; // simply mask
 		p[1] = 0xFF & (block >> 8); // shift down and mask
 		p[2] = 0xFF & (block >> 16);
-		//memcpy((uint8_t *) p, &next_command, sizeof(next_command));
 
 		// send block request packet
 		RFM69_SEND(p);
 
 		// clear buffer
-		memset(p, 0, sizeof(uint8_t) * PACKET_SIZE);
+		memset(p, '\0', sizeof(uint8_t) * PACKET_SIZE);
 
-		// receive confirmation signal, able to timeout
+		///* receive packet, able to timeout
 		timeout = RFM69_RECEIVE_TIMEOUT(p);
 
-		// ensure timeout hasn't occured
+		// ensure timeout hasn't happened
 		if (timeout == 1) {
 			handshake = 1;
 		}
@@ -54,16 +53,9 @@ void packetRequest(uint8_t *p, uint32_t block) {
 		else {
 			handshake = 0;
 		}
+		//*/
 	}
 
-	/* print the block number first to the data sheet
-	 sprintf((char *) temp, "block number %d", block); // warning is since it is uint8_t not char (equivalent)
-	 for (i = 0; i < PACKET_SIZE; i++) {
-	 putty_putchar(temp[i]);
-	 }
-	 //*/
-
-	//putty_putstr("\r\n");
 	// vomit the data over UART
 	for (int j = 0; j < PACKET_SIZE; j++) {
 		putty_putchar(p[j]);
@@ -75,7 +67,7 @@ uint32_t txStart(uint8_t *p) {
 	uint8_t handshake = 0;
 	uint8_t timeout = 0;
 
-	memset(p, 0, sizeof(uint8_t) * PACKET_SIZE);
+	memset(p, '\0', sizeof(uint8_t) * PACKET_SIZE);
 
 	///*// wait for contact to be made with the satellite
 	while (!handshake) {
@@ -87,7 +79,7 @@ uint32_t txStart(uint8_t *p) {
 		//putty_putchar('t');
 
 		// clear buffer
-		memset(p, 0, sizeof(uint8_t) * PACKET_SIZE);
+		memset(p, '\0', sizeof(uint8_t) * PACKET_SIZE);
 
 		// receive confirmation signal, able to timeout
 		timeout = RFM69_RECEIVE_TIMEOUT(p);
@@ -115,17 +107,19 @@ int transmitPacket(uint8_t *p, uint8_t **image) {
 	uint8_t packet_request = 0; // 0 when no request, 1 when contacted by ground station
 	uint32_t block_number;
 	int zero_counter = 0;
+	//uint8_t timeout;
 
 	// clean buffer
-	memset(p, 0, sizeof(uint8_t) * PACKET_SIZE);
+	memset(p, '\0', sizeof(uint8_t) * PACKET_SIZE);
 
 	// wait for packet to be requested
 	while (!packet_request) {
 		// receive packet request
 		RFM69_RECEIVE(p);
+		//timeout = RFM69_RECEIVE_TIMEOUT(p);
 
 		// if received end command return 0
-		if ((strcmp((char *) &stop_command, (char *) p) == 0)) {
+		if ((memcmp(&stop_command, p, sizeof(uint8_t) * PACKET_SIZE) == 0)) {
 			return 0;
 		}
 
@@ -137,7 +131,7 @@ int transmitPacket(uint8_t *p, uint8_t **image) {
 		}
 
 		// check if it is next packet or resend packet
-		//if (((strcmp((char *) &next_command, (char *) p) == 0)) || ((strcmp((char *) &resend_command, (char *) p) == 0))) {
+		//if (zero_counter == PACKET_SIZE - 3 && timeout) {
 		if (zero_counter == PACKET_SIZE - 3) {
 
 			packet_request = 1;
@@ -146,23 +140,10 @@ int transmitPacket(uint8_t *p, uint8_t **image) {
 
 	// determine the block number
 	block_number = ((p[2] << 16) & 0xFF) | ((p[1] << 8) & 0xFF)
-			| ((p[0]) & 0xFF);
-
-	/*// if the next block needs a new set of information
-	 if ((last_block == 0 && block_number == 0) || (block_number == last_block + 1)) {
-	 // read in next packet from camera
-	 for (int i = 0; i < PACKET_SIZE; i++) {
-	 camera[i] = cam_reg_read(0x3D);
-	 }
-	 }
-	 //*/
+			| ((p[0]) & 0xFF) - 0x9; //offset by 0x9 for testing
 
 	// read block from image into p
 	memcpy(p, image[block_number], sizeof(uint8_t) * PACKET_SIZE);
-
-	// read block from camera into p
-	//memcpy(p, camera, sizeof(uint8_t) * PACKET_SIZE);
-	//memcpy(p, "0123456789ABCDE", sizeof("0123456789ABCDE"));
 
 	// transmit packet multiple times
 	//RFM69_SEND_TIMEOUT(p);
@@ -175,17 +156,20 @@ int transmitPacket(uint8_t *p, uint8_t **image) {
 void imageSize(uint8_t *p, int fifo_length) {
 	uint8_t packet_request = 0; // 0 when no request, 1 when contacted by ground station
 	uint8_t block_number[3]; // 3 uint8_t will give 24 bits
+	uint8_t timeout;
 
 // clean buffer
-	memset(p, 0, sizeof(uint8_t) * PACKET_SIZE);
+	memset(p, '\0', sizeof(uint8_t) * PACKET_SIZE);
 
 // wait for packet to be requested
 	while (!packet_request) {
 		// receive packet request
-		RFM69_RECEIVE(p);
+		//RFM69_RECEIVE(p);
+		timeout = RFM69_RECEIVE_TIMEOUT(p);
 
 		// check if packet is start signal, ensure no timeout
-		if ((strcmp((char *) &start_command, (char *) p) == 0)) {
+		//if ((strcmp((char *) &start_command, (char *) p) == 0)) {
+		if ((memcmp( &start_command,  p, sizeof(uint8_t) * PACKET_SIZE) == 0) && timeout) {
 			packet_request = 1;
 		}
 	}
@@ -196,7 +180,7 @@ void imageSize(uint8_t *p, int fifo_length) {
 	block_number[2] = (fifo_length >> 16) & 0xFF;
 
 // prepare packet
-	memset(p, 0, sizeof(uint8_t) * PACKET_SIZE);
+	memset(p, '\0', sizeof(uint8_t) * PACKET_SIZE);
 	memcpy((uint8_t *) p, &block_number, sizeof(uint8_t) * 3);
 
 // transmit packet multiple times

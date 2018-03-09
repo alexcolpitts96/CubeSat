@@ -260,12 +260,17 @@ void RFM69_RECEIVE(uint8_t *buffer){
 
 	for(i = 0; i < 4; i++){
 		RFM69_RX(REG_FIFO); // dummy read
+		//putty_putchar(RFM69_RX(REG_FIFO));
 	}
+
+	//putty_putchar('\r');
+	//putty_putchar('\n');
 
 	i = 0;
 	//while(i < PACKET_SIZE && (RFM69_RX(REG_IRQFLAGS2) & RF_IRQFLAGS2_FIFONOTEMPTY)){
 	while(i < PACKET_SIZE && !RFM69_DIO0_Read()){
 		buffer[i] = RFM69_RX(REG_FIFO);
+		//putty_putchar(buffer[i]);
 		i++;
 	}
 
@@ -305,10 +310,14 @@ uint8_t RFM69_RECEIVE_TIMEOUT(uint8_t *buffer){
 		// set to standby once a package has been received to save power
 		RFM69_SET_MODE(RF_OPMODE_STANDBY);
 
-		// dummy reads to remove trash bytes
+		///*// dummy reads to remove trash bytes
 		for(i = 0; i < 4; i++){
 			RFM69_RX(REG_FIFO);
 		}
+		//*/
+
+		// make the buffer the same size as the
+		uint8_t *RFM_buffer = calloc(MAX_PACKET_SIZE, sizeof(uint8_t));
 
 		i = 0;
 		// read packet from fifo into the buffer
