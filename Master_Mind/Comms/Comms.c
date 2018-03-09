@@ -30,7 +30,7 @@ void packetRequest(uint8_t *p, uint32_t block) {
 	while (!handshake) {
 
 		// load in block number
-		memset(p, '\0', sizeof(uint8_t) * PACKET_SIZE);
+		memset(p, 0, sizeof(uint8_t) * PACKET_SIZE);
 		p[0] = 0xFF & block; // simply mask
 		p[1] = 0xFF & (block >> 8); // shift down and mask
 		p[2] = 0xFF & (block >> 16);
@@ -39,7 +39,7 @@ void packetRequest(uint8_t *p, uint32_t block) {
 		RFM69_SEND(p);
 
 		// clear buffer
-		memset(p, '\0', sizeof(uint8_t) * PACKET_SIZE);
+		memset(p, 0, sizeof(uint8_t) * PACKET_SIZE);
 
 		///* receive packet, able to timeout
 		timeout = RFM69_RECEIVE_TIMEOUT(p);
@@ -67,7 +67,7 @@ uint32_t txStart(uint8_t *p) {
 	uint8_t handshake = 0;
 	uint8_t timeout = 0;
 
-	memset(p, '\0', sizeof(uint8_t) * PACKET_SIZE);
+	memset(p, 0, sizeof(uint8_t) * PACKET_SIZE);
 
 	///*// wait for contact to be made with the satellite
 	while (!handshake) {
@@ -79,7 +79,7 @@ uint32_t txStart(uint8_t *p) {
 		//putty_putchar('t');
 
 		// clear buffer
-		memset(p, '\0', sizeof(uint8_t) * PACKET_SIZE);
+		memset(p, 0, sizeof(uint8_t) * PACKET_SIZE);
 
 		// receive confirmation signal, able to timeout
 		timeout = RFM69_RECEIVE_TIMEOUT(p);
@@ -110,7 +110,7 @@ int transmitPacket(uint8_t *p, uint8_t **image) {
 	//uint8_t timeout;
 
 	// clean buffer
-	memset(p, '\0', sizeof(uint8_t) * PACKET_SIZE);
+	memset(p, 0, sizeof(uint8_t) * PACKET_SIZE);
 
 	// wait for packet to be requested
 	while (!packet_request) {
@@ -138,13 +138,7 @@ int transmitPacket(uint8_t *p, uint8_t **image) {
 	}
 
 	// determine the block number
-<<<<<<< HEAD
-	block_number = ((p[2] << 16) & 0xFF) | ((p[1] << 8) & 0xFF)
-			| ((p[0]) & 0xFF); //offset by 0x9 for testing
-=======
-	//block_number = ((p[2] << 16) & 0xFF) | ((p[1] << 8) & 0xFF)| ((p[0]) & 0xFF);
 	block_number = (p[2] << 16) | (p[1] << 8) | (p[0]);
->>>>>>> 68ce725c9e1f1ab16ba2c9f243523eea11aa39f7
 
 	// read block from image into p
 	memcpy(p, image[block_number], sizeof(uint8_t) * PACKET_SIZE);
@@ -167,7 +161,7 @@ void imageSize(uint8_t *p, int fifo_length) {
 	//uint8_t timeout;
 
 // clean buffer
-	memset(p, '\0', sizeof(uint8_t) * PACKET_SIZE);
+	memset(p, 0, sizeof(uint8_t) * PACKET_SIZE);
 
 // wait for packet to be requested
 	while (!packet_request) {
@@ -177,7 +171,7 @@ void imageSize(uint8_t *p, int fifo_length) {
 
 		// check if packet is start signal, ensure no timeout
 		//if ((strcmp((char *) &start_command, (char *) p) == 0)) {
-		if ((memcmp( &start_command,  p, sizeof(uint8_t) * PACKET_SIZE) == 0)) {
+		if ((memcmp(&start_command, p, sizeof(uint8_t) * PACKET_SIZE) == 0)) {
 			packet_request = 1;
 		}
 	}
@@ -188,7 +182,7 @@ void imageSize(uint8_t *p, int fifo_length) {
 	block_number[2] = (fifo_length >> 16) & 0xFF;
 
 // prepare packet
-	memset(p, '\0', sizeof(uint8_t) * PACKET_SIZE);
+	memset(p, 0, sizeof(uint8_t) * PACKET_SIZE);
 	memcpy((uint8_t *) p, &block_number, sizeof(uint8_t) * 3);
 
 // transmit packet multiple times
