@@ -119,7 +119,10 @@ int main() {
 		// send the stop command once image received
 		memset(buffer, '\0', sizeof(uint8_t) * PACKET_SIZE);
 		memcpy((uint8_t *) buffer, &stop_command, sizeof(stop_command));
-		RFM69_SEND_TIMEOUT(buffer);
+		RFM69_SEND(buffer);
+		RFM69_SEND(buffer);
+		RFM69_SEND(buffer);
+		//RFM69_SEND_TIMEOUT(buffer);
 	}
 
 	return 0;

@@ -140,7 +140,7 @@ int transmitPacket(uint8_t *p, uint8_t **image) {
 
 	// determine the block number
 	block_number = ((p[2] << 16) & 0xFF) | ((p[1] << 8) & 0xFF)
-			| ((p[0]) & 0xFF) - 0x9; //offset by 0x9 for testing
+			| ((p[0]) & 0xFF); //offset by 0x9 for testing
 
 	// read block from image into p
 	memcpy(p, image[block_number], sizeof(uint8_t) * PACKET_SIZE);
