@@ -156,7 +156,7 @@ int transmitPacket(uint8_t *p, uint8_t **image) {
 void imageSize(uint8_t *p, int fifo_length) {
 	uint8_t packet_request = 0; // 0 when no request, 1 when contacted by ground station
 	uint8_t block_number[3]; // 3 uint8_t will give 24 bits
-	uint8_t timeout;
+	//uint8_t timeout;
 
 // clean buffer
 	memset(p, '\0', sizeof(uint8_t) * PACKET_SIZE);
@@ -164,12 +164,12 @@ void imageSize(uint8_t *p, int fifo_length) {
 // wait for packet to be requested
 	while (!packet_request) {
 		// receive packet request
-		//RFM69_RECEIVE(p);
-		timeout = RFM69_RECEIVE_TIMEOUT(p);
+		RFM69_RECEIVE(p);
+		//timeout = RFM69_RECEIVE_TIMEOUT(p);
 
 		// check if packet is start signal, ensure no timeout
 		//if ((strcmp((char *) &start_command, (char *) p) == 0)) {
-		if ((memcmp( &start_command,  p, sizeof(uint8_t) * PACKET_SIZE) == 0) && timeout) {
+		if ((memcmp( &start_command,  p, sizeof(uint8_t) * PACKET_SIZE) == 0)) {
 			packet_request = 1;
 		}
 	}
@@ -184,6 +184,7 @@ void imageSize(uint8_t *p, int fifo_length) {
 	memcpy((uint8_t *) p, &block_number, sizeof(uint8_t) * 3);
 
 // transmit packet multiple times
-	RFM69_SEND_TIMEOUT(p);
+	//RFM69_SEND_TIMEOUT(p);
+	RFM69_SEND(p);
 }
 

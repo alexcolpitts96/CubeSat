@@ -62,7 +62,7 @@ void master_init() {
 }
 
 int main() {
-	int mode_select = 8; // 8 is satellite, 9 is ground station
+	int mode_select = 9; // 8 is satellite, 9 is ground station
 	uint8_t *buffer = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
 	//uint8_t *camera = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
 
@@ -116,7 +116,7 @@ int main() {
 			packetRequest(buffer, i);
 		}
 
-		// send the stop command
+		// send the stop command once image received
 		memset(buffer, '\0', sizeof(uint8_t) * PACKET_SIZE);
 		memcpy((uint8_t *) buffer, &stop_command, sizeof(stop_command));
 		RFM69_SEND_TIMEOUT(buffer);
