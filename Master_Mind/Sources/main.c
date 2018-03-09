@@ -62,15 +62,16 @@ void master_init() {
 }
 
 int main() {
-	int mode_select = 8; // 8 is satellite, 9 is ground station
+	int mode_select = 9; // 8 is satellite, 9 is ground station
 	uint8_t *buffer = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
-	//uint8_t *camera = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
+	uint8_t *camera = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
 
 	master_init();
 
 	while (mode_select == 8) {
 		int image_length;
 		int packets = 0;
+		uint32_t last_block;
 
 		uint8_t **image;
 
@@ -86,6 +87,7 @@ int main() {
 			image[i] = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
 		}
 
+		/*
 		// read image into memory
 		for (int i = 0; i < packets; i++) {
 			for (int j = 0; j < PACKET_SIZE; j++) {
@@ -94,12 +96,16 @@ int main() {
 				//putty_putchar(image[i][j]); // for debugging
 			}
 		}
+		//*/
 
 		// transmit size of the image and wait for the start command
 		imageSize(buffer, image_length);
 
 		// transmit packets until stop command received
-		while (transmitPacket(buffer, image));
+		last_block = 0;
+		while (last_block < packets){
+			last_block = transmitPacket(buffer, camera, last_block);
+		}
 
 		// free memory for the image
 		for (int i = 0; i < packets; i++) {

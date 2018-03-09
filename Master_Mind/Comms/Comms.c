@@ -102,8 +102,8 @@ uint32_t txStart(uint8_t *p) {
 //////////////////////////////////// Satellite Functions ////////////////////////////////////
 
 // transmit requested block from buffer (camera) using buffer (p) to transmit
-int transmitPacket(uint8_t *p, uint8_t **image) {
-//uint32_t transmitPacket(uint8_t *p, uint8_t *camera, uint32_t last_block) {
+//int transmitPacket(uint8_t *p, uint8_t **image) {
+int transmitPacket(uint8_t *p, uint8_t *camera, uint32_t last_block) {
 	uint8_t packet_request = 0; // 0 when no request, 1 when contacted by ground station
 	uint32_t block_number;
 	int zero_counter = 0;
@@ -116,12 +116,6 @@ int transmitPacket(uint8_t *p, uint8_t **image) {
 	while (!packet_request) {
 		// receive packet request
 		RFM69_RECEIVE(p);
-		//timeout = RFM69_RECEIVE_TIMEOUT(p);
-
-		// if received end command return 0
-		if ((memcmp(&stop_command, p, sizeof(uint8_t) * PACKET_SIZE) == 0)) {
-			return 0;
-		}
 
 		// start where the packet number isn't
 		for (int i = 3; i < PACKET_SIZE; i++) {
@@ -130,8 +124,7 @@ int transmitPacket(uint8_t *p, uint8_t **image) {
 			}
 		}
 
-		// check if it is next packet or resend packet
-		//if (zero_counter == PACKET_SIZE - 3 && timeout) {
+		// ensure it is a good request
 		if (zero_counter == PACKET_SIZE - 3) {
 			packet_request = 1;
 		}
@@ -140,18 +133,20 @@ int transmitPacket(uint8_t *p, uint8_t **image) {
 	// determine the block number
 	block_number = (p[2] << 16) | (p[1] << 8) | (p[0]);
 
-	// read block from image into p
-	memcpy(p, image[block_number], sizeof(uint8_t) * PACKET_SIZE);
-	//for(int i = 0; i < PACKET_SIZE; i++){
-	//	p[i] = image[block_number][i];
-	//}
-	//memcpy(p, "0123456789ABCDEF", sizeof(uint8_t) * PACKET_SIZE);
+	// read in from camera as needed
+	if((block_number == 0 && last_block == 0) || (block_number == last_block + 1)){
+		for(int i = 0; i < PACKET_SIZE; i++){
+			camera[i] = cam_reg_read(0x3D);
+		}
+	}
+
+	memcpy(p, camera, sizeof(uint8_t) * PACKET_SIZE);
 
 	// transmit packet
 	//RFM69_SEND_TIMEOUT(p);
 	RFM69_SEND(p);
 
-	return 1;
+	return block_number;
 }
 
 // transmit image size in blocks to the ground station

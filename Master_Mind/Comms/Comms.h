@@ -26,7 +26,7 @@ uint32_t txStart(uint8_t *p);
 //////////////////////////////////// Satellite Functions ////////////////////////////////////
 
 // transmit requested block from storage (s) using buffer (p) to transmit -------------------------------- UNTESTED
-int transmitPacket(uint8_t *p, uint8_t **image);
+int transmitPacket(uint8_t *p, uint8_t *camera, uint32_t last_block);
 //uint32_t transmitPacket(uint8_t *p, uint8_t *camera, uint32_t last_block);
 
 // transmit image size in blocks to the ground station

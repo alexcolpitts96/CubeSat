@@ -158,7 +158,7 @@ void fifo_read() {
 		return; // ERROR
 	}
 
-	int read_count = 0;
+	//int read_count = 0;
 
 	//int packet_number = (int) ceil((float) len / (float) PACKET_SIZE);
 
