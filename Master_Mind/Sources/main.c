@@ -45,12 +45,9 @@
 #include "../Comms/Comms.h"
 #include "../Camera/camera.h"
 #include "../I2C/i2c.h"
+#include "flash.h"
 
 #define MAX_IMAGE_SIZE 0x5FFFF
-
-// memory map locations (p. 147)
-#define MEMORY_MAP_START 0x40053000
-#define MEMORY_MAP_END 0x40060000
 
 void master_init() {
 	UART0_Init();
@@ -75,10 +72,6 @@ int main() {
 	uint8_t *buffer = &buffer_arr;
 	uint8_t *camera = &camera_arr;
 	uint8_t image[10000];
-
-	// can safely allocate around 200kB in the memory locations defined
-	uint8_t *image_loc = MEMORY_MAP_START;
-	image_loc[0] = 1;
 
 	master_init();
 
