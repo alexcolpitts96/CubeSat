@@ -45,9 +45,12 @@
 #include "../Comms/Comms.h"
 #include "../Camera/camera.h"
 #include "../I2C/i2c.h"
-#include "sat_data.h"
 
 #define MAX_IMAGE_SIZE 0x5FFFF
+
+// memory map locations (p. 147)
+#define MEMORY_MAP_START 0x40053000
+#define MEMORY_MAP_END 0x40060000
 
 void master_init() {
 	UART0_Init();
@@ -63,7 +66,7 @@ void master_init() {
 }
 
 int main() {
-	int mode_select = 9; // 8 is satellite, 9 is ground station
+	int mode_select = 8; // 8 is satellite, 9 is ground station
 	//uint8_t *buffer = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
 	//uint8_t *camera = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
 
@@ -71,57 +74,40 @@ int main() {
 	uint8_t camera_arr[PACKET_SIZE];
 	uint8_t *buffer = &buffer_arr;
 	uint8_t *camera = &camera_arr;
+	uint8_t image[10000];
+
+	// can safely allocate around 200kB in the memory locations defined
+	uint8_t *image_loc = MEMORY_MAP_START;
+	image_loc[0] = 1;
 
 	master_init();
 
 	while (mode_select == 8) {
 		int image_length;
-		int packets = 0;
-		uint32_t last_block;
-
-		uint8_t **image;
 
 		capture();
 		image_length = fifo_len();
 
-		// determine how many packets are needed
-		packets = (int) ceil((float) image_length / (float) PACKET_SIZE);
-
-		/*// allocate memory for the image
-		image = (uint8_t **) malloc(packets * sizeof(uint8_t *));
-		for (int i = 0; i < packets; i++) {
-			image[i] = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
+		// read the image into the array
+		for (int i = 0; i < image_length; i++) {
+			image[i] = cam_reg_read(0x3D);
+			//putty_putchar(image[i]);
 		}
-		//*/
 
-		/*
-		// read image into memory
-		for (int i = 0; i < packets; i++) {
-			for (int j = 0; j < PACKET_SIZE; j++) {
-				image[i][j] = cam_reg_read(0x3D);
-				putty_putchar(image[i][j]);
-				//putty_putchar(image[i][j]); // for debugging
-			}
+		for (int i = 0; i < image_length; i++) {
+			putty_putchar(image[i]);
 		}
-		//*/
 
 		// transmit size of the image and wait for the start command
 		imageSize(buffer, image_length);
 
 		// transmit packets until stop command received
-		last_block = 0;
-		while (last_block < packets){
-			last_block = transmitPacket(buffer, camera, last_block);
-		}
+		while (transmitPacket(buffer, camera, &image));
 
-		// free memory for the image
-		for (int i = 0; i < packets; i++) {
-			free(image[i]);
-		}
-		//free(image);
+		// clear the camera memory
 		flush_fifo();
-
 	}
+
 // packetRequest test - ground station
 	while (mode_select == 9) {
 
@@ -130,7 +116,7 @@ int main() {
 				(float) image_bytes / (float) PACKET_SIZE);
 
 		// retrieve all of the packets
-		for (uint32_t i = 0; i < packet_number; i++) {
+		for (int i = 0; i < packet_number; i++) {
 			packetRequest(buffer, i);
 		}
 
@@ -140,7 +126,8 @@ int main() {
 		RFM69_SEND(buffer);
 		RFM69_SEND(buffer);
 		RFM69_SEND(buffer);
-		//RFM69_SEND_TIMEOUT(buffer);
+		RFM69_SEND(buffer);
+		RFM69_SEND(buffer);
 	}
 
 	return 0;

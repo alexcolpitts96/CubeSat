@@ -103,7 +103,7 @@ uint32_t txStart(uint8_t *p) {
 
 // transmit requested block from buffer (camera) using buffer (p) to transmit
 //int transmitPacket(uint8_t *p, uint8_t **image) {
-int transmitPacket(uint8_t *p, uint8_t *camera, uint32_t last_block) {
+int transmitPacket(uint8_t *p, uint8_t *camera, uint8_t *image) {
 	uint8_t packet_request = 0; // 0 when no request, 1 when contacted by ground station
 	uint32_t block_number;
 	int zero_counter = 0;
@@ -116,6 +116,11 @@ int transmitPacket(uint8_t *p, uint8_t *camera, uint32_t last_block) {
 	while (!packet_request) {
 		// receive packet request
 		RFM69_RECEIVE(p);
+
+		// return 0 if stop command received
+		if ((memcmp(&stop_command, p, sizeof(uint8_t) * PACKET_SIZE) == 0)) {
+			return 0;
+		}
 
 		// start where the packet number isn't
 		for (int i = 3; i < PACKET_SIZE; i++) {
@@ -133,21 +138,17 @@ int transmitPacket(uint8_t *p, uint8_t *camera, uint32_t last_block) {
 	// determine the block number
 	block_number = (p[2] << 16) | (p[1] << 8) | (p[0]);
 
-	// read in from camera as needed
-	if((block_number == 0 && last_block == 0) || (block_number == last_block + 1)){
-		for(int i = 0; i < PACKET_SIZE; i++){
-			camera[i] = cam_reg_read(0x3D);
-		}
+	// read the correct block into the buffer CAMERA
+	for (int i = 0; i < PACKET_SIZE; i++) {
+		camera[i] = image[block_number * PACKET_SIZE + i];
+		//putty_putchar(camera[i]);
 	}
 
-	//memcpy(p, camera, sizeof(uint8_t) * PACKET_SIZE);
-
 	// transmit packet
-	//RFM69_SEND_TIMEOUT(p);
-	//RFM69_SEND(p);
 	RFM69_SEND(camera);
 
-	return block_number;
+	// return 1 if packet was transmitted and no stop requested
+	return 1;
 }
 
 // transmit image size in blocks to the ground station
