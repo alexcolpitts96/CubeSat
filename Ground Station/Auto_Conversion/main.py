@@ -9,8 +9,11 @@
 
 import time
 from putty2jpeg import *
+from serial_read import *
+
+#readImage()
 
 # convert logs to images every second
 while 1:
-    p2j(79) # 79 for camera images, 80 for test.jpeg
+    p2j()
     time.sleep(1)

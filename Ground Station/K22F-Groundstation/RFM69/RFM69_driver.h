@@ -7,6 +7,8 @@
 #ifndef SOURCES_RFM69_RFM69_H
 #define SOURCES_RFM69_RFM69_H
 
+#define PACKET_SIZE 16
+
 void RFM69_TX(uint8_t REG, uint8_t tx_byte);
 
 uint8_t RFM69_RX(uint8_t REG);

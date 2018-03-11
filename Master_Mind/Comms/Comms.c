@@ -16,13 +16,15 @@
 #include "../GPIO/gpio.h" // included in RFM69 driver
 #include "../UART1/UART1_driver.h"
 #include "Comms.h"
+#include "math.h"
+#include "../Camera/camera.h"
 
 ////////////////////////////////// GroundStation Functions //////////////////////////////////
 
 // request packet number for satellite to transmit, p[0] is LSB, p[1] is MSB for request -------------------- UNTESTED
-void packetRequest(uint8_t *p, uint16_t block) {
+void packetRequest(uint8_t *p, uint32_t block) {
 	uint8_t handshake = 0;
-	uint8_t timeout = 0, i;
+	uint8_t timeout = 0;
 
 	///*// wait for contact to be made with the satellite
 	while (!handshake) {
@@ -31,6 +33,7 @@ void packetRequest(uint8_t *p, uint16_t block) {
 		memset(p, 0, sizeof(uint8_t) * PACKET_SIZE);
 		p[0] = 0xFF & block; // simply mask
 		p[1] = 0xFF & (block >> 8); // shift down and mask
+		p[2] = 0xFF & (block >> 16);
 
 		// send block request packet
 		RFM69_SEND(p);
@@ -38,10 +41,10 @@ void packetRequest(uint8_t *p, uint16_t block) {
 		// clear buffer
 		memset(p, 0, sizeof(uint8_t) * PACKET_SIZE);
 
-		// receive confirmation signal, able to timeout
+		///* receive packet, able to timeout
 		timeout = RFM69_RECEIVE_TIMEOUT(p);
 
-		// ensure timeout hasn't occured
+		// ensure timeout hasn't happened
 		if (timeout == 1) {
 			handshake = 1;
 		}
@@ -50,25 +53,17 @@ void packetRequest(uint8_t *p, uint16_t block) {
 		else {
 			handshake = 0;
 		}
+		//*/
 	}
-
-	/* print the block number first to the data sheet
-	sprintf((char *) temp, "block number %d", block); // warning is since it is uint8_t not char (equivalent)
-	for (i = 0; i < PACKET_SIZE; i++) {
-		putty_putchar(temp[i]);
-	}
-	//*/
-
-	//putty_putstr("\r\n");
 
 	// vomit the data over UART
-	for (i = 0; i < PACKET_SIZE; i++) {
-		putty_putchar(p[i]);
+	for (int j = 0; j < PACKET_SIZE; j++) {
+		putty_putchar(p[j]);
 	}
 }
 
 // get satellite to start transmitting from p, receives image block count into p
-void txStart(uint8_t *p) {
+uint32_t txStart(uint8_t *p) {
 	uint8_t handshake = 0;
 	uint8_t timeout = 0;
 
@@ -99,16 +94,20 @@ void txStart(uint8_t *p) {
 			handshake = 0;
 		}
 	}
+
+	// read out the image size from p and return it
+	return (p[0]) | (p[1] << 8) | (p[2] << 16);
 }
 
 //////////////////////////////////// Satellite Functions ////////////////////////////////////
 
-// transmit requested block from storage (s) using buffer (p) to transmit
-void transmitPacket(uint8_t *p, uint8_t **s) {
+// transmit requested block from buffer (camera) using buffer (p) to transmit
+//int transmitPacket(uint8_t *p, uint8_t **image) {
+int transmitPacket(uint8_t *p, uint8_t *camera, uint8_t *image) {
 	uint8_t packet_request = 0; // 0 when no request, 1 when contacted by ground station
-	uint8_t i;
-	uint8_t packet_zeros;
-	uint16_t block_number;
+	uint32_t block_number;
+	int zero_counter = 0;
+	//uint8_t timeout;
 
 	// clean buffer
 	memset(p, 0, sizeof(uint8_t) * PACKET_SIZE);
@@ -118,68 +117,73 @@ void transmitPacket(uint8_t *p, uint8_t **s) {
 		// receive packet request
 		RFM69_RECEIVE(p);
 
-		// check how many zeros are in the packet excluding the first two entries
-		packet_zeros = 0;
-		for (i = 2; i < PACKET_SIZE; i++) {
+		// return 0 if stop command received
+		if ((memcmp(&stop_command, p, sizeof(uint8_t) * PACKET_SIZE) == 0)) {
+			return 0;
+		}
+
+		// start where the packet number isn't
+		for (int i = 3; i < PACKET_SIZE; i++) {
 			if (p[i] == 0) {
-				packet_zeros++;
+				zero_counter++;
 			}
 		}
 
-		// check if all bytes are 0 except for the first 2 (0, 1)
-		if (packet_zeros == PACKET_SIZE - 2) {
+		// ensure it is a good request
+		if (zero_counter == PACKET_SIZE - 3) {
 			packet_request = 1;
 		}
 	}
 
 	// determine the block number
-	block_number = (p[1] << 8) | (p[0]);
+	block_number = (p[2] << 16) | (p[1] << 8) | (p[0]);
 
-	// read block from s into p
-	memset(p, 0, sizeof(uint8_t) * PACKET_SIZE);
-	//memcpy(p, s[block_number], sizeof(uint8_t) * PACKET_SIZE);
-
-	for(int loc = 0; loc < PACKET_SIZE; loc++){
-		p[loc] = s[block_number][loc];
+	// read the correct block into the buffer CAMERA
+	for (int i = 0; i < PACKET_SIZE; i++) {
+		camera[i] = image[block_number * PACKET_SIZE + i];
+		//putty_putchar(camera[i]);
 	}
 
+	// transmit packet
+	RFM69_SEND(camera);
 
-	// transmit packet multiple times
-	//RFM69_SEND_TIMEOUT(p);
-	RFM69_SEND(p);
+	// return 1 if packet was transmitted and no stop requested
+	return 1;
 }
 
 // transmit image size in blocks to the ground station
-void imageSize(uint8_t *p, uint16_t image_size) {
+void imageSize(uint8_t *p, int fifo_length) {
 	uint8_t packet_request = 0; // 0 when no request, 1 when contacted by ground station
-	uint8_t block_number[2]; // 2 uint8_t will give 16 bits effectively
+	uint8_t block_number[3]; // 3 uint8_t will give 24 bits
+	//uint8_t timeout;
 
-	// clean buffer
+// clean buffer
 	memset(p, 0, sizeof(uint8_t) * PACKET_SIZE);
 
-	// wait for packet to be requested
+// wait for packet to be requested
 	while (!packet_request) {
 		// receive packet request
 		RFM69_RECEIVE(p);
+		//timeout = RFM69_RECEIVE_TIMEOUT(p);
 
 		// check if packet is start signal, ensure no timeout
-		if ((strcmp((char *) &start_command, (char *) p) == 0)) {
+		//if ((strcmp((char *) &start_command, (char *) p) == 0)) {
+		if ((memcmp(&start_command, p, sizeof(uint8_t) * PACKET_SIZE) == 0)) {
 			packet_request = 1;
 		}
 	}
 
-	// NOTE: block_number[0] is LSB, block_number[1] is MSB
-	// mask 8 LSB into block_number
-	block_number[0] = image_size & 0xFF;
+// NOTE: block_number[0] is LSB, block_number[2] is MSB
+	block_number[0] = fifo_length & 0xFF;
+	block_number[1] = (fifo_length >> 8) & 0xFF;
+	block_number[2] = (fifo_length >> 16) & 0xFF;
 
-	// mask 8 MSB bits and shift down into block_number
-	block_number[1] = (image_size & 0xFF00) >> 8;
-
-	// prepare packet
+// prepare packet
 	memset(p, 0, sizeof(uint8_t) * PACKET_SIZE);
-	memcpy((uint8_t *) p, &block_number, sizeof(uint8_t) * 2);
+	memcpy((uint8_t *) p, &block_number, sizeof(uint8_t) * 3);
 
-	// transmit packet multiple times
-	RFM69_SEND_TIMEOUT(p);
+// transmit packet multiple times
+	//RFM69_SEND_TIMEOUT(p);
+	RFM69_SEND(p);
 }
 

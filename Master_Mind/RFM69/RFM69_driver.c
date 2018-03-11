@@ -4,6 +4,7 @@
 #include "RFM69registers.h"
 #include "../GPIO/gpio.h"
 #include "../FTM/FTM_driver.h" // needed for timeout capability
+#include "../RFM69/RFM69_driver.h"
 
 // need access to memset and standard commands
 #include <stdio.h>
@@ -13,9 +14,6 @@
 #define RFM_WRITE 0x80
 #define RFM_READ 0x00
 #define LISTEN_ABORT_IGNORE 0xE3
-//#define PACKET_SIZE 66
-#define PACKET_SIZE 10
-#define MAX_PACKET_SIZE 66
 
 // configuration structure and drivers have been modified from https://github.com/LowPowerLab/RFM69/blob/master/RFM69.cpp
 const uint8_t CONFIG[][2] = {
@@ -262,12 +260,17 @@ void RFM69_RECEIVE(uint8_t *buffer){
 
 	for(i = 0; i < 4; i++){
 		RFM69_RX(REG_FIFO); // dummy read
+		//putty_putchar(RFM69_RX(REG_FIFO));
 	}
+
+	//putty_putchar('\r');
+	//putty_putchar('\n');
 
 	i = 0;
 	//while(i < PACKET_SIZE && (RFM69_RX(REG_IRQFLAGS2) & RF_IRQFLAGS2_FIFONOTEMPTY)){
 	while(i < PACKET_SIZE && !RFM69_DIO0_Read()){
 		buffer[i] = RFM69_RX(REG_FIFO);
+		//putty_putchar(buffer[i]);
 		i++;
 	}
 
@@ -307,10 +310,11 @@ uint8_t RFM69_RECEIVE_TIMEOUT(uint8_t *buffer){
 		// set to standby once a package has been received to save power
 		RFM69_SET_MODE(RF_OPMODE_STANDBY);
 
-		// dummy reads to remove trash bytes
+		///*// dummy reads to remove trash bytes
 		for(i = 0; i < 4; i++){
 			RFM69_RX(REG_FIFO);
 		}
+		//*/
 
 		i = 0;
 		// read packet from fifo into the buffer

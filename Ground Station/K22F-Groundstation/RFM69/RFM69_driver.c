@@ -4,6 +4,7 @@
 #include "RFM69registers.h"
 #include "../GPIO/gpio.h"
 #include "../FTM/FTM_driver.h" // needed for timeout capability
+#include "../RFM69/RFM69_driver.h"
 
 // need access to memset and standard commands
 #include <stdio.h>
@@ -14,7 +15,6 @@
 #define RFM_READ 0x00
 #define LISTEN_ABORT_IGNORE 0xE3
 //#define PACKET_SIZE 66
-#define PACKET_SIZE 10
 #define MAX_PACKET_SIZE 66
 
 // configuration structure and drivers have been modified from https://github.com/LowPowerLab/RFM69/blob/master/RFM69.cpp
