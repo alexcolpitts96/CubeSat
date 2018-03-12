@@ -84,7 +84,7 @@ int main() {
 		// read the image into the array
 		for (int i = 0; i < image_length; i++) {
 			image[i] = cam_reg_read(0x3D);
-			//putty_putchar(image[i]);
+			putty_putchar(image[i]);
 		}
 
 		for (int i = 0; i < image_length; i++) {
