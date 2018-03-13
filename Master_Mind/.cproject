@@ -53,6 +53,7 @@
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.std.1016285329" name="Language standard" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.std" useByScannerDiscovery="true" value="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.std.c99" valueType="enumerated"/>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths.1112802864" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;../Sources&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ksdk_platform_lib_K22F51212}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;../Project_Settings/Startup_Code&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;../SDK/platform/CMSIS/Include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;../SDK/platform/devices&quot;"/>
