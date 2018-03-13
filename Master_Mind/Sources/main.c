@@ -45,10 +45,6 @@
 #include "../Comms/Comms.h"
 #include "../Camera/camera.h"
 #include "../I2C/i2c.h"
-#include "flash_demo.h"
-//#include "/home/alex/KSDK_1.3.0/examples/frdmk22f/board.h"
-//#include "/home/alex/KSDK_1.3.0/platform/drivers/inc/fsl_gpio_driver.h"
-//#include "/home/alex/KSDK_1.3.0/platform/hal/inc/fsl_port_hal.h"
 
 #define MAX_IMAGE_SIZE 0x5FFFF
 
@@ -64,27 +60,6 @@ void master_init() {
 	SPI1_Init(16);
 	camera_init();
 }
-
-uint8_t DataArray[PGM_SIZE_BYTE];
-uint8_t program_buffer[BUFFER_SIZE_BYTE];
-uint32_t gCallBackCnt; /* global counter in callback(). */
-pFLASHCOMMANDSEQUENCE g_FlashLaunchCommand = (pFLASHCOMMANDSEQUENCE)0xFFFFFFFF;
-uint16_t __ram_func[LAUNCH_CMD_SIZE/2];
-uint16_t __ram_for_callback[CALLBACK_SIZE/2]; /* length of this array depends on total size of the functions need to be copied to RAM*/
-
-
-FLASH_SSD_CONFIG flashSSDConfig =
-{
-    FTFx_REG_BASE,          /* FTFx control register base */
-    P_FLASH_BASE,           /* base address of PFlash block */
-    P_FLASH_SIZE,           /* size of PFlash block */
-    FLEXNVM_BASE,           /* base address of DFlash block */
-    0,                      /* size of DFlash block */
-    EERAM_BASE,             /* base address of EERAM block */
-    0,                      /* size of EEE block */
-    DEBUGENABLE,            /* background debug mode enable bit */
-    NULL_CALLBACK           /* pointer to callback function */
-};
 
 int main() {
 	int mode_select = 8; // 8 is satellite, 9 is ground station
@@ -105,9 +80,12 @@ int main() {
 		capture();
 		image_length = fifo_len();
 
+		///*
 		// read the image into the array
 		for (int i = 0; i < image_length; i++) {
 			image[i] = cam_reg_read(0x3D);
+
+			putty_putchar(image[i]);
 
 			// this had no errors
 			//image[i] = '0' + (i%10);
@@ -116,12 +94,14 @@ int main() {
 		for (int i = 0; i < image_length; i++) {
 			putty_putchar(image[i]);
 		}
+		//*/
 
 		// transmit size of the image and wait for the start command
 		imageSize(buffer, image_length);
 
 		// transmit packets until stop command received
-		while (transmitPacket(buffer, camera, image));
+		while (transmitPacket(buffer, camera, image))
+			;
 
 		// clear the camera memory
 		flush_fifo();

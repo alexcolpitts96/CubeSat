@@ -135,6 +135,7 @@ int transmitPacket(uint8_t *p, uint8_t *camera, uint8_t *image) {
 		}
 	}
 
+	///*
 	// determine the block number
 	block_number = (p[2] << 16) | (p[1] << 8) | (p[0]);
 
@@ -143,6 +144,13 @@ int transmitPacket(uint8_t *p, uint8_t *camera, uint8_t *image) {
 		camera[i] = image[block_number * PACKET_SIZE + i];
 		//putty_putchar(camera[i]);
 	}
+	//*/
+
+	/*
+	 for (int i = 0; i < 10; i++) {
+	 camera[i] = cam_reg_read(0x3D);
+	 }
+	 //*/
 
 	// transmit packet
 	RFM69_SEND(camera);
