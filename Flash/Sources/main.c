@@ -31,6 +31,10 @@
 // Standard C Included Files
 #include <string.h>
 #include <stdio.h>
+#include "stdlib.h"
+#include "string.h"
+#include "math.h"
+
 // SDK Included Files
 #include "board.h"
 #include "main.h"
@@ -40,13 +44,25 @@
 #include "flash_demo.h"
 #include "fsl_interrupt_manager.h"
 
+// custom libraries
+#include "../RFM69/RFM69_driver.h"
+#include "../UART1/UART1_driver.h"
+#include "../FTM/FTM_driver.h"
+#include "../UART0/UART0_driver.h"
+#include "../SPI0/SPI0_driver.h"
+#include "../GPIO/gpio.h" // included in RFM69 driver
+#include "../Comms/Comms.h"
+#include "../Camera/camera.h"
+#include "../I2C/i2c.h"
+
 uint8_t DataArray[PGM_SIZE_BYTE];
-uint8_t program_buffer[BUFFER_SIZE_BYTE];
+//uint8_t program_buffer[BUFFER_SIZE_BYTE];
+uint8_t program_buffer[FTFx_PSECTOR_SIZE * 6]; // fill entire flash space remaining
 uint8_t return_buffer[BUFFER_SIZE_BYTE];
 uint32_t gCallBackCnt; /* global counter in callback(). */
 //pFLASHCOMMANDSEQUENCE g_FlashLaunchCommand = (pFLASHCOMMANDSEQUENCE) 0xFFFFFFFF;
 
-uint16_t ramFunc[LAUNCH_CMD_SIZE/2];
+uint16_t ramFunc[LAUNCH_CMD_SIZE / 2];
 /* array to copy __Launch_Command func to RAM */
 uint16_t __ram_func[LAUNCH_CMD_SIZE / 2];
 uint16_t __ram_for_callback[CALLBACK_SIZE / 2]; /* length of this array depends on total size of the functions need to be copied to RAM*/
@@ -63,12 +79,27 @@ NULL_CALLBACK /* pointer to callback function */
 };
 
 // get stuck if an error occurs
-void error_trap(uint32_t ret){
-	if(ret != FTFx_OK){
-		while(1);
+void error_trap(uint32_t ret) {
+	if (ret != FTFx_OK) {
+		while (1)
+			;
 	}
 }
 
+void master_init() {
+	UART0_Init();
+	//UART1_putty_init();
+	SPI0_Init(16);
+	RFM69_DIO0_Init();
+	RFM69_Init(); // must always be after the SPI interface has been enabled
+	FTM0_init();
+	FTM1_init();
+	init_I2C();
+	SPI1_Init(16);
+	camera_init();
+}
+
+// NOTE: for FRDMK22F There is 6 blocks of 2048 bytes to use
 int main(void) {
 	uint32_t ret; /* Return code from each SSD function */
 	uint32_t destination; /* Address of the target location */
@@ -79,10 +110,8 @@ int main(void) {
 	//uint32_t *p_data;
 	uint32_t margin_read_level; /* 0=normal, 1=user - margin read for reading 1's */
 	uint8_t *flash_pointer;
-
-#if (!defined(SWAP_M))
-    uint32_t i, FailAddr;
-#endif
+	uint32_t i, FailAddr;
+	int image_length;
 
 	gCallBackCnt = 0;
 
@@ -90,32 +119,39 @@ int main(void) {
 
 	// init board hardware
 	hardware_init();
+	master_init();
 
 	// init flash
 	ret = FlashInit(&flashSSDConfig);
 	error_trap(ret);
 
-	flashSSDConfig.CallBack = (PCALLBACK)RelocateFunction((uint32_t)__ram_for_callback , CALLBACK_SIZE , (uint32_t)callback);
-	//g_FlashLaunchCommand = (pFLASHCOMMANDSEQUENCE)RelocateFunction((uint32_t)__ram_func , LAUNCH_CMD_SIZE ,(uint32_t)FlashCommandSequence);
-	 pFLASHCOMMANDSEQUENCE g_FlashLaunchCommand = (pFLASHCOMMANDSEQUENCE)0xFFFFFFFF;
+	flashSSDConfig.CallBack = (PCALLBACK) RelocateFunction(
+			(uint32_t) __ram_for_callback, CALLBACK_SIZE, (uint32_t) callback);
+	pFLASHCOMMANDSEQUENCE g_FlashLaunchCommand =
+			(pFLASHCOMMANDSEQUENCE) 0xFFFFFFFF;
 
-	  g_FlashLaunchCommand = (pFLASHCOMMANDSEQUENCE)RelocateFunction((uint32_t)ramFunc , LAUNCH_CMD_SIZE ,(uint32_t)FlashCommandSequence);
+	g_FlashLaunchCommand = (pFLASHCOMMANDSEQUENCE) RelocateFunction(
+			(uint32_t) ramFunc, LAUNCH_CMD_SIZE,
+			(uint32_t) FlashCommandSequence);
 
-	// set program buffer to only have 10 bytes of interest
-	for (i = 0; i < BUFFER_SIZE_BYTE; i++) {
-		if (i < 10) {
-			program_buffer[i] = i;
-		}
+	//int mode_select = 8;
 
-		else {
-			program_buffer[i] = 0;
-		}
+	// take image
+	capture();
+	image_length = fifo_len();
+
+	// read in the image
+	for (int i = 0; i < image_length; i++) {
+		program_buffer[i] = cam_reg_read(0x3D);
 	}
+
+	// store image in flash
 
 	///*
 	// set destination to part way into the PFlash memory
-	destination = flashSSDConfig.PFlashBase + (flashSSDConfig.PFlashSize - 6*FTFx_PSECTOR_SIZE);
-	size = FTFx_PSECTOR_SIZE;
+	destination = flashSSDConfig.PFlashBase
+			+ (flashSSDConfig.PFlashSize - 6 * FTFx_PSECTOR_SIZE);
+	size = FTFx_PSECTOR_SIZE * 6;
 
 	// check if memory is protected
 	uint32_t protectStatus;
@@ -124,24 +160,27 @@ int main(void) {
 
 	// erase sector of PFlash
 	INT_SYS_DisableIRQGlobal();
-	ret = FlashEraseSector(&flashSSDConfig, destination, size, g_FlashLaunchCommand);
+	ret = FlashEraseSector(&flashSSDConfig, destination, size,
+			g_FlashLaunchCommand);
 	INT_SYS_EnableIRQGlobal();
 	error_trap(ret);
 
 	// program memory with program_buffer data
-	ret = FlashProgram(&flashSSDConfig, destination, size, program_buffer, g_FlashLaunchCommand);
+	ret = FlashProgram(&flashSSDConfig, destination, size, program_buffer,
+			g_FlashLaunchCommand);
 	error_trap(ret);
 
 	// check the data written to the memory
-	for (margin_read_level = 1; margin_read_level < 0x2; margin_read_level++){
-		ret = FlashProgramCheck(&flashSSDConfig, destination, size, program_buffer, &FailAddr, margin_read_level, g_FlashLaunchCommand);
+	for (margin_read_level = 1; margin_read_level < 0x2; margin_read_level++) {
+		ret = FlashProgramCheck(&flashSSDConfig, destination, size,
+				program_buffer, &FailAddr, margin_read_level,
+				g_FlashLaunchCommand);
 		error_trap(ret);
 	}
 
-	memset(return_buffer, 0, sizeof(uint8_t) * BUFFER_SIZE_BYTE);
 	flash_pointer = (uint8_t *) destination;
-	for (i = 0; i < 10; i++) {
-		return_buffer[i] = flash_pointer[i];
+	for (i = 0; i < image_length; i++) {
+		PRINTF("%c", flash_pointer[i]);
 	}
 
 	for (;;) {

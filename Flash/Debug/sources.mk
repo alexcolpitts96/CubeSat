@@ -26,10 +26,19 @@ S_UPPER_DEPS :=
 
 # Every subdirectory with source files must be described here
 SUBDIRS := \
+UART1 \
+UART0 \
 Sources \
+SPI0 \
 SDK/platform/utilities \
 SDK/flash \
 SDK/flash/C90TFS/drvsrc/source \
 SDK/board \
+RFM69 \
 Project_Settings/Startup_Code \
+I2C \
+GPIO \
+FTM \
+Comms \
+Camera \
 

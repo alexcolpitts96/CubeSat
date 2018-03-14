@@ -8,12 +8,21 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
+-include UART1/subdir.mk
+-include UART0/subdir.mk
 -include Sources/subdir.mk
+-include SPI0/subdir.mk
 -include SDK/platform/utilities/subdir.mk
 -include SDK/flash/C90TFS/drvsrc/source/subdir.mk
 -include SDK/flash/subdir.mk
 -include SDK/board/subdir.mk
+-include RFM69/subdir.mk
 -include Project_Settings/Startup_Code/subdir.mk
+-include I2C/subdir.mk
+-include GPIO/subdir.mk
+-include FTM/subdir.mk
+-include Comms/subdir.mk
+-include Camera/subdir.mk
 -include subdir.mk
 -include objects.mk
 

@@ -94,4 +94,5 @@
 ///////////////////////////////////////////////////////////////////////////////
 extern uint32_t RelocateFunction(uint32_t dest, uint32_t size, uint32_t src);
 void error_trap(uint32_t ret);
+void master_init();
 #endif // __MAIN__
