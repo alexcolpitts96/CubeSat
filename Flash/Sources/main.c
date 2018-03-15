@@ -112,75 +112,130 @@ int main(void) {
 	uint8_t *flash_pointer;
 	uint32_t i, FailAddr;
 	int image_length;
+	uint8_t buffer_arr[PACKET_SIZE];
+	uint8_t camera_arr[PACKET_SIZE];
+	uint8_t *buffer = buffer_arr; // may need to be the address
+	uint8_t *camera = camera_arr;
 
 	gCallBackCnt = 0;
+	int mode_select = 8; // S is 8, GS is 9
 
-	CACHE_DISABLE
+	//CACHE_DISABLE
 
 	// init board hardware
 	hardware_init();
 	master_init();
 
-	// init flash
-	ret = FlashInit(&flashSSDConfig);
-	error_trap(ret);
+	while (mode_select == 8) {
+		// init flash
 
-	flashSSDConfig.CallBack = (PCALLBACK) RelocateFunction(
-			(uint32_t) __ram_for_callback, CALLBACK_SIZE, (uint32_t) callback);
-	pFLASHCOMMANDSEQUENCE g_FlashLaunchCommand =
-			(pFLASHCOMMANDSEQUENCE) 0xFFFFFFFF;
+		PRINTF("\r\nFlash Initialization Complete\r\n");
+		ret = FlashInit(&flashSSDConfig);
+		error_trap(ret);
 
-	g_FlashLaunchCommand = (pFLASHCOMMANDSEQUENCE) RelocateFunction(
-			(uint32_t) ramFunc, LAUNCH_CMD_SIZE,
-			(uint32_t) FlashCommandSequence);
+		flashSSDConfig.CallBack = (PCALLBACK) RelocateFunction(
+				(uint32_t) __ram_for_callback, CALLBACK_SIZE,
+				(uint32_t) callback);
+		pFLASHCOMMANDSEQUENCE g_FlashLaunchCommand =
+				(pFLASHCOMMANDSEQUENCE) 0xFFFFFFFF;
 
-	//int mode_select = 8;
+		g_FlashLaunchCommand = (pFLASHCOMMANDSEQUENCE) RelocateFunction(
+				(uint32_t) ramFunc, LAUNCH_CMD_SIZE,
+				(uint32_t) FlashCommandSequence);
 
-	// take image
-	capture();
-	image_length = fifo_len();
+		// take image
+		capture();
+		PRINTF("\r\nImage Captured\r\n");
+		image_length = fifo_len();
+		PRINTF("\r\nImage Size: %d\r\n", image_length);
 
-	// read in the image
-	for (int i = 0; i < image_length; i++) {
-		program_buffer[i] = cam_reg_read(0x3D);
-	}
+		// read in the image
+		for (int i = 0; i < image_length; i++) {
+			program_buffer[i] = cam_reg_read(0x3D);
+		}
+		PRINTF("\r\nImage is now in RAM\r\n");
 
-	// store image in flash
+		// store image in flash
 
-	///*
-	// set destination to part way into the PFlash memory
-	destination = flashSSDConfig.PFlashBase
-			+ (flashSSDConfig.PFlashSize - 6 * FTFx_PSECTOR_SIZE);
-	size = FTFx_PSECTOR_SIZE * 6;
+		///*
+		// set destination to part way into the PFlash memory
+		destination = flashSSDConfig.PFlashBase
+				+ (flashSSDConfig.PFlashSize - 6 * FTFx_PSECTOR_SIZE);
+		size = FTFx_PSECTOR_SIZE * 6;
 
-	// check if memory is protected
-	uint32_t protectStatus;
-	ret = PFlashGetProtection(&flashSSDConfig, &protectStatus);
-	error_trap(ret);
+		// check if memory is protected
+		uint32_t protectStatus;
+		ret = PFlashGetProtection(&flashSSDConfig, &protectStatus);
+		error_trap(ret);
 
-	// erase sector of PFlash
-	INT_SYS_DisableIRQGlobal();
-	ret = FlashEraseSector(&flashSSDConfig, destination, size,
-			g_FlashLaunchCommand);
-	INT_SYS_EnableIRQGlobal();
-	error_trap(ret);
+		// erase sector of PFlash
+		INT_SYS_DisableIRQGlobal();
+		ret = FlashEraseSector(&flashSSDConfig, destination, size,
+				g_FlashLaunchCommand);
+		INT_SYS_EnableIRQGlobal();
+		error_trap(ret);
 
-	// program memory with program_buffer data
-	ret = FlashProgram(&flashSSDConfig, destination, size, program_buffer,
-			g_FlashLaunchCommand);
-	error_trap(ret);
-
-	// check the data written to the memory
-	for (margin_read_level = 1; margin_read_level < 0x2; margin_read_level++) {
-		ret = FlashProgramCheck(&flashSSDConfig, destination, size,
-				program_buffer, &FailAddr, margin_read_level,
+		// program memory with program_buffer data
+		ret = FlashProgram(&flashSSDConfig, destination, size, program_buffer,
 				g_FlashLaunchCommand);
 		error_trap(ret);
+
+		// check the data written to the memory
+		for (margin_read_level = 1; margin_read_level < 0x2;
+				margin_read_level++) {
+			ret = FlashProgramCheck(&flashSSDConfig, destination, size,
+					program_buffer, &FailAddr, margin_read_level,
+					g_FlashLaunchCommand);
+			error_trap(ret);
+		}
+		PRINTF("\r\nImage now in flash memory\r\n");
+
+		// flash pointer points to the location of the image
+		flash_pointer = (uint8_t *) destination;
+
+		/* View Image from Satellite perspective
+		for (i = 0; i < image_length; i++) {
+			PRINTF("%c", flash_pointer[i]);
+		}
+		//*/
+
+		// wait to make contact with the ground station
+		PRINTF("\r\nWaiting for Ground Station Contact\r\n");
+		imageSize(buffer, image_length);
+		PRINTF("\r\nGround Station Contact received\r\n");
+
+		// transmit packets until the stop command is received
+		while (transmitPacket(buffer, camera, flash_pointer));
+		PRINTF("\r\nImage Transmission Complete\r\n");
+
+		// clear the camera memory
+		flush_fifo();
 	}
 
-	flash_pointer = (uint8_t *) destination;
-	for (i = 0; i < image_length; i++) {
-		PRINTF("%c", flash_pointer[i]);
+	while (mode_select == 9) {
+
+		PRINTF("\n\rRequesting Image Size From Satellite\n\r");
+		uint32_t image_bytes = txStart(buffer);
+		PRINTF("\n\rImage Size: %d\n\r", image_bytes);
+
+		uint32_t packet_number = (uint32_t) ceil(
+				(float) image_bytes / (float) PACKET_SIZE);
+
+		PRINTF("\r\Requesting Image Packetsn\r\n");
+		// retrieve all of the packets
+		for (int i = 0; i < packet_number; i++) {
+			packetRequest(buffer, i);
+		}
+		PRINTF("\r\nImage Transmission Complete\r\n");
+
+		// send the stop command once image received
+		memset(buffer, '\0', sizeof(uint8_t) * PACKET_SIZE);
+		memcpy((uint8_t *) buffer, &stop_command, sizeof(stop_command));
+		RFM69_SEND(buffer);
+		RFM69_SEND(buffer);
+		RFM69_SEND(buffer);
+		RFM69_SEND(buffer);
+		RFM69_SEND(buffer);
 	}
 
 	for (;;) {

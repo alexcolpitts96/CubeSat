@@ -33,6 +33,7 @@
 
 #include "board.h"
 #include "SSD_FTFx.h"
+#include "MK22F51212.h"
 /* size of array to copy__Launch_Command function to.*/
 /* It should be at least equal to actual size of __Launch_Command func */
 /* User can change this value based on RAM size availability and actual size of __Launch_Command function */

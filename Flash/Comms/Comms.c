@@ -5,10 +5,22 @@
  * Feb 19, 2018
  */
 
-#include "fsl_device_registers.h"
-#include "stdio.h"
+#include <string.h>
+#include <stdio.h>
 #include "stdlib.h"
 #include "string.h"
+#include "math.h"
+
+// SDK Included Files
+#include "board.h"
+#include "main.h"
+#include "fsl_debug_console.h"
+#include "fsl_device_registers.h"
+#include "SSD_FTFx.h"
+#include "flash_demo.h"
+#include "fsl_interrupt_manager.h"
+
+
 
 #include "../RFM69/RFM69_driver.h"
 #include "../GPIO/gpio.h"
@@ -58,7 +70,8 @@ void packetRequest(uint8_t *p, uint32_t block) {
 
 	// vomit the data over UART
 	for (int j = 0; j < PACKET_SIZE; j++) {
-		putty_putchar(p[j]);
+		//putty_putchar(p[j]);
+		PRINTF("%c", p[j]);
 	}
 }
 

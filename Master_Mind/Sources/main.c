@@ -63,41 +63,7 @@ void master_init() {
 
 int main() {
 
-	/*
-	 // set program buffer to only have 10 bytes of interest
-	 for (int i = 0; i < BUFFER_SIZE_BYTE; i++) {
-	 if (i < 10) {
-	 program_buffer[i] = i;
-	 } else {
-	 program_buffer[i] = 0;
-	 }
-	 }
-
-	 // test flash programming and reading back
-	 destination = flashSSDConfig.PFlashBase
-	 + (flashSSDConfig.PFlashSize - 6 * FTFx_PSECTOR_SIZE);
-	 size = BUFFER_SIZE_BYTE;
-
-	 // erase sector
-	 ret = FlashEraseSector(&flashSSDConfig, destination, size,
-	 g_FlashLaunchCommand);
-
-	 // program memory
-	 ret = FlashProgram(&flashSSDConfig, destination, size, program_buffer,
-	 g_FlashLaunchCommand);
-
-	 uint8_t return_buffer[BUFFER_SIZE_BYTE];
-	 ret = FlashReadResource(&flashSSDConfig, destination, program_buffer, 1,
-	 g_FlashLaunchCommand);
-
-	 memset(return_buffer, 0, sizeof(uint8_t) * BUFFER_SIZE_BYTE);
-	 uint8_t *flash_pointer = destination;
-	 for (int i = 0; i < 10; i++) {
-	 return_buffer[i] = flash_pointer[i];
-	 }
-	 //*/
-
-	int mode_select = 8; // 8 is satellite, 9 is ground station
+	int mode_select = 9; // 8 is satellite, 9 is ground station
 	//uint8_t *buffer = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
 	//uint8_t *camera = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
 
@@ -119,25 +85,15 @@ int main() {
 		// read the image into the array
 		for (int i = 0; i < image_length; i++) {
 			image[i] = cam_reg_read(0x3D);
-
-			putty_putchar(image[i]);
-
-			// this had no errors
-			//image[i] = '0' + (i%10);
 		}
 
-		for (int i = 0; i < image_length; i++) {
-			// this has errors
-			putty_putchar(image[i]);
-		}
 		//*/
 
 		// transmit size of the image and wait for the start command
 		imageSize(buffer, image_length);
 
 		// transmit packets until stop command received
-		while (transmitPacket(buffer, camera, image))
-			;
+		while (transmitPacket(buffer, camera, image));
 
 		// clear the camera memory
 		flush_fifo();

@@ -24,11 +24,13 @@ Sources/main.o: ../Sources/main.c \
  /home/alex/GitHub/CubeSat/Flash/SDK/platform/utilities/fsl_debug_console.h \
  /home/alex/GitHub/CubeSat/Flash/SDK/platform/osa/fsl_os_abstraction.h \
  /home/alex/GitHub/CubeSat/Flash/SDK/platform/osa/fsl_os_abstraction_bm.h \
- ../Sources/flash_demo.h ../Sources/fsl_interrupt_manager.h \
- ../Sources/../RFM69/RFM69_driver.h ../Sources/../UART1/UART1_driver.h \
- ../Sources/../FTM/FTM_driver.h ../Sources/../UART0/UART0_driver.h \
- ../Sources/../SPI0/SPI0_driver.h ../Sources/../GPIO/gpio.h \
- ../Sources/../Comms/Comms.h ../Sources/../Comms/../RFM69/RFM69_driver.h \
+ ../Sources/flash_demo.h \
+ /home/alex/KSDK_1.3.0/platform/devices/MK22F51212/include/MK22F51212.h \
+ ../Sources/fsl_interrupt_manager.h ../Sources/../RFM69/RFM69_driver.h \
+ ../Sources/../UART1/UART1_driver.h ../Sources/../FTM/FTM_driver.h \
+ ../Sources/../UART0/UART0_driver.h ../Sources/../SPI0/SPI0_driver.h \
+ ../Sources/../GPIO/gpio.h ../Sources/../Comms/Comms.h \
+ ../Sources/../Comms/../RFM69/RFM69_driver.h \
  ../Sources/../Camera/camera.h ../Sources/../I2C/i2c.h
 
 /home/alex/GitHub/CubeSat/Flash/SDK/board/board.h:
@@ -84,6 +86,8 @@ Sources/main.o: ../Sources/main.c \
 /home/alex/GitHub/CubeSat/Flash/SDK/platform/osa/fsl_os_abstraction_bm.h:
 
 ../Sources/flash_demo.h:
+
+/home/alex/KSDK_1.3.0/platform/devices/MK22F51212/include/MK22F51212.h:
 
 ../Sources/fsl_interrupt_manager.h:
 
