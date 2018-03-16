@@ -22,7 +22,7 @@
 ////////////////////////////////// GroundStation Functions //////////////////////////////////
 
 // request packet number for satellite to transmit, p[0] is LSB, p[1] is MSB for request -------------------- UNTESTED
-void packetRequest(uint8_t *p, uint32_t block) {
+void packetRequest(uint8_t *p, uint32_t block, uint8_t *image) {
 	uint8_t handshake = 0;
 	uint8_t timeout = 0;
 
@@ -59,6 +59,7 @@ void packetRequest(uint8_t *p, uint32_t block) {
 	// vomit the data over UART
 	for (int j = 0; j < PACKET_SIZE; j++) {
 		putty_putchar(p[j]);
+		image[block*PACKET_SIZE + j] = p[j];
 	}
 }
 

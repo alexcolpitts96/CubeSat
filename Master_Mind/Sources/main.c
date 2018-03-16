@@ -71,7 +71,7 @@ int main() {
 	uint8_t camera_arr[PACKET_SIZE];
 	uint8_t *buffer = buffer_arr; // may need to be the address
 	uint8_t *camera = camera_arr;
-	uint8_t image[7500];
+	uint8_t *image;
 
 	master_init();
 
@@ -84,7 +84,7 @@ int main() {
 		///*
 		// read the image into the array
 		for (int i = 0; i < image_length; i++) {
-			image[i] = cam_reg_read(0x3D);
+			//image[i] = cam_reg_read(0x3D);
 		}
 
 		//*/
@@ -106,9 +106,15 @@ int main() {
 		uint32_t packet_number = (uint32_t) ceil(
 				(float) image_bytes / (float) PACKET_SIZE);
 
+		image = (uint8_t *) calloc(image_bytes, sizeof(uint8_t));
+
 		// retrieve all of the packets
 		for (int i = 0; i < packet_number; i++) {
-			packetRequest(buffer, i);
+			packetRequest(buffer, i, image);
+		}
+
+		for(int i = 0; i < image_bytes; i++){
+			putty_putchar(image[i]);
 		}
 
 		// send the stop command once image received
@@ -119,6 +125,7 @@ int main() {
 		RFM69_SEND(buffer);
 		RFM69_SEND(buffer);
 		RFM69_SEND(buffer);
+		free(image);
 	}
 
 	uint8_t test_string[] = "0123456789";

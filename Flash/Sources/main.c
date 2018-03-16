@@ -176,10 +176,9 @@ int main(void) {
 
 		//camera_init();
 		//capture();
-		PRINTF("\r\nImage Captured\r\n");
 		//image_length = fifo_len();
 		image_length = 5000;
-		PRINTF("\r\nImage Size: %d\r\n", image_length);
+
 
 		// read in the image
 		disable_modules();
@@ -190,6 +189,7 @@ int main(void) {
 			//program_buffer[i] = i;
 			program_buffer[i] = test_image[i];
 			//program_buffer[i] = '0' + (i%10);
+			PRINTF("%c", test_image[i]);
 		}
 
 		/*
@@ -257,14 +257,14 @@ int main(void) {
 		mode_select = 10;
 
 		// wait to make contact with the ground station
-		PRINTF("\r\nWaiting for Ground Station Contact\r\n");
+		//PRINTF("\r\nWaiting for Ground Station Contact\r\n");
 		//imageSize(buffer, image_length);
-		PRINTF("\r\nGround Station Contact received\r\n");
+		//PRINTF("\r\nGround Station Contact received\r\n");
 
 		// transmit packets until the stop command is received
 		//while (transmitPacket(buffer, camera, flash_pointer));
 		//while (transmitPacket(buffer, camera, program_buffer));
-		PRINTF("\r\nImage Transmission Complete\r\n");
+		//PRINTF("\r\nImage Transmission Complete\r\n");
 
 		// clear the camera memory
 		//flush_fifo();
@@ -272,19 +272,19 @@ int main(void) {
 
 	while (mode_select == 9) {
 
-		PRINTF("\n\rRequesting Image Size From Satellite\n\r");
+		//PRINTF("\n\rRequesting Image Size From Satellite\n\r");
 		uint32_t image_bytes = txStart(buffer);
-		PRINTF("\n\rImage Size: %d\n\r", image_bytes);
+		//PRINTF("\n\rImage Size: %d\n\r", image_bytes);
 
 		uint32_t packet_number = (uint32_t) ceil(
 				(float) image_bytes / (float) PACKET_SIZE);
 
-		PRINTF("\r\nRequesting Image Packetsn\r\n");
+		//PRINTF("\r\nRequesting Image Packetsn\r\n");
 		// retrieve all of the packets
 		for (int i = 0; i < packet_number; i++) {
 			packetRequest(buffer, i);
 		}
-		PRINTF("\r\nImage Transmission Complete\r\n");
+		//PRINTF("\r\nImage Transmission Complete\r\n");
 
 		// send the stop command once image received
 		memset(buffer, '\0', sizeof(uint8_t) * PACKET_SIZE);

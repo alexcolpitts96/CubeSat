@@ -24,6 +24,7 @@ void UART1_putty_init() {
 	UART1_C2 &= ~(UART_C2_TE_MASK | UART_C2_RE_MASK); // disable receive/transfer
 
 	UART1_C1 = 0; // set 8 bits
+	//UART1_C1 |= UART_C1_PE_MASK; // set parity to 1
 
 	// calculate and set the baud rate
 	ubd = ((21000 * 1000) / (115200 * 16)); // set baudrate

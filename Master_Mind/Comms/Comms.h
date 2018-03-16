@@ -18,7 +18,7 @@ const uint8_t next_command[PACKET_SIZE] = "next";
 ////////////////////////////////// GroundStation Functions //////////////////////////////////
 
 // request packet number for satellite to transmit, p[0] is LSB, p[1] is MSB for request -------------------- UNTESTED
-void packetRequest(uint8_t *p, uint32_t block);
+void packetRequest(uint8_t *p, uint32_t block, uint8_t *image);
 
 // get satellite to start transmitting from p, receives image block count into p
 uint32_t txStart(uint8_t *p);
