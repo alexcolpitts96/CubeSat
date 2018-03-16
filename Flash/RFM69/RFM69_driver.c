@@ -169,6 +169,7 @@ void RFM69_SEND(uint8_t *buffer){
 	// DIO0 will be packet sent when put into tx mode
 	RFM69_TX(REG_DIOMAPPING1, RF_DIOMAPPING1_DIO0_00);
 
+	RFM69_CLEAR_FIFO();
 	//uint8_t test_string[] = "0123456789";
 	// read the buffer into the FIFO
 	for(i = 0; i < PACKET_SIZE; i++){
@@ -260,6 +261,7 @@ void RFM69_RECEIVE(uint8_t *buffer){
 	// set to standby once a package has been received to save power
 	RFM69_SET_MODE(RF_OPMODE_STANDBY);
 
+	uint8_t temp;
 	for(i = 0; i < 4; i++){
 		RFM69_RX(REG_FIFO); // dummy read
 		//putty_putchar(RFM69_RX(REG_FIFO));

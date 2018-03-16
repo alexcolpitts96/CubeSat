@@ -139,6 +139,7 @@ int main(void) {
 
 	gCallBackCnt = 0;
 	int mode_select = 8; // S is 8, GS is 9
+	uint8_t *temp = test_image;
 
 	//CACHE_DISABLE
 
@@ -171,10 +172,10 @@ int main(void) {
 
 		// take image
 		disable_modules();
-		init_I2C();
+		//init_I2C();
 
 		//camera_init();
-		capture();
+		//capture();
 		PRINTF("\r\nImage Captured\r\n");
 		//image_length = fifo_len();
 		image_length = 5000;
@@ -183,9 +184,12 @@ int main(void) {
 		// read in the image
 		disable_modules();
 		SPI1_Init(16);
+		image_length = sizeof(test_image);
 		for (uint32_t i = 0; i < image_length; i++) {
 			//program_buffer[i] = cam_reg_read(0x3D);
-			program_buffer[i] = i;
+			//program_buffer[i] = i;
+			program_buffer[i] = test_image[i];
+			//program_buffer[i] = '0' + (i%10);
 		}
 
 		/*
@@ -250,14 +254,16 @@ int main(void) {
 		RFM69_Init(); // must always be after the SPI interface has been enabled
 		FTM0_init();
 
+		mode_select = 10;
+
 		// wait to make contact with the ground station
 		PRINTF("\r\nWaiting for Ground Station Contact\r\n");
-		imageSize(buffer, image_length);
+		//imageSize(buffer, image_length);
 		PRINTF("\r\nGround Station Contact received\r\n");
 
 		// transmit packets until the stop command is received
 		//while (transmitPacket(buffer, camera, flash_pointer));
-		while (transmitPacket(buffer, camera, program_buffer));
+		//while (transmitPacket(buffer, camera, program_buffer));
 		PRINTF("\r\nImage Transmission Complete\r\n");
 
 		// clear the camera memory
@@ -291,7 +297,44 @@ int main(void) {
 	}
 	memcpy((uint8_t *) buffer, "0123456789", sizeof("0123456789"));
 	while (mode_select == 10) {
-		RFM69_SEND(buffer);
+		uint32_t block_number;
+		uint8_t block_arr[3];
+
+		// receive with until there is no timeout
+		while(!RFM69_RECEIVE_TIMEOUT(buffer)); // rx packet now in buffer
+
+		// look at received value and take proper action
+
+		// if start command, send image size in bytes
+		if ((memcmp(&start_command, buffer, sizeof(uint8_t) * PACKET_SIZE) == 0)) {
+			block_arr[0] = image_length & 0xFF;
+			block_arr[1] = (image_length >> 8) & 0xFF;
+			block_arr[2] = (image_length >> 16) & 0xFF;
+
+			// clear the buffer
+			memset(buffer, 0, sizeof(uint8_t) * PACKET_SIZE);
+			memcpy((uint8_t *) buffer, &block_arr, sizeof(uint8_t) * 3);
+
+			// send the packet
+			RFM69_SEND(buffer);
+		}
+
+		// if stop command erase the image
+		else if ((memcmp(&stop_command, buffer, sizeof(uint8_t) * PACKET_SIZE) == 0)) {
+			mode_select = 8;
+		}
+
+		// if packet request, send the requested packet
+		else{
+			block_number = (buffer[2] << 16) | (buffer[1] << 8) | (buffer[0]);
+			//RFM69_SEND(buffer);
+			//RFM69_SEND(program_buffer+(block_number * PACKET_SIZE));
+			RFM69_SEND(temp+(block_number * PACKET_SIZE));
+		}
+	}
+
+	while(mode_select == 11){
+		while(1);
 	}
 
 	for (;;) {
