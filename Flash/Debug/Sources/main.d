@@ -31,7 +31,8 @@ Sources/main.o: ../Sources/main.c \
  ../Sources/../UART0/UART0_driver.h ../Sources/../SPI0/SPI0_driver.h \
  ../Sources/../GPIO/gpio.h ../Sources/../Comms/Comms.h \
  ../Sources/../Comms/../RFM69/RFM69_driver.h \
- ../Sources/../Camera/camera.h ../Sources/../I2C/i2c.h
+ ../Sources/../Camera/camera.h ../Sources/../I2C/i2c.h \
+ /home/alex/Desktop/sat_data.h
 
 /home/alex/GitHub/CubeSat/Flash/SDK/board/board.h:
 
@@ -110,3 +111,5 @@ Sources/main.o: ../Sources/main.c \
 ../Sources/../Camera/camera.h:
 
 ../Sources/../I2C/i2c.h:
+
+/home/alex/Desktop/sat_data.h:

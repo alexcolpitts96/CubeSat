@@ -55,6 +55,9 @@
 #include "../Camera/camera.h"
 #include "../I2C/i2c.h"
 
+// image
+#include "/home/alex/Desktop/sat_data.h"
+
 uint8_t DataArray[PGM_SIZE_BYTE];
 //uint8_t program_buffer[BUFFER_SIZE_BYTE];
 uint8_t program_buffer[FTFx_PSECTOR_SIZE * 6]; // fill entire flash space remaining
@@ -86,17 +89,34 @@ void error_trap(uint32_t ret) {
 	}
 }
 
+// disable all GPIO modules
+void disable_modules() {
+	// turn off port clocks, NOT and then masks to the register
+	SIM_SCGC5 &= ~SIM_SCGC5_PORTA_MASK;
+	SIM_SCGC5 &= ~SIM_SCGC5_PORTB_MASK;
+	SIM_SCGC5 &= ~SIM_SCGC5_PORTC_MASK;
+	SIM_SCGC5 &= ~SIM_SCGC5_PORTD_MASK;
+	SIM_SCGC5 &= ~SIM_SCGC5_PORTE_MASK;
+
+	// turn off module clocks, NOT and then mask to the register
+	SIM_SCGC4 &= ~SIM_SCGC4_I2C0_MASK;
+	SIM_SCGC6 &= ~SIM_SCGC6_SPI1_MASK;
+	SIM_SCGC6 &= ~SIM_SCGC6_SPI0_MASK;
+	SIM_SCGC6 &= ~SIM_SCGC6_FTM0_MASK;
+	SIM_SCGC6 &= ~SIM_SCGC6_FTM1_MASK;
+}
+
 void master_init() {
-	UART0_Init();
+	//UART0_Init();
 	//UART1_putty_init();
 	SPI0_Init(16);
 	RFM69_DIO0_Init();
 	RFM69_Init(); // must always be after the SPI interface has been enabled
 	FTM0_init();
 	FTM1_init();
-	init_I2C();
+	//init_I2C();
 	SPI1_Init(16);
-	camera_init();
+	//camera_init();
 }
 
 // NOTE: for FRDMK22F There is 6 blocks of 2048 bytes to use
@@ -111,7 +131,7 @@ int main(void) {
 	uint32_t margin_read_level; /* 0=normal, 1=user - margin read for reading 1's */
 	uint8_t *flash_pointer;
 	uint32_t i, FailAddr;
-	int image_length;
+	uint32_t image_length;
 	uint8_t buffer_arr[PACKET_SIZE];
 	uint8_t camera_arr[PACKET_SIZE];
 	uint8_t *buffer = buffer_arr; // may need to be the address
@@ -123,81 +143,112 @@ int main(void) {
 	//CACHE_DISABLE
 
 	// init board hardware
+	INT_SYS_DisableIRQGlobal();
 	hardware_init();
-	master_init();
+	//master_init();
+	disable_modules(); // ensure no modules of interest are turned on
+	INT_SYS_DisableIRQGlobal();
 
 	while (mode_select == 8) {
 		// init flash
 
-		PRINTF("\r\nFlash Initialization Complete\r\n");
-		ret = FlashInit(&flashSSDConfig);
-		error_trap(ret);
+		/*
+		 PRINTF("\r\nFlash Initialization Complete\r\n");
+		 ret = FlashInit(&flashSSDConfig);
+		 error_trap(ret);
 
-		flashSSDConfig.CallBack = (PCALLBACK) RelocateFunction(
-				(uint32_t) __ram_for_callback, CALLBACK_SIZE,
-				(uint32_t) callback);
-		pFLASHCOMMANDSEQUENCE g_FlashLaunchCommand =
-				(pFLASHCOMMANDSEQUENCE) 0xFFFFFFFF;
+		 flashSSDConfig.CallBack = (PCALLBACK) RelocateFunction(
+		 (uint32_t) __ram_for_callback, CALLBACK_SIZE,
+		 (uint32_t) callback);
+		 pFLASHCOMMANDSEQUENCE g_FlashLaunchCommand =
+		 (pFLASHCOMMANDSEQUENCE) 0xFFFFFFFF;
 
-		g_FlashLaunchCommand = (pFLASHCOMMANDSEQUENCE) RelocateFunction(
-				(uint32_t) ramFunc, LAUNCH_CMD_SIZE,
-				(uint32_t) FlashCommandSequence);
+		 g_FlashLaunchCommand = (pFLASHCOMMANDSEQUENCE) RelocateFunction(
+		 (uint32_t) ramFunc, LAUNCH_CMD_SIZE,
+		 (uint32_t) FlashCommandSequence);
+
+		 //*/
 
 		// take image
+		disable_modules();
+		init_I2C();
+
+		//camera_init();
 		capture();
 		PRINTF("\r\nImage Captured\r\n");
-		image_length = fifo_len();
+		//image_length = fifo_len();
+		image_length = 5000;
 		PRINTF("\r\nImage Size: %d\r\n", image_length);
 
 		// read in the image
-		for (int i = 0; i < image_length; i++) {
-			program_buffer[i] = cam_reg_read(0x3D);
+		disable_modules();
+		SPI1_Init(16);
+		for (uint32_t i = 0; i < image_length; i++) {
+			//program_buffer[i] = cam_reg_read(0x3D);
+			program_buffer[i] = i;
 		}
-		PRINTF("\r\nImage is now in RAM\r\n");
 
-		// store image in flash
+		/*
+		 for (uint32_t i = 0; i < image_length; i++) {
+		 //PRINTF("%c", program_buffer[i]);
+		 }
 
-		///*
-		// set destination to part way into the PFlash memory
-		destination = flashSSDConfig.PFlashBase
-				+ (flashSSDConfig.PFlashSize - 6 * FTFx_PSECTOR_SIZE);
-		size = FTFx_PSECTOR_SIZE * 6;
+		 PRINTF("\r\nImage is now in RAM\r\n");
 
-		// check if memory is protected
-		uint32_t protectStatus;
-		ret = PFlashGetProtection(&flashSSDConfig, &protectStatus);
-		error_trap(ret);
+		 // store image in flash
 
-		// erase sector of PFlash
-		INT_SYS_DisableIRQGlobal();
-		ret = FlashEraseSector(&flashSSDConfig, destination, size,
-				g_FlashLaunchCommand);
-		INT_SYS_EnableIRQGlobal();
-		error_trap(ret);
+		 ///*
+		 // set destination to part way into the PFlash memory
+		 destination = flashSSDConfig.PFlashBase
+		 + (flashSSDConfig.PFlashSize - 6 * FTFx_PSECTOR_SIZE);
+		 size = FTFx_PSECTOR_SIZE * 6;
 
-		// program memory with program_buffer data
-		ret = FlashProgram(&flashSSDConfig, destination, size, program_buffer,
-				g_FlashLaunchCommand);
-		error_trap(ret);
+		 // check if memory is protected
+		 uint32_t protectStatus;
+		 ret = PFlashGetProtection(&flashSSDConfig, &protectStatus);
+		 error_trap(ret);
 
-		// check the data written to the memory
-		for (margin_read_level = 1; margin_read_level < 0x2;
-				margin_read_level++) {
-			ret = FlashProgramCheck(&flashSSDConfig, destination, size,
-					program_buffer, &FailAddr, margin_read_level,
-					g_FlashLaunchCommand);
-			error_trap(ret);
-		}
-		PRINTF("\r\nImage now in flash memory\r\n");
+		 // erase sector of PFlash
+		 INT_SYS_DisableIRQGlobal();
+		 ret = FlashEraseSector(&flashSSDConfig, destination, size,
+		 g_FlashLaunchCommand);
+		 INT_SYS_EnableIRQGlobal();
+		 error_trap(ret);
 
-		// flash pointer points to the location of the image
-		flash_pointer = (uint8_t *) destination;
+		 // program memory with program_buffer data
+		 ret = FlashProgram(&flashSSDConfig, destination, size, program_buffer,
+		 g_FlashLaunchCommand);
+		 error_trap(ret);
 
-		/* View Image from Satellite perspective
-		for (i = 0; i < image_length; i++) {
-			PRINTF("%c", flash_pointer[i]);
-		}
+		 // check the data written to the memory
+		 for (margin_read_level = 1; margin_read_level < 0x2;
+		 margin_read_level++) {
+		 ret = FlashProgramCheck(&flashSSDConfig, destination, size,
+		 program_buffer, &FailAddr, margin_read_level,
+		 g_FlashLaunchCommand);
+		 error_trap(ret);
+		 }
+		 PRINTF("\r\nImage now in flash memory\r\n");
+
+		 // flash pointer points to the location of the image
+		 flash_pointer = (uint8_t *) destination;
+		 //*/
+
+		// try from constant image
+		//flash_pointer = test_image;
+		//image_length = sizeof(test_image);
+		///* View Image from Satellite perspective
+		//for (i = 0; i < image_length; i++) {
+		//PRINTF("%c", flash_pointer[i]);
+		//}
 		//*/
+
+		// turn on modules for RFM, no other modules on
+		disable_modules();
+		SPI0_Init(16);
+		RFM69_DIO0_Init();
+		RFM69_Init(); // must always be after the SPI interface has been enabled
+		FTM0_init();
 
 		// wait to make contact with the ground station
 		PRINTF("\r\nWaiting for Ground Station Contact\r\n");
@@ -205,11 +256,12 @@ int main(void) {
 		PRINTF("\r\nGround Station Contact received\r\n");
 
 		// transmit packets until the stop command is received
-		while (transmitPacket(buffer, camera, flash_pointer));
+		//while (transmitPacket(buffer, camera, flash_pointer));
+		while (transmitPacket(buffer, camera, program_buffer));
 		PRINTF("\r\nImage Transmission Complete\r\n");
 
 		// clear the camera memory
-		flush_fifo();
+		//flush_fifo();
 	}
 
 	while (mode_select == 9) {
@@ -221,7 +273,7 @@ int main(void) {
 		uint32_t packet_number = (uint32_t) ceil(
 				(float) image_bytes / (float) PACKET_SIZE);
 
-		PRINTF("\r\Requesting Image Packetsn\r\n");
+		PRINTF("\r\nRequesting Image Packetsn\r\n");
 		// retrieve all of the packets
 		for (int i = 0; i < packet_number; i++) {
 			packetRequest(buffer, i);
@@ -235,6 +287,10 @@ int main(void) {
 		RFM69_SEND(buffer);
 		RFM69_SEND(buffer);
 		RFM69_SEND(buffer);
+		RFM69_SEND(buffer);
+	}
+	memcpy((uint8_t *) buffer, "0123456789", sizeof("0123456789"));
+	while (mode_select == 10) {
 		RFM69_SEND(buffer);
 	}
 

@@ -169,9 +169,11 @@ void RFM69_SEND(uint8_t *buffer){
 	// DIO0 will be packet sent when put into tx mode
 	RFM69_TX(REG_DIOMAPPING1, RF_DIOMAPPING1_DIO0_00);
 
+	//uint8_t test_string[] = "0123456789";
 	// read the buffer into the FIFO
 	for(i = 0; i < PACKET_SIZE; i++){
 		RFM69_TX(REG_FIFO, buffer[i]);
+		//RFM69_TX(REG_FIFO, test_string[i]);
 	}
 
 	// set to tx mode, RFM does the work

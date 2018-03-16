@@ -152,8 +152,8 @@ int transmitPacket(uint8_t *p, uint8_t *camera, uint8_t *image) {
 	// determine the block number
 	block_number = (p[2] << 16) | (p[1] << 8) | (p[0]);
 
-	// read the correct block into the buffer CAMERA
-	for (int i = 0; i < PACKET_SIZE; i++) {
+	/*// read the correct block into the buffer CAMERA
+	for (uint32_t i = 0; i < PACKET_SIZE; i++) {
 		camera[i] = image[block_number * PACKET_SIZE + i];
 		//putty_putchar(camera[i]);
 	}
@@ -166,7 +166,7 @@ int transmitPacket(uint8_t *p, uint8_t *camera, uint8_t *image) {
 	 //*/
 
 	// transmit packet
-	RFM69_SEND(camera);
+	RFM69_SEND(image+(block_number * PACKET_SIZE));
 
 	// return 1 if packet was transmitted and no stop requested
 	return 1;

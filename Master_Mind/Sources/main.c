@@ -121,5 +121,11 @@ int main() {
 		RFM69_SEND(buffer);
 	}
 
+	uint8_t test_string[] = "0123456789";
+	while(mode_select == 10){
+		RFM69_SEND(test_string);
+
+	}
+
 	return 0;
 }
