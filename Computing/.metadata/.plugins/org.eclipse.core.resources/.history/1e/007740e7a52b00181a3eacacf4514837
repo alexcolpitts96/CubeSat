@@ -472,12 +472,12 @@ int main() {
 		check_solar();
 
 	if(sunlight){
-		if (bat<2.6)
+		if (bat<)
 			sleep_flag=1;
 		else
 			{sleep_flag=0;
 			GPIOC_PCOR=0x01 << 1;
-				}
+			}
 
 			}
 	if(!sunlight){
@@ -487,7 +487,7 @@ int main() {
 				{sleep_flag=0;
 				GPIOC_PCOR=0x01 << 1;
 				}
-		}
+	}
 
 		//Reinitialized All the SIM module clock back
 	}

@@ -61,7 +61,6 @@
 	void ADC1_Init();
 	float ADC1_Convert();
 
-
 //----------------------------------------//
 	//Global Flag Register
 	int check_bat_flag  = 0;// State 1
@@ -73,7 +72,7 @@
 
 	//Global Sleep Flag Condition
 	int sleep_flag = 0;//Check battery state
-    int sunlight=0;
+
 
 
 #define MAX_IMAGE_SIZE 0x5FFFF
@@ -427,12 +426,9 @@ int main() {
 		//----------------------------------------------------------
 		//1.6
 		if (sol>2.4){
-			sunlight=1;
-
 			LED1();
 		}
 		else
-			sunlight =0;
 			GPIOC_PCOR=0x01 << 2;
 
 
@@ -469,25 +465,14 @@ int main() {
 		//----------------------------------------------------------
 		//Check the Battery level without the load.
 
-		check_solar();
 
-	if(sunlight){
 		if (bat<2.6)
 			sleep_flag=1;
 		else
 			{sleep_flag=0;
 			GPIOC_PCOR=0x01 << 1;
-				}
 
 			}
-	if(!sunlight){
-		if (bat<2.6)
-				sleep_flag=1;
-			else
-				{sleep_flag=0;
-				GPIOC_PCOR=0x01 << 1;
-				}
-		}
 
 		//Reinitialized All the SIM module clock back
 	}

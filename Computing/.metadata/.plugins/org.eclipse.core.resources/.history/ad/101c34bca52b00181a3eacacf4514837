@@ -477,17 +477,17 @@ int main() {
 		else
 			{sleep_flag=0;
 			GPIOC_PCOR=0x01 << 1;
-				}
+			}
 
 			}
-	if(!sunlight){
+	else{
 		if (bat<2.6)
 				sleep_flag=1;
 			else
 				{sleep_flag=0;
 				GPIOC_PCOR=0x01 << 1;
 				}
-		}
+	}
 
 		//Reinitialized All the SIM module clock back
 	}
