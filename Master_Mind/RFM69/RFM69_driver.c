@@ -316,9 +316,6 @@ uint8_t RFM69_RECEIVE_TIMEOUT(uint8_t *buffer){
 		}
 		//*/
 
-		// make the buffer the same size as the
-		uint8_t *RFM_buffer = calloc(MAX_PACKET_SIZE, sizeof(uint8_t));
-
 		i = 0;
 		// read packet from fifo into the buffer
 		while(i < PACKET_SIZE && !RFM69_DIO0_Read()){

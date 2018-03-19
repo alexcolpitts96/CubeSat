@@ -62,64 +62,76 @@ void master_init() {
 }
 
 int main() {
-	int mode_select = 8; // 8 is satellite, 9 is ground station
-	uint8_t *buffer = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
+
+	int mode_select = 9; // 8 is satellite, 9 is ground station
+	//uint8_t *buffer = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
 	//uint8_t *camera = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
+
+	uint8_t buffer_arr[PACKET_SIZE];
+	uint8_t camera_arr[PACKET_SIZE];
+	uint8_t *buffer = buffer_arr; // may need to be the address
+	uint8_t *camera = camera_arr;
+	uint8_t *image;
 
 	master_init();
 
 	while (mode_select == 8) {
-		int image_length, packets;
+		int image_length;
 
-		// take image
 		capture();
 		image_length = fifo_len();
 
-		// determine how many packets are needed
-		packets = (int) ceil((float) image_length / (float) PACKET_SIZE);
-
-		// allocate memory for the image
-		uint8_t **image = (uint8_t **) malloc(packets * sizeof(uint8_t *));
-		for (int i = 0; i < packets; i++) {
-			image[i] = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
+		///*
+		// read the image into the array
+		for (int i = 0; i < image_length; i++) {
+			//image[i] = cam_reg_read(0x3D);
 		}
 
-		for(int i = 0; i < packets; i++){
-			for(int j = 0; j < PACKET_SIZE; j++){
-				image[i][j] = cam_reg_read(0x3D);
-				//putty_putchar(image[i][j]); // for debugging
-			}
-		}
+		//*/
 
 		// transmit size of the image and wait for the start command
 		imageSize(buffer, image_length);
 
 		// transmit packets until stop command received
-		while (transmitPacket(buffer, image));
+		while (transmitPacket(buffer, camera, image));
 
-		// free memory for the image
-		for (int i = 0; i < packets; i++) {
-			free(image[i]);
-		}
-		free(image);
+		// clear the camera memory
+		flush_fifo();
 	}
 
-	// packetRequest test - ground station
+// packetRequest test - ground station
 	while (mode_select == 9) {
 
 		uint32_t image_bytes = txStart(buffer);
 		uint32_t packet_number = (uint32_t) ceil(
 				(float) image_bytes / (float) PACKET_SIZE);
 
+		image = (uint8_t *) calloc(image_bytes, sizeof(uint8_t));
+
 		// retrieve all of the packets
-		for (uint32_t i = 0; i < packet_number; i++) {
-			packetRequest(buffer, i);
+		for (int i = 0; i < packet_number; i++) {
+			packetRequest(buffer, i, image);
 		}
 
-		// send the stop command
+		for(int i = 0; i < image_bytes; i++){
+			putty_putchar(image[i]);
+		}
+
+		// send the stop command once image received
 		memset(buffer, '\0', sizeof(uint8_t) * PACKET_SIZE);
 		memcpy((uint8_t *) buffer, &stop_command, sizeof(stop_command));
-		RFM69_SEND_TIMEOUT(buffer);
+		RFM69_SEND(buffer);
+		RFM69_SEND(buffer);
+		RFM69_SEND(buffer);
+		RFM69_SEND(buffer);
+		RFM69_SEND(buffer);
+		free(image);
+	}
+
+	uint8_t test_string[] = "0123456789";
+	while(mode_select == 10){
+		RFM69_SEND(test_string);
+
 	}
 
 	return 0;

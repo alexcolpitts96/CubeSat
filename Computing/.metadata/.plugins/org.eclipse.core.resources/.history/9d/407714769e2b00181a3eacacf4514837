@@ -1,0 +1,489 @@
+/*
+ * Copyright (c) 2015, Freescale Semiconductor, Inc.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *
+ * o Redistributions of source code must retain the above copyright notice, this list
+ *   of conditions and the following disclaimer.
+ *
+ * o Redistributions in binary form must reproduce the above copyright notice, this
+ *   list of conditions and the following disclaimer in the documentation and/or
+ *   other materials provided with the distribution.
+ *
+ * o Neither the name of Freescale Semiconductor, Inc. nor the names of its
+ *   contributors may be used to endorse or promote products derived from this
+ *   software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+// standard libraries
+#include "fsl_device_registers.h"
+#include "stdio.h"
+#include "stdlib.h"
+#include "string.h"
+#include "math.h"
+
+// custom libraries
+#include "../RFM69/RFM69_driver.h"
+#include "../UART1/UART1_driver.h"
+#include "../FTM/FTM_driver.h"
+#include "../UART0/UART0_driver.h"
+#include "../SPI0/SPI0_driver.h"
+#include "../GPIO/gpio.h" // included in RFM69 driver
+#include "../Comms/Comms.h"
+#include "../Camera/camera.h"
+#include "../I2C/i2c.h"
+#include "../I2C/i2c.h"
+
+
+//------------Define_Fuction--------------//
+	void init_sys_module();
+	void sleep_now();
+	void check_bat();
+	void check_solar();
+	void deinit_sys_module();
+	void LED();
+	void LED1();
+	void  ADC0_Init ();
+	float ADC0_Convert();
+	void ADC1_Init();
+	float ADC1_Convert();
+
+//----------------------------------------//
+	//Global Flag Register
+	int check_bat_flag  = 0;// State 1
+	int image_iden_flag = 0;// State 2
+	int image_cap_flag  = 0;// State 3
+	int prep_Tx_flag = 0; 	// State 4
+	int listen_flag = 0;  	// State 5
+	int tx_flag = 0;     	// State 6
+
+	//Global Sleep Flag Condition
+	int sleep_flag = 0;//Check battery state
+
+
+
+#define MAX_IMAGE_SIZE 0x5FFFF
+
+void master_init() {
+	UART0_Init();
+	UART1_putty_init();
+	SPI0_Init(16);
+	RFM69_DIO0_Init();
+	RFM69_Init(); // must always be after the SPI interface has been enabled
+	FTM0_init();
+	FTM1_init();
+	init_I2C();
+	SPI1_Init(16);
+	camera_init();
+}
+
+// disable all GPIO modules
+void disable_modules() {
+	// turn off port clocks, NOT and then masks to the register
+	SIM_SCGC5 &= ~SIM_SCGC5_PORTA_MASK;
+	SIM_SCGC5 &= ~SIM_SCGC5_PORTB_MASK;
+	SIM_SCGC5 &= ~SIM_SCGC5_PORTC_MASK;
+	SIM_SCGC5 &= ~SIM_SCGC5_PORTD_MASK;
+	SIM_SCGC5 &= ~SIM_SCGC5_PORTE_MASK;
+
+	// turn off module clocks, NOT and then mask to the register
+	SIM_SCGC4 &= ~SIM_SCGC4_I2C0_MASK;
+	SIM_SCGC6 &= ~SIM_SCGC6_SPI1_MASK;
+	SIM_SCGC6 &= ~SIM_SCGC6_SPI0_MASK;
+	SIM_SCGC6 &= ~SIM_SCGC6_FTM0_MASK;
+	SIM_SCGC6 &= ~SIM_SCGC6_FTM1_MASK;
+}
+
+int main() {
+
+	int mode_select = 9; // 8 is satellite, 9 is ground station
+	//uint8_t *buffer = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
+	//uint8_t *camera = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
+
+	uint8_t buffer_arr[PACKET_SIZE];
+	uint8_t camera_arr[PACKET_SIZE];
+	uint8_t *buffer = buffer_arr; // may need to be the address
+	uint8_t *camera = camera_arr;
+	uint8_t *image;
+
+
+	master_init();
+
+	//----------------------Global_Variable-------------//
+	int reset=0;
+	check_bat_flag=1;//Start the first state in the while 1 loop
+	LED();
+	//--------------------------------------------------//
+			//Check battery start
+
+	while(check_bat_flag==1){
+	         	//1. Put the System into sleep
+	        	//2. Set a delay block function
+	        	//3. Wakes up after the duration
+
+
+	        check_bat();
+	        if (!sleep_flag){
+	        	image_iden_flag=1;check_bat_flag=reset;}//If battery level is good, go to state 2
+	}
+	//-------------------------------------------------
+	while(1){
+	//init_sys_module();
+
+	check_solar();
+	//Test case
+
+	//----------------------------------------------------
+	//Sleep Mode Condition
+		while(sleep_flag==1){
+			LED();
+			//GPIOA_PSOR = 0x01 << 1;//PTA1 Red LED
+			//1. Put the System into sleep
+			//2. Set a delay block function
+			//3. Wakes up after the duration
+
+			//Check the battery once it take up from sleep
+
+			//disable module before sleep
+			disable_modules();
+			LPTMR0_enable(10000); // wait 10000 seconds and enter sleep mode
+			//
+			check_bat();
+
+			//If the battery still low put into sleep again
+		}
+
+
+	//--------------------------------------------------
+		//image identification state 1
+
+		while(image_iden_flag==1&&!sleep_flag){
+			int imageI = 1;
+
+					//Set the next flag ready
+					if (imageI){
+						image_cap_flag=1;
+	                }
+
+				//-------------------------------
+				//check_bat(); this will be removed since we dont want to lose detumbling condition
+				image_iden_flag=reset;//exit the state go to next state
+
+				}
+
+
+
+	//--------------------------------------------------
+	        //Capture Image state 2
+		while((image_cap_flag==1)&&!sleep_flag){
+
+
+		//--------------------------------------------------------------------
+				//Capture the camera Task:
+				//GPIOC_PSOR = 0x01 << 1;//turn on Camera via MOSFET switch
+				//Capture the image
+				//GPIOC_PCOR=0x01 << 1;//turn off the Camera via MOSFET switch
+			//--------------------------------------------------------------------
+				 prep_Tx_flag=1;//Set the Next flag ready
+
+				 check_bat();
+				 image_cap_flag=reset;//exit the state go to next state
+
+	        }
+
+
+	//--------------------------------------------------
+	        //Transmit Preparation state (NO PN sequence which this state is NO GO)
+
+		while(prep_Tx_flag==1&&!sleep_flag){
+	        //bat=1;
+
+			//Transmit Preparation:
+				//Setup the Transmition in SPI module ready
+				//Check the image size or location in the flash memory
+
+			  listen_flag=1;//Set the next flag ready
+
+			  check_bat();
+			  prep_Tx_flag=reset;//exit the state go to next state
+
+	                }
+
+	//--------------------------------------------------
+	            //Listen state 3
+		while(listen_flag ==1&&!sleep_flag){
+
+	    //bat=1;
+				//Listen Mode:
+					//Listen to the ground station for packet request
+					//If (packet_request == 1){
+					  tx_flag=1;//If ground station is heard set the next flag ready
+					// }
+
+
+					check_bat();
+					listen_flag=reset;
+
+	        }
+
+	//--------------------------------------------------
+	        //Transmit state 4
+		while(tx_flag==1&&!sleep_flag){
+
+			 uint32_t block_number;
+			 uint8_t block_arr[3];
+
+			 // receive with until there is no timeout
+			 while(!RFM69_RECEIVE_TIMEOUT(buffer)&&1!sleep_flag){
+				 if(Timeout ==1000){
+					 check_bat();
+				 }
+			 } // rx packet now in buffer
+
+					// look at received value and take proper action
+
+					// if start command, send image size in bytes
+					if ((memcmp(&start_command, buffer, sizeof(uint8_t) * PACKET_SIZE) == 0)) {
+						block_arr[0] = image_length & 0xFF;
+						block_arr[1] = (image_length >> 8) & 0xFF;
+						block_arr[2] = (image_length >> 16) & 0xFF;
+
+						// clear the buffer
+						memset(buffer, 0, sizeof(uint8_t) * PACKET_SIZE);
+						memcpy((uint8_t *) buffer, &block_arr, sizeof(uint8_t) * 3);
+
+						// send the packet
+						RFM69_SEND(buffer);
+					}
+
+					// if stop command erase the image
+					else if ((memcmp(&stop_command, buffer, sizeof(uint8_t) * PACKET_SIZE) == 0)) {
+
+                         image_iden_flag=1;
+                         tx_flag=reset;//Start again from the beginning
+
+
+					}
+
+					// if packet request, send the requested packet
+					else{
+						block_number = (buffer[2] << 16) | (buffer[1] << 8) | (buffer[0]);
+						//RFM69_SEND(buffer);
+						//RFM69_SEND(program_buffer+(block_number * PACKET_SIZE));
+
+						//RFM69_SEND(temp+(block_number * PACKET_SIZE));
+					}
+        //------------------------------------------------------------
+
+
+				//else {listen_flag=1;tx_flag=reset;}// go back to the listen mode again if ground station lost communication
+
+
+
+	        	check_bat();
+
+
+				}
+
+	//---------------------------End Of Line ----------------------------------
+			}//While(1) Function
+
+		}//Main Function
+
+
+	void LPTMR0_enable(int miliseconds)
+	{
+		//call this function when low power is needed. This function will activate the LPTMR and its interrupt. The
+		// board will go to sleep for "miliseconds" and then will wake up using the lptmr interrupt
+
+		SIM_SCGC5 |= SIM_SCGC5_LPTMR_MASK; //enable system clock
+	    //Reset LPTMR module
+	    LPTMR0_CSR=0x00;
+	    LPTMR0_PSR=0x00;
+	    LPTMR0_CMR=0x00;
+
+	    // Enable LPT Interrupt in NVIC
+	    NVIC_EnableIRQ(LPTMR0_IRQn);
+
+		SIM_SOPT1|=0xC0000;  // setting 1khz internal clock to LPTMR
+	    LPTMR0_CMR=LPTMR_CMR_COMPARE(miliseconds);  //Set compare value
+		LPTMR0_PSR|=0x45;  //Prescaler Register, Prescale disabled, 1 count = 1 milisecond
+	    LPTMR0_CSR=LPTMR_CSR_TIE_MASK;  //Enable interrupt
+	    LPTMR0_CSR|=LPTMR_CSR_TEN_MASK; //Turn on LPTMR and start counting
+
+	    // Enable Low Power Mode
+	    SCB->SCR|= SCB_SCR_SLEEPDEEP_Msk; //Enable Sleepdeep instead of sleep
+	    SMC_PMPROT|=0x20; //allow VLPS to be activated
+
+	    SMC_STOPCTRL&=0x40; // Enabling PSTOP1
+
+		SMC_PMCTRL|=0x2; // Enter VLPS
+		int Dummy2=SMC_PMCTRL; // dummy read
+		__WFI();   // Wait for interrupt //this line starts VLPS
+
+	}
+
+	void LPTMR0_IRQHandler(void)
+	{
+
+	   LPTMR0_CSR |= LPTMR_CSR_TCF_MASK; // set the TCF flag to 0
+	   LPTMR0_CSR&=0xFE; //disable the counter
+	   master_init();//
+
+	}
+
+	void ADC0_Init (){
+
+		//Pick Port ADC0_DP0 for the testing
+
+		//Pick Port PTB0 ADC0_SE8/ADC1_SE8 ALT0 pg219
+
+		SIM_SCGC6 |= SIM_SCGC6_ADC0_MASK;//0x08000000
+		SIM_SCGC5 |= SIM_SCGC5_PORTB_MASK;
+		PORTB_PCR0 |= PORT_PCR_MUX(0) | PORT_PCR_DSE_MASK;
+
+		ADC0_SC1A = 0b0001000;
+		//ADC0_SC1A = 0b0001111; //Mask the ADCH selection ADC0_SE14
+
+		ADC0_CFG1 |= 0b00011100;// Set the Mode in 16 as it to have 10-bit conversion, with long sample time
+								// Set the ADIV (clock Divide Select) ratio is 1
+		ADC0_CFG2 |= 0x00;
+		ADC0_SC2 |= 0x00;// ADTRG software triiger, DMA disabled, Voltage Refereence (REFSEL) default voltage reference =1.207
+						  // ACREN Range function disabled
+		ADC0_SC3 |= 0x00;
+
+
+	}
+
+
+	float ADC0_Convert() {
+
+		ADC0_SC1A &= ADC_SC1_ADCH(8); //Mask the ADCH selection
+		while(1) {
+			if ((ADC0_SC1A&0x80)==0x80) {
+				break;
+			}
+		}
+		return ADC0_RA;//Return the value read from the ADC register
+
+		}
+
+	void ADC1_Init (){
+		//Pick Port ADC0_DP3 for the testing
+		//PTB1/ADC0_SE9/ADC1_SE9
+		SIM_SCGC5 |= SIM_SCGC5_PORTB_MASK;
+		PORTB_PCR1 |= PORT_PCR_MUX(0) | PORT_PCR_DSE_MASK;
+
+		SIM_SCGC6 |= SIM_SCGC6_ADC1_MASK;//0x08000000
+		ADC1_SC1A  = 0b0001001; //Mask the ADCH selection
+
+		ADC1_CFG1 |= 0b00011100;// Set the Mode in 16 as it to have 10-bit conversion, with long sample time
+								// Set the ADIV (clock Divide Select) ratio is 1
+		ADC1_CFG2|= 0x00;
+		ADC1_SC2 |= 0x00; // ADTRG software trigger, DMA disabled, Voltage Refereence (REFSEL) default voltage reference =1.207
+						  // ACREN Range function disabled
+		ADC1_SC3 |= 0x00;
+
+
+	}
+
+	float ADC1_Convert() {
+
+		ADC1_SC1A  &= ADC_SC1_ADCH(9); //Mask the ADCH selection
+		while(1) {
+			if ((ADC1_SC1A&0x80)==0x80) {
+				break;
+			}
+		}
+		return ADC1_RA;//Return the value read from the ADC register
+
+		}
+
+	void check_solar(){
+		float solraw=0;
+		float sol=0;
+
+		ADC1_Init();
+		//----------------------------------------------------------
+		solraw=ADC1_Convert();//Print the Read ADC value in the num
+		sol=(solraw*3.3f)/(65536.0f);
+		//----------------------------------------------------------
+		//1.6
+		if (sol>2.4){
+			LED1();
+		}
+		else
+			GPIOC_PCOR=0x01 << 2;
+
+
+	}
+
+
+	void LED(){
+		//PTA1 Red LED
+		//PTD5 Blue LED
+				SIM_SCGC5 |= SIM_SCGC5_PORTC_MASK;
+				PORTC_PCR1 |= PORT_PCR_MUX(1) | PORT_PCR_DSE_MASK;
+				GPIOC_PDDR = 0x01 << 1; //PTC1
+				GPIOC_PSOR = 0x01 << 1;//turn on Camera via MOSFET switch
+	}
+
+	void LED1(){
+				SIM_SCGC5 |= SIM_SCGC5_PORTC_MASK;
+				PORTC_PCR2 |= PORT_PCR_MUX(1) | PORT_PCR_DSE_MASK;
+				GPIOC_PDDR = 0x01 << 2; //PTC2
+				GPIOC_PSOR = 0x01 << 2;//turn on Camera via MOSFET switch
+
+	}
+
+	void check_bat(){
+		float batraw=0;
+		float bat=0;
+		disable_modules();
+		ADC0_Init();
+		//Set the All SIM Module to default or turn off expect ADC module
+
+		//-------------------------ADC_Convert----------------------
+		batraw=ADC0_Convert();//Print the Read ADC value in the num
+		bat=(batraw*3.3f)/(65536.0f);
+		//----------------------------------------------------------
+		//Check the Battery level without the load.
+		if (bat<2.6)
+			sleep_flag=1;
+		else
+			{sleep_flag=0;
+			GPIOC_PCOR=0x01 << 1;
+
+			}
+
+		//Reinitialized All the SIM module clock back
+	}
+
+	void Wait32() {
+		for(int i = 0;i<15000;i++){
+					__asm__("nop");
+				}
+		return;
+	}
+
+
+	void delay(){
+	int c,d;
+	 for (c=1; c<50;c++)
+	    for(d=1;d<=50;d++)
+	 {}
+	 }
+

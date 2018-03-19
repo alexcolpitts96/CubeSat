@@ -43,6 +43,7 @@ uint8_t cam_reg_read(uint8_t regaddr) {
 	SPI1_TX(regaddr << 8,0);
 	tmp = SPI1_RX();
 	Pause();
+
 	return tmp;
 }
 
@@ -65,25 +66,25 @@ void fifo_read() {
 		return; // ERROR
 	}
 
-	int read_count = 0;
+	//int read_count = 0;
 
 	//int packet_number = (int) ceil((float) len / (float) PACKET_SIZE);
 
 	/*
-	for (int i = 0; i < packet_number; i++) {
-		for (int j = 0; j < PACKET_SIZE; j++) {
+	 for (int i = 0; i < packet_number; i++) {
+	 for (int j = 0; j < PACKET_SIZE; j++) {
 
-			// if all bytes have been read return
-			if (read_count >= len) {
-				return;
-			}
+	 // if all bytes have been read return
+	 if (read_count >= len) {
+	 return;
+	 }
 
-			// read into memory
-			image[i][j] = cam_reg_read(0x3D);
-			read_count++;
-		}
-	}
-	//*/
+	 // read into memory
+	 image[i][j] = cam_reg_read(0x3D);
+	 read_count++;
+	 }
+	 }
+	 //*/
 	return;
 }
 
@@ -92,8 +93,10 @@ void capture() {
 
 	enable_fifo();
 	flush_fifo(); // clear fifo flag/flush fifo
-	start_capture();
-	while (!(capture_done())); // check flag for capture complete
+	start_capture()
+	;
+	while (!(capture_done()))
+		; // check flag for capture complete
 	//fifo_read(image); // read entire fifo in
 
 	//flush_fifo(); // finished reading, so empty fifo
