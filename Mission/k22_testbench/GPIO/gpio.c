@@ -23,7 +23,7 @@ void GPIO_init(){
 	GPIOD_PDDR = 1<<5;
 	GPIOA_PDDR = 0b11;
 	GPIOB_PDDR &= 0<<17;
-	GPIOB_PDDR &= 0;
+	GPIOB_PDDR |= 1;
 
 	//GPIOA_PCOR = -1;
 

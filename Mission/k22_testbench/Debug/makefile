@@ -10,12 +10,13 @@ RM := rm -rf
 -include sources.mk
 -include UART/subdir.mk
 -include Sources/subdir.mk
--include SPI_SD/subdir.mk
+-include SPI/subdir.mk
 -include Project_Settings/Startup_Code/subdir.mk
 -include I2C/subdir.mk
 -include GPIO/subdir.mk
 -include FTM/subdir.mk
 -include Camera/subdir.mk
+-include ACCEL/subdir.mk
 -include subdir.mk
 -include objects.mk
 
@@ -60,7 +61,7 @@ all: k22_testbench.elf secondary-outputs
 k22_testbench.elf: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: Cross ARM C++ Linker'
-	arm-none-eabi-g++ -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O0 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wall  -g3 -T "MK22FN512xxx12_flash.ld" -Xlinker --gc-sections -L"/home/alex/GitHub/CubeSat/Mission/k22_testbench/Project_Settings/Linker_Files" -Wl,-Map,"k22_testbench.map" -specs=nosys.specs -specs=nano.specs -Xlinker -z -Xlinker muldefs -o "k22_testbench.elf" $(OBJS) $(USER_OBJS) $(LIBS)
+	arm-none-eabi-g++ -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O0 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wall  -g3 -T "MK22FN512xxx12_flash.ld" -Xlinker --gc-sections -L"/home/quinn/workspace.kds/k22_testbench/Project_Settings/Linker_Files" -Wl,-Map,"k22_testbench.map" -specs=nosys.specs -specs=nano.specs -Xlinker -z -Xlinker muldefs -o "k22_testbench.elf" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 

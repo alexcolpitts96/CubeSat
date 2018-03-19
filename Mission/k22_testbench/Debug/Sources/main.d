@@ -13,7 +13,8 @@ Sources/main.o: ../Sources/main.c \
  ../SDK/platform/devices/MK22F51212/include/MK22F51212.h \
  ../SDK/platform/devices/MK22F51212/include/fsl_bitaccess.h \
  ../SDK/platform/devices/MK22F51212/include/MK22F51212_features.h \
- ../Sources/../I2C/i2c.h
+ ../Sources/../I2C/i2c.h ../Sources/../ACCEL/accel.h \
+ ../Sources/../SPI/spi.h
 
 ../SDK/platform/devices/MK22F51212/include/MK22F51212.h:
 
@@ -48,3 +49,7 @@ Sources/main.o: ../Sources/main.c \
 ../SDK/platform/devices/MK22F51212/include/MK22F51212_features.h:
 
 ../Sources/../I2C/i2c.h:
+
+../Sources/../ACCEL/accel.h:
+
+../Sources/../SPI/spi.h:

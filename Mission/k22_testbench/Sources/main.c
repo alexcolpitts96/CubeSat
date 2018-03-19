@@ -11,6 +11,8 @@
 #include "../Camera/camera.h"
 #include "../FTM/ftm.h"
 #include "../I2C/i2c.h"
+#include "../ACCEL/accel.h"
+#include "../SPI/spi.h"
 #include <stdio.h>
 
 int main(){
@@ -23,26 +25,20 @@ int main(){
 	redLED(0);
 	greenLED(0);
 	//blueLED(1);
-	camera_init();
 	enable_fifo();
-	capture();
-	while(1){
-//		flush_fifo(); // clear fifo flag/flush fifo
-//		start_capture();
+	//capture();
+	//accel_init();
+while(1){
+	GPIOB_PCOR |= 1;
 
-//		char buf[10];
-//		int cap = 0;
-//		int len = 0;
-//		while(!cap){
-//			sprintf(buf, "capture: %d\t fifo: %d\r\n",cap, len);
-//			putty_putstr(buf);
-//			cap = capture_done();
-//			len = fifo_len();
-//		}
+	camera_init();
+	//capture();
 
+	GPIOB_PSOR |= 1;
+}
+	camera_init();
+	//capture();
 
-
-	}
 	return 0;
 }
 

@@ -28,10 +28,11 @@ S_UPPER_DEPS :=
 SUBDIRS := \
 UART \
 Sources \
-SPI_SD \
+SPI \
 Project_Settings/Startup_Code \
 I2C \
 GPIO \
 FTM \
 Camera \
+ACCEL \
 
