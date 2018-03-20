@@ -1,4 +1,4 @@
-Camera/camera.o: ../Camera/camera.c \
+ACCEL/accel.o: ../ACCEL/accel.c ../ACCEL/../I2C/i2c.h \
  ../SDK/platform/devices/fsl_device_registers.h \
  ../SDK/platform/devices/MK22F51212/include/MK22F51212.h \
  ../SDK/platform/CMSIS/Include/core_cm4.h \
@@ -10,8 +10,9 @@ Camera/camera.o: ../Camera/camera.c \
  ../SDK/platform/devices/MK22F51212/include/MK22F51212.h \
  ../SDK/platform/devices/MK22F51212/include/fsl_bitaccess.h \
  ../SDK/platform/devices/MK22F51212/include/MK22F51212_features.h \
- ../Camera/camera.h ../Camera/../I2C/i2c.h ../Camera/../UART/uart.h \
- ../Camera/../SPI/spi.h
+ ../ACCEL/accel.h
+
+../ACCEL/../I2C/i2c.h:
 
 ../SDK/platform/devices/fsl_device_registers.h:
 
@@ -35,10 +36,4 @@ Camera/camera.o: ../Camera/camera.c \
 
 ../SDK/platform/devices/MK22F51212/include/MK22F51212_features.h:
 
-../Camera/camera.h:
-
-../Camera/../I2C/i2c.h:
-
-../Camera/../UART/uart.h:
-
-../Camera/../SPI/spi.h:
+../ACCEL/accel.h:

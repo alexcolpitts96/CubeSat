@@ -96,18 +96,18 @@ const uint8_t CONFIG[][2] = {
 };
 
 void RFM69_TX(uint8_t REG, uint8_t tx_byte){
-	SPI0_TX(((RFM_WRITE | REG) << 8) | tx_byte); // write to REG
+	SPI1_TX(((RFM_WRITE | REG) << 8, 1) | tx_byte); // write to REG
 }
 
 uint8_t RFM69_RX(uint8_t REG){
-	SPI0_TX((RFM_READ | REG) << 8); // want to read from REG
+	SPI1_TX((RFM_READ | REG) << 8, 1); // want to read from REG
 	return SPI0_RX() & 0xFF;
 }
 
 void RFM69_Init(){
 	uint8_t i;
 
-	SPI0_Prep(); // ensure SPI0 is ready for tx/rx
+	SPI1_txPrep(); // ensure SPI0 is ready for tx/rx
 
 	// sync to the module to ensure reading and writing is working properly
 	// no need to wait for timeout, this either works or the whole system dies

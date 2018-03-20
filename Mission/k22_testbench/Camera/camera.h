@@ -8,27 +8,19 @@
 #ifndef CAMERA__CAMERA_H_
 #define CAMERA__CAMERA_H_
 
+#define CAM_I2C_ADDRESS		0x60
+
 #define MAX_FIFO_LENGTH 0x5FFFF // 384 kB
 
-#define flush_fifo() SPI1_TX(0x8419)
-#define start_capture() SPI1_TX(8101);\
-						SPI1_TX(0x8402)
-#define enable_fifo() SPI1_TX(0x8312) // enable fifo mode, vsync active low
+#define flush_fifo() SPI1_TX(0x8419,0)
+#define start_capture() SPI1_TX(8101,0);\
+						SPI1_TX(0x8402,0)
+#define enable_fifo() SPI1_TX(0x8312,0) // enable fifo mode, vsync active low
 
 struct ov2640_reg_cfg{
 	uint8_t reg;
 	uint8_t val;
 };
-
-void SPI1_Init(int frame_size);
-
-void SPI1_txPrep();
-
-uint16_t SPI1_RX();
-
-void SPI1_TX(uint16_t tx_data);
-
-uint8_t SPI1_read(uint8_t regaddr);
 
 void cam_cfg(struct ov2640_reg_cfg *vals);
 
