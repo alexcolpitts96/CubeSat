@@ -284,7 +284,6 @@ int main() {
 //---------------------------------Low Power Function ----------------------------------
 
 //---------------------------Check_bttery------------------------------
-//Don't want to mess up the sleep flag for the white check condition since its constant updating
 	void check_bat(){
 		float batraw=0;
 		float bat=0;
