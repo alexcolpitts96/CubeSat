@@ -84,7 +84,21 @@ void master_init() {
 }
 
 // disable all GPIO modules
+void disable_modules() {
+	// turn off port clocks, NOT and then masks to the register
+	SIM_SCGC5 &= ~SIM_SCGC5_PORTA_MASK;
+	SIM_SCGC5 &= ~SIM_SCGC5_PORTB_MASK;
+	SIM_SCGC5 &= ~SIM_SCGC5_PORTC_MASK;
+	SIM_SCGC5 &= ~SIM_SCGC5_PORTD_MASK;
+	SIM_SCGC5 &= ~SIM_SCGC5_PORTE_MASK;
 
+	// turn off module clocks, NOT and then mask to the register
+	SIM_SCGC4 &= ~SIM_SCGC4_I2C0_MASK;
+	SIM_SCGC6 &= ~SIM_SCGC6_SPI1_MASK;
+	SIM_SCGC6 &= ~SIM_SCGC6_SPI0_MASK;
+	SIM_SCGC6 &= ~SIM_SCGC6_FTM0_MASK;
+	SIM_SCGC6 &= ~SIM_SCGC6_FTM1_MASK;
+}
 
 int main() {
 

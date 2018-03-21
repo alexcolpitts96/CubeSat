@@ -84,7 +84,21 @@ void master_init() {
 }
 
 // disable all GPIO modules
+void disable_modules() {
+	// turn off port clocks, NOT and then masks to the register
+	SIM_SCGC5 &= ~SIM_SCGC5_PORTA_MASK;
+	SIM_SCGC5 &= ~SIM_SCGC5_PORTB_MASK;
+	SIM_SCGC5 &= ~SIM_SCGC5_PORTC_MASK;
+	SIM_SCGC5 &= ~SIM_SCGC5_PORTD_MASK;
+	SIM_SCGC5 &= ~SIM_SCGC5_PORTE_MASK;
 
+	// turn off module clocks, NOT and then mask to the register
+	SIM_SCGC4 &= ~SIM_SCGC4_I2C0_MASK;
+	SIM_SCGC6 &= ~SIM_SCGC6_SPI1_MASK;
+	SIM_SCGC6 &= ~SIM_SCGC6_SPI0_MASK;
+	SIM_SCGC6 &= ~SIM_SCGC6_FTM0_MASK;
+	SIM_SCGC6 &= ~SIM_SCGC6_FTM1_MASK;
+}
 
 int main() {
 
@@ -283,39 +297,3 @@ int main() {
 
 //---------------------------------Low Power Function ----------------------------------
 
-//---------------------------Check_bttery------------------------------
-	void check_bat(){
-		float batraw=0;
-		float bat=0;
-		disable_modules();
-		ADC0_Init();
-		//Set the All SIM Module to default or turn off expect ADC module
-
-		//-------------------------ADC_Convert----------------------
-		batraw=ADC0_Convert();//Print the Read ADC value in the num
-		bat=(batraw*3.3f)/(65536.0f);
-		//----------------------------------------------------------
-		//Check the Battery level without the load.
-
-		check_solar(&sunlight);
-
-	if(sunlight){
-		if (bat<2.6)//3.4
-			sleep_flag=1;
-		else
-			{sleep_flag=0;
-			master_init();//Reinitialized the module when exiting the sleep mode
-			GPIOC_PCOR=0x01 << 1;
-				}
-
-			}
-	if(!sunlight){
-		if (bat<2.5)//3.2
-				sleep_flag=1;
-			else
-				{sleep_flag=0;
-				master_init();;//Reinitialized the module when exiting the sleep mode
-				GPIOC_PCOR=0x01 << 1;
-				}
-		}
-	}

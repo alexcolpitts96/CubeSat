@@ -1,0 +1,6 @@
+#ifndef OS_Functions_H_   /* Include guard */
+#define OS_Functions_H_ 
+
+int foo(int x);  /* An example function declaration */
+
+#endif // OS_Functions_H_ 
