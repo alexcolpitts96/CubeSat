@@ -56,7 +56,7 @@
 #include "../I2C/i2c.h"
 
 // image
-#include "/home/alex/Desktop/sat_data.h"
+//#include "/home/alex/Desktop/sat_data.h"
 
 uint8_t DataArray[PGM_SIZE_BYTE];
 //uint8_t program_buffer[BUFFER_SIZE_BYTE];
@@ -114,9 +114,9 @@ void master_init() {
 	RFM69_Init(); // must always be after the SPI interface has been enabled
 	FTM0_init();
 	FTM1_init();
-	//init_I2C();
+	init_I2C();
 	SPI1_Init(16);
-	//camera_init();
+	camera_init();
 }
 
 // NOTE: for FRDMK22F There is 6 blocks of 2048 bytes to use
@@ -139,16 +139,17 @@ int main(void) {
 
 	gCallBackCnt = 0;
 	int mode_select = 8; // S is 8, GS is 9
-	uint8_t *temp = test_image;
+	//uint8_t *temp = test_image;
 
 	//CACHE_DISABLE
 
 	// init board hardware
-	INT_SYS_DisableIRQGlobal();
-	hardware_init();
-	//master_init();
-	disable_modules(); // ensure no modules of interest are turned on
-	INT_SYS_DisableIRQGlobal();
+	//INT_SYS_DisableIRQGlobal();
+	//hardware_init();
+	//INT_SYS_EnableIRQGlobal();
+	master_init();
+	//disable_modules(); // ensure no modules of interest are turned on
+	//INT_SYS_DisableIRQGlobal();
 
 	while (mode_select == 8) {
 		// init flash
@@ -171,25 +172,14 @@ int main(void) {
 		 //*/
 
 		// take image
-		disable_modules();
-		//init_I2C();
-
-		//camera_init();
-		//capture();
-		//image_length = fifo_len();
-		image_length = 5000;
-
+		camera_init();
+		capture();
+		image_length = fifo_len();
 
 		// read in the image
-		disable_modules();
-		SPI1_Init(16);
-		image_length = sizeof(test_image);
 		for (uint32_t i = 0; i < image_length; i++) {
-			//program_buffer[i] = cam_reg_read(0x3D);
-			//program_buffer[i] = i;
-			program_buffer[i] = test_image[i];
-			//program_buffer[i] = '0' + (i%10);
-			PRINTF("%c", test_image[i]);
+			program_buffer[i] = cam_reg_read(0x3D);
+			//PRINTF("%c", test_image[i]);
 		}
 
 		/*
@@ -248,11 +238,11 @@ int main(void) {
 		//*/
 
 		// turn on modules for RFM, no other modules on
-		disable_modules();
-		SPI0_Init(16);
-		RFM69_DIO0_Init();
-		RFM69_Init(); // must always be after the SPI interface has been enabled
-		FTM0_init();
+		//disable_modules();
+		//SPI0_Init(16);
+		//RFM69_DIO0_Init();
+		//RFM69_Init(); // must always be after the SPI interface has been enabled
+		//FTM0_init();
 
 		mode_select = 10;
 
@@ -328,8 +318,8 @@ int main(void) {
 		else{
 			block_number = (buffer[2] << 16) | (buffer[1] << 8) | (buffer[0]);
 			//RFM69_SEND(buffer);
-			//RFM69_SEND(program_buffer+(block_number * PACKET_SIZE));
-			RFM69_SEND(temp+(block_number * PACKET_SIZE));
+			RFM69_SEND(program_buffer+(block_number * PACKET_SIZE));
+			//RFM69_SEND(temp+(block_number * PACKET_SIZE));
 		}
 	}
 

@@ -54,6 +54,7 @@ void I2C0_IRQHandler(){
 void init_I2C(void)
 {
 	SIM_SCGC4 |= SIM_SCGC4_I2C0_MASK;	//Turn on clock to I2C` module
+	SIM_SCGC5 |= SIM_SCGC5_PORTB_MASK;
 
 	/* configure GPIO for I2C0 function */
 	PORTB_PCR2 = PORT_PCR_MUX(2);
@@ -72,7 +73,7 @@ void Pause(void)
 {
 	int n;
 	for (n = 1; n < 50; n++) {
-		__asm__("nop");
+		__asm("nop");
 	}
 }
 
