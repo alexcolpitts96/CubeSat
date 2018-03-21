@@ -60,6 +60,11 @@
 	float ADC0_Convert();
 	void ADC1_Init();
 	float ADC1_Convert();
+	void LPTMR0_enable(int miliseconds);
+	void WDT_int();
+	void Refresh_Dog();
+	void Unleash_Dog();
+
 
 
 //----------------------------------------//
@@ -110,7 +115,7 @@ void disable_modules() {
 
 int main() {
 
-	int mode_select = 9; // 8 is satellite, 9 is ground station
+
 	//uint8_t *buffer = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
 	//uint8_t *camera = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
 
@@ -143,8 +148,8 @@ int main() {
 	}
 	//-------------------------------------------------
 	while(1){
-	//init_sys_module();
-	//Test case
+
+
 
 	//----------------------------------------------------
 	//Sleep Mode Condition
@@ -173,10 +178,11 @@ int main() {
 		while(image_iden_flag==1&&!sleep_flag){
 			int imageI = 1;
 			//check_solar();
-					//Set the next flag ready
-					if (imageI){
+			//Set the next flag ready
+			check_solar();
+					if (imageI&&sunlight){
 						image_cap_flag=1;
-	                }
+					}
 
 				//-------------------------------
 				//check_bat(); this will be removed since we dont want to lose detumbling condition
@@ -242,7 +248,7 @@ int main() {
 	//--------------------------------------------------
 	        //Transmit state 4
 		while(tx_flag==1&&!sleep_flag){
-
+/*
 			 uint32_t block_number;
 			 uint8_t block_arr[3];
 
@@ -290,24 +296,18 @@ int main() {
 
 						//RFM69_SEND(temp+(block_number * PACKET_SIZE));
 					}
-        //------------------------------------------------------------
-
-
 				//else {listen_flag=1;tx_flag=reset;}// go back to the listen mode again if ground station lost communication
 
-
-
+ 	 	 	 	 */
 	        	check_bat();
-
-
 				}
 
-	//---------------------------End Of Line ----------------------------------
+//---------------------------------End Of Line ----------------------------------
 			}//While(1) Function
 
 		}//Main Function
 
-
+//---------------------------------Low Power Function ----------------------------------
 	void LPTMR0_enable(int miliseconds)
 	{
 		//call this function when low power is needed. This function will activate the LPTMR and its interrupt. The
@@ -348,7 +348,7 @@ int main() {
 	   master_init();//
 
 	}
-
+	//---------------------------Battery ADC0 Reading ------------------------------
 	void ADC0_Init (){
 
 		//Pick Port ADC0_DP0 for the testing
@@ -384,7 +384,7 @@ int main() {
 		return ADC0_RA;//Return the value read from the ADC register
 
 		}
-
+//---------------------------Solar ADC1 Reading ------------------------------
 	void ADC1_Init (){
 		//Pick Port ADC0_DP3 for the testing
 		//PTB1/ADC0_SE9/ADC1_SE9
@@ -415,7 +415,7 @@ int main() {
 		return ADC1_RA;//Return the value read from the ADC register
 
 		}
-
+	//---------------------------Check_Solar------------------------------
 	void check_solar(){
 		float solraw=0;
 		float sol=0;
@@ -428,17 +428,54 @@ int main() {
 		//1.6
 		if (sol>2.4){
 			sunlight=1;
-
 			LED1();
 		}
-		else
+		else{
 			sunlight =0;
 			GPIOC_PCOR=0x01 << 2;
-
+		}
 
 	}
 
 
+//---------------------------Check_bttery------------------------------
+	void check_bat(){
+		float batraw=0;
+		float bat=0;
+		disable_modules();
+		ADC0_Init();
+		//Set the All SIM Module to default or turn off expect ADC module
+
+		//-------------------------ADC_Convert----------------------
+		batraw=ADC0_Convert();//Print the Read ADC value in the num
+		bat=(batraw*3.3f)/(65536.0f);
+		//----------------------------------------------------------
+		//Check the Battery level without the load.
+
+		check_solar();
+
+	if(sunlight){
+		if (bat<2.6)//3.4
+			sleep_flag=1;
+		else
+			{sleep_flag=0;
+			master_init();//Reinitialized the module when exiting the sleep mode
+			GPIOC_PCOR=0x01 << 1;
+				}
+
+			}
+	if(!sunlight){
+		if (bat<2.5)//3.2
+				sleep_flag=1;
+			else
+				{sleep_flag=0;
+				master_init();;//Reinitialized the module when exiting the sleep mode
+				GPIOC_PCOR=0x01 << 1;
+				}
+		}
+	}
+
+//----------------------------LED------------------------------
 	void LED(){
 		//PTA1 Red LED
 		//PTD5 Blue LED
@@ -456,41 +493,38 @@ int main() {
 
 	}
 
-	void check_bat(){
-		float batraw=0;
-		float bat=0;
-		disable_modules();
-		ADC0_Init();
-		//Set the All SIM Module to default or turn off expect ADC module
+//--------------------------WatchDog Timer-------------------------------
 
-		//-------------------------ADC_Convert----------------------
-		batraw=ADC0_Convert();//Print the Read ADC value in the num
-		bat=(batraw*3.3f)/(65536.0f);
-		//----------------------------------------------------------
-		//Check the Battery level without the load.
+	void WDT_int(void){
+	// Status and Control Register High
+	WDOG_STCTRLH |= WDOG_STCTRLH_WDOGEN_MASK; //enable WDOG
+	WDOG_STCTRLH |= WDOG_STCTRLH_DBGEN_MASK;  //WDOG enable in CPU debug mode
+	WDOG_STCTRLH |= WDOG_STCTRLH_TESTWDOG_MASK;// Put the WDOG in the quick test mode for small amount value
 
-		check_solar();
+	//Time-Out Value Register
+	//WDOG_TOVALH = 0x0000;
+	 //WDOG_TOVALL |= 0x5;
+	 WDOG_TOVALL = WDOG_TOVALL_TOVALLOW(1000000);
 
-	if(sunlight){
-		if (bat<3.4)
-			sleep_flag=1;
-		else
-			{sleep_flag=0;
-			master_init();//Reinitialized the module when exiting the sleep mode
-			GPIOC_PCOR=0x01 << 1;
-				}
+	 WDOG_TMROUTH = 0x0;
+	 WDOG_TMROUTL = 0x0;
 
-			}
-	if(!sunlight){
-		if (bat<2.6)
-				sleep_flag=1;
-			else
-				{sleep_flag=0;
-				master_init();;//Reinitialized the module when exiting the sleep mode
-				GPIOC_PCOR=0x01 << 1;
-				}
-		}
+	WDOG_PRESC |=WDOG_PRESC_PRESCVAL(0);// set our frequency 1 kHz -> 1 mSec
+
+
 	}
+
+	void Refresh_Dog(void){
+		WDOG_REFRESH = 0xA602;
+		WDOG_REFRESH = 0xB480;
+	}
+
+	void Unleash_Dog(void){
+		WDOG_UNLOCK = 0xC520;
+		WDOG_UNLOCK = 0xD928;
+	}
+
+//----------------------------Miscellaneous-------------------------------
 
 	void Wait32() {
 		for(int i = 0;i<15000;i++){
