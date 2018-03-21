@@ -1,0 +1,105 @@
+13:23:48 **** Incremental Build of configuration Debug for project Master_Mind_Final ****
+make all 
+Building file: ../UART1/UART1_driver.c
+Invoking: Cross ARM C Compiler
+arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O0 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wall  -g3 -D"CPU_MK22FN512VDC12" -I"../Sources" -I"../Project_Settings/Startup_Code" -I"../SDK/platform/CMSIS/Include" -I"../SDK/platform/devices" -I"../SDK/platform/devices/MK22F51212/include" -std=c99 -MMD -MP -MF"UART1/UART1_driver.d" -MT"UART1/UART1_driver.o" -c -o "UART1/UART1_driver.o" "../UART1/UART1_driver.c"
+Finished building: ../UART1/UART1_driver.c
+ 
+Building file: ../UART0/UART0_driver.c
+Invoking: Cross ARM C Compiler
+arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O0 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wall  -g3 -D"CPU_MK22FN512VDC12" -I"../Sources" -I"../Project_Settings/Startup_Code" -I"../SDK/platform/CMSIS/Include" -I"../SDK/platform/devices" -I"../SDK/platform/devices/MK22F51212/include" -std=c99 -MMD -MP -MF"UART0/UART0_driver.d" -MT"UART0/UART0_driver.o" -c -o "UART0/UART0_driver.o" "../UART0/UART0_driver.c"
+Finished building: ../UART0/UART0_driver.c
+ 
+Building file: ../Sources/main.c
+Invoking: Cross ARM C Compiler
+arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O0 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wall  -g3 -D"CPU_MK22FN512VDC12" -I"../Sources" -I"../Project_Settings/Startup_Code" -I"../SDK/platform/CMSIS/Include" -I"../SDK/platform/devices" -I"../SDK/platform/devices/MK22F51212/include" -std=c99 -MMD -MP -MF"Sources/main.d" -MT"Sources/main.o" -c -o "Sources/main.o" "../Sources/main.c"
+../Sources/main.c: In function 'main':
+../Sources/main.c:131:6: warning: unused variable 'Timeout' [-Wunused-variable]
+  int Timeout=0;
+      ^
+../Sources/main.c:123:11: warning: unused variable 'image' [-Wunused-variable]
+  uint8_t *image;
+           ^
+../Sources/main.c:122:11: warning: unused variable 'camera' [-Wunused-variable]
+  uint8_t *camera = camera_arr;
+           ^
+../Sources/main.c:121:11: warning: unused variable 'buffer' [-Wunused-variable]
+  uint8_t *buffer = buffer_arr; // may need to be the address
+           ^
+../Sources/main.c:115:6: warning: unused variable 'mode_select' [-Wunused-variable]
+  int mode_select = 9; // 8 is satellite, 9 is ground station
+      ^
+../Sources/main.c: In function 'LPTMR0_enable':
+../Sources/main.c:341:7: warning: unused variable 'Dummy2' [-Wunused-variable]
+   int Dummy2=SMC_PMCTRL; // dummy read
+       ^
+Finished building: ../Sources/main.c
+ 
+Building file: ../SPI0/SPI0_driver.c
+Invoking: Cross ARM C Compiler
+arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O0 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wall  -g3 -D"CPU_MK22FN512VDC12" -I"../Sources" -I"../Project_Settings/Startup_Code" -I"../SDK/platform/CMSIS/Include" -I"../SDK/platform/devices" -I"../SDK/platform/devices/MK22F51212/include" -std=c99 -MMD -MP -MF"SPI0/SPI0_driver.d" -MT"SPI0/SPI0_driver.o" -c -o "SPI0/SPI0_driver.o" "../SPI0/SPI0_driver.c"
+Finished building: ../SPI0/SPI0_driver.c
+ 
+Building file: ../RFM69/RFM69_driver.c
+Invoking: Cross ARM C Compiler
+arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O0 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wall  -g3 -D"CPU_MK22FN512VDC12" -I"../Sources" -I"../Project_Settings/Startup_Code" -I"../SDK/platform/CMSIS/Include" -I"../SDK/platform/devices" -I"../SDK/platform/devices/MK22F51212/include" -std=c99 -MMD -MP -MF"RFM69/RFM69_driver.d" -MT"RFM69/RFM69_driver.o" -c -o "RFM69/RFM69_driver.o" "../RFM69/RFM69_driver.c"
+Finished building: ../RFM69/RFM69_driver.c
+ 
+Building file: ../Project_Settings/Startup_Code/startup.c
+Invoking: Cross ARM C Compiler
+arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O0 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wall  -g3 -D"CPU_MK22FN512VDC12" -I"../Sources" -I"../Project_Settings/Startup_Code" -I"../SDK/platform/CMSIS/Include" -I"../SDK/platform/devices" -I"../SDK/platform/devices/MK22F51212/include" -std=c99 -MMD -MP -MF"Project_Settings/Startup_Code/startup.d" -MT"Project_Settings/Startup_Code/startup.o" -c -o "Project_Settings/Startup_Code/startup.o" "../Project_Settings/Startup_Code/startup.c"
+Finished building: ../Project_Settings/Startup_Code/startup.c
+ 
+Building file: ../Project_Settings/Startup_Code/startup_MK22F51212.S
+Invoking: Cross ARM GNU Assembler
+arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O0 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wall  -g3 -x assembler-with-cpp -MMD -MP -MF"Project_Settings/Startup_Code/startup_MK22F51212.d" -MT"Project_Settings/Startup_Code/startup_MK22F51212.o" -c -o "Project_Settings/Startup_Code/startup_MK22F51212.o" "../Project_Settings/Startup_Code/startup_MK22F51212.S"
+Finished building: ../Project_Settings/Startup_Code/startup_MK22F51212.S
+ 
+Building file: ../Project_Settings/Startup_Code/system_MK22F51212.c
+Invoking: Cross ARM C Compiler
+arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O0 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wall  -g3 -D"CPU_MK22FN512VDC12" -I"../Sources" -I"../Project_Settings/Startup_Code" -I"../SDK/platform/CMSIS/Include" -I"../SDK/platform/devices" -I"../SDK/platform/devices/MK22F51212/include" -std=c99 -MMD -MP -MF"Project_Settings/Startup_Code/system_MK22F51212.d" -MT"Project_Settings/Startup_Code/system_MK22F51212.o" -c -o "Project_Settings/Startup_Code/system_MK22F51212.o" "../Project_Settings/Startup_Code/system_MK22F51212.c"
+Finished building: ../Project_Settings/Startup_Code/system_MK22F51212.c
+ 
+Building file: ../I2C/i2c.c
+Invoking: Cross ARM C Compiler
+arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O0 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wall  -g3 -D"CPU_MK22FN512VDC12" -I"../Sources" -I"../Project_Settings/Startup_Code" -I"../SDK/platform/CMSIS/Include" -I"../SDK/platform/devices" -I"../SDK/platform/devices/MK22F51212/include" -std=c99 -MMD -MP -MF"I2C/i2c.d" -MT"I2C/i2c.o" -c -o "I2C/i2c.o" "../I2C/i2c.c"
+Finished building: ../I2C/i2c.c
+ 
+Building file: ../GPIO/gpio.c
+Invoking: Cross ARM C Compiler
+arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O0 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wall  -g3 -D"CPU_MK22FN512VDC12" -I"../Sources" -I"../Project_Settings/Startup_Code" -I"../SDK/platform/CMSIS/Include" -I"../SDK/platform/devices" -I"../SDK/platform/devices/MK22F51212/include" -std=c99 -MMD -MP -MF"GPIO/gpio.d" -MT"GPIO/gpio.o" -c -o "GPIO/gpio.o" "../GPIO/gpio.c"
+Finished building: ../GPIO/gpio.c
+ 
+Building file: ../FTM/FTM_driver.c
+Invoking: Cross ARM C Compiler
+arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O0 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wall  -g3 -D"CPU_MK22FN512VDC12" -I"../Sources" -I"../Project_Settings/Startup_Code" -I"../SDK/platform/CMSIS/Include" -I"../SDK/platform/devices" -I"../SDK/platform/devices/MK22F51212/include" -std=c99 -MMD -MP -MF"FTM/FTM_driver.d" -MT"FTM/FTM_driver.o" -c -o "FTM/FTM_driver.o" "../FTM/FTM_driver.c"
+Finished building: ../FTM/FTM_driver.c
+ 
+Building file: ../Comms/Comms.c
+Invoking: Cross ARM C Compiler
+arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O0 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wall  -g3 -D"CPU_MK22FN512VDC12" -I"../Sources" -I"../Project_Settings/Startup_Code" -I"../SDK/platform/CMSIS/Include" -I"../SDK/platform/devices" -I"../SDK/platform/devices/MK22F51212/include" -std=c99 -MMD -MP -MF"Comms/Comms.d" -MT"Comms/Comms.o" -c -o "Comms/Comms.o" "../Comms/Comms.c"
+Finished building: ../Comms/Comms.c
+ 
+Building file: ../Camera/camera.c
+Invoking: Cross ARM C Compiler
+arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O0 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wall  -g3 -D"CPU_MK22FN512VDC12" -I"../Sources" -I"../Project_Settings/Startup_Code" -I"../SDK/platform/CMSIS/Include" -I"../SDK/platform/devices" -I"../SDK/platform/devices/MK22F51212/include" -std=c99 -MMD -MP -MF"Camera/camera.d" -MT"Camera/camera.o" -c -o "Camera/camera.o" "../Camera/camera.c"
+../Camera/camera.c: In function 'cam_reg_read':
+../Camera/camera.c:138:2: warning: implicit declaration of function 'Pause' [-Wimplicit-function-declaration]
+  Pause();
+  ^
+Finished building: ../Camera/camera.c
+ 
+Building target: Master_Mind.elf
+Invoking: Cross ARM C++ Linker
+arm-none-eabi-g++ -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O0 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wall  -g3 -T "MK22FN512xxx12_flash.ld" -Xlinker --gc-sections -L"C:/Users/Hsuan-Wei Lo/Documents/GitHub/CubeSat/Computing/Master_Mind_Final/Project_Settings/Linker_Files" -Wl,-Map,"Master_Mind.map" -specs=nosys.specs -specs=nano.specs -Xlinker -z -Xlinker muldefs -o "Master_Mind.elf"  ./UART1/UART1_driver.o  ./UART0/UART0_driver.o  ./Sources/main.o  ./SPI0/SPI0_driver.o  ./RFM69/RFM69_driver.o  ./Project_Settings/Startup_Code/startup.o ./Project_Settings/Startup_Code/startup_MK22F51212.o ./Project_Settings/Startup_Code/system_MK22F51212.o  ./I2C/i2c.o  ./GPIO/gpio.o  ./FTM/FTM_driver.o  ./Comms/Comms.o  ./Camera/camera.o   
+Finished building target: Master_Mind.elf
+ 
+Invoking: Cross ARM GNU Print Size
+arm-none-eabi-size --format=berkeley "Master_Mind.elf"
+   text	   data	    bss	    dec	    hex	filename
+   6772	    612	   2132	   9516	   252c	Master_Mind.elf
+Finished building: Master_Mind.siz
+ 
+
+13:24:08 Build Finished (took 20s.174ms)
+

@@ -1,0 +1,101 @@
+13:20:06 **** Incremental Build of configuration Debug for project Accel Mod ****
+make all 
+Building file: ../UART/uart.c
+Invoking: Cross ARM C Compiler
+arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O0 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wall  -g3 -D"CPU_MK22FN512VDC12" -I"../Sources" -I"../Project_Settings/Startup_Code" -I"../SDK/platform/CMSIS/Include" -I"../SDK/platform/devices" -I"../SDK/platform/devices/MK22F51212/include" -std=c99 -MMD -MP -MF"UART/uart.d" -MT"UART/uart.o" -c -o "UART/uart.o" "../UART/uart.c"
+Finished building: ../UART/uart.c
+ 
+Building file: ../Sources/main.c
+Invoking: Cross ARM C Compiler
+arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O0 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wall  -g3 -D"CPU_MK22FN512VDC12" -I"../Sources" -I"../Project_Settings/Startup_Code" -I"../SDK/platform/CMSIS/Include" -I"../SDK/platform/devices" -I"../SDK/platform/devices/MK22F51212/include" -std=c99 -MMD -MP -MF"Sources/main.d" -MT"Sources/main.o" -c -o "Sources/main.o" "../Sources/main.c"
+../Sources/main.c: In function 'main':
+../Sources/main.c:41:2: warning: passing argument 2 of 'sprintf' makes pointer from integer without a cast [enabled by default]
+  sprintf(" x direction: %d\n\r ",da->dat_X);
+  ^
+In file included from c:\freescale\kds_v3\toolchain\arm-none-eabi\include\stdlib.h:11:0,
+                 from ../SDK/platform/devices/MK22F51212/include/fsl_bitaccess.h:77,
+                 from ../SDK/platform/devices/MK22F51212/include/MK22F51212_extension.h:89,
+                 from ../SDK/platform/devices/fsl_device_registers.h:196,
+                 from ../Sources/../FTM/ftm.h:11,
+                 from ../Sources/main.c:12:
+c:\freescale\kds_v3\toolchain\arm-none-eabi\include\stdio.h:217:5: note: expected 'const char * restrict' but argument is of type 'int16_t'
+ int _EXFUN(sprintf, (char *__restrict, const char *__restrict, ...)
+     ^
+../Sources/main.c:42:2: warning: passing argument 1 of 'putty_putstr' makes pointer from integer without a cast [enabled by default]
+  putty_putstr(da->dat_X);
+  ^
+In file included from ../Sources/main.c:10:0:
+../Sources/../UART/uart.h:17:6: note: expected 'char *' but argument is of type 'int16_t'
+ void putty_putstr(char *str);
+      ^
+../Sources/main.c:40:7: warning: unused variable 'test' [-Wunused-variable]
+  char test[60];
+       ^
+../Sources/main.c:34:11: warning: 'da' is used uninitialized in this function [-Wuninitialized]
+  da->dat_X=0;
+           ^
+Finished building: ../Sources/main.c
+ 
+Building file: ../SPI/spi.c
+Invoking: Cross ARM C Compiler
+arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O0 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wall  -g3 -D"CPU_MK22FN512VDC12" -I"../Sources" -I"../Project_Settings/Startup_Code" -I"../SDK/platform/CMSIS/Include" -I"../SDK/platform/devices" -I"../SDK/platform/devices/MK22F51212/include" -std=c99 -MMD -MP -MF"SPI/spi.d" -MT"SPI/spi.o" -c -o "SPI/spi.o" "../SPI/spi.c"
+Finished building: ../SPI/spi.c
+ 
+Building file: ../Project_Settings/Startup_Code/startup.c
+Invoking: Cross ARM C Compiler
+arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O0 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wall  -g3 -D"CPU_MK22FN512VDC12" -I"../Sources" -I"../Project_Settings/Startup_Code" -I"../SDK/platform/CMSIS/Include" -I"../SDK/platform/devices" -I"../SDK/platform/devices/MK22F51212/include" -std=c99 -MMD -MP -MF"Project_Settings/Startup_Code/startup.d" -MT"Project_Settings/Startup_Code/startup.o" -c -o "Project_Settings/Startup_Code/startup.o" "../Project_Settings/Startup_Code/startup.c"
+Finished building: ../Project_Settings/Startup_Code/startup.c
+ 
+Building file: ../Project_Settings/Startup_Code/startup_MK22F51212.S
+Invoking: Cross ARM GNU Assembler
+arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O0 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wall  -g3 -x assembler-with-cpp -MMD -MP -MF"Project_Settings/Startup_Code/startup_MK22F51212.d" -MT"Project_Settings/Startup_Code/startup_MK22F51212.o" -c -o "Project_Settings/Startup_Code/startup_MK22F51212.o" "../Project_Settings/Startup_Code/startup_MK22F51212.S"
+Finished building: ../Project_Settings/Startup_Code/startup_MK22F51212.S
+ 
+Building file: ../Project_Settings/Startup_Code/system_MK22F51212.c
+Invoking: Cross ARM C Compiler
+arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O0 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wall  -g3 -D"CPU_MK22FN512VDC12" -I"../Sources" -I"../Project_Settings/Startup_Code" -I"../SDK/platform/CMSIS/Include" -I"../SDK/platform/devices" -I"../SDK/platform/devices/MK22F51212/include" -std=c99 -MMD -MP -MF"Project_Settings/Startup_Code/system_MK22F51212.d" -MT"Project_Settings/Startup_Code/system_MK22F51212.o" -c -o "Project_Settings/Startup_Code/system_MK22F51212.o" "../Project_Settings/Startup_Code/system_MK22F51212.c"
+Finished building: ../Project_Settings/Startup_Code/system_MK22F51212.c
+ 
+Building file: ../I2C/i2c.c
+Invoking: Cross ARM C Compiler
+arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O0 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wall  -g3 -D"CPU_MK22FN512VDC12" -I"../Sources" -I"../Project_Settings/Startup_Code" -I"../SDK/platform/CMSIS/Include" -I"../SDK/platform/devices" -I"../SDK/platform/devices/MK22F51212/include" -std=c99 -MMD -MP -MF"I2C/i2c.d" -MT"I2C/i2c.o" -c -o "I2C/i2c.o" "../I2C/i2c.c"
+Finished building: ../I2C/i2c.c
+ 
+Building file: ../GPIO/gpio.c
+Invoking: Cross ARM C Compiler
+arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O0 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wall  -g3 -D"CPU_MK22FN512VDC12" -I"../Sources" -I"../Project_Settings/Startup_Code" -I"../SDK/platform/CMSIS/Include" -I"../SDK/platform/devices" -I"../SDK/platform/devices/MK22F51212/include" -std=c99 -MMD -MP -MF"GPIO/gpio.d" -MT"GPIO/gpio.o" -c -o "GPIO/gpio.o" "../GPIO/gpio.c"
+Finished building: ../GPIO/gpio.c
+ 
+Building file: ../FTM/ftm.c
+Invoking: Cross ARM C Compiler
+arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O0 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wall  -g3 -D"CPU_MK22FN512VDC12" -I"../Sources" -I"../Project_Settings/Startup_Code" -I"../SDK/platform/CMSIS/Include" -I"../SDK/platform/devices" -I"../SDK/platform/devices/MK22F51212/include" -std=c99 -MMD -MP -MF"FTM/ftm.d" -MT"FTM/ftm.o" -c -o "FTM/ftm.o" "../FTM/ftm.c"
+Finished building: ../FTM/ftm.c
+ 
+Building file: ../Camera/camera.c
+Invoking: Cross ARM C Compiler
+arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O0 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wall  -g3 -D"CPU_MK22FN512VDC12" -I"../Sources" -I"../Project_Settings/Startup_Code" -I"../SDK/platform/CMSIS/Include" -I"../SDK/platform/devices" -I"../SDK/platform/devices/MK22F51212/include" -std=c99 -MMD -MP -MF"Camera/camera.d" -MT"Camera/camera.o" -c -o "Camera/camera.o" "../Camera/camera.c"
+../Camera/camera.c: In function 'cam_reg_read':
+../Camera/camera.c:44:2: warning: implicit declaration of function 'Pause' [-Wimplicit-function-declaration]
+  Pause();
+  ^
+Finished building: ../Camera/camera.c
+ 
+Building file: ../ACCEL/accel.c
+Invoking: Cross ARM C Compiler
+arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O0 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wall  -g3 -D"CPU_MK22FN512VDC12" -I"../Sources" -I"../Project_Settings/Startup_Code" -I"../SDK/platform/CMSIS/Include" -I"../SDK/platform/devices" -I"../SDK/platform/devices/MK22F51212/include" -std=c99 -MMD -MP -MF"ACCEL/accel.d" -MT"ACCEL/accel.o" -c -o "ACCEL/accel.o" "../ACCEL/accel.c"
+Finished building: ../ACCEL/accel.c
+ 
+Building target: k22_testbench.elf
+Invoking: Cross ARM C++ Linker
+arm-none-eabi-g++ -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O0 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wall  -g3 -T "MK22FN512xxx12_flash.ld" -Xlinker --gc-sections -L"C:/Users/Hsuan-Wei Lo/Documents/GitHub/CubeSat/Computing/Accel Mod/Project_Settings/Linker_Files" -Wl,-Map,"k22_testbench.map" -specs=nosys.specs -specs=nano.specs -Xlinker -z -Xlinker muldefs -o "k22_testbench.elf"  ./UART/uart.o  ./Sources/main.o  ./SPI_SD/SPI0.o  ./SPI/spi.o  ./Project_Settings/Startup_Code/startup.o ./Project_Settings/Startup_Code/startup_MK22F51212.o ./Project_Settings/Startup_Code/system_MK22F51212.o  ./I2C/i2c.o  ./GPIO/gpio.o  ./FTM/ftm.o  ./Camera/camera.o  ./ACCEL/accel.o   
+Finished building target: k22_testbench.elf
+ 
+Invoking: Cross ARM GNU Print Size
+arm-none-eabi-size --format=berkeley "k22_testbench.elf"
+   text	   data	    bss	    dec	    hex	filename
+   5532	    112	   2116	   7760	   1e50	k22_testbench.elf
+Finished building: k22_testbench.siz
+ 
+
+13:20:15 Build Finished (took 8s.692ms)
+
