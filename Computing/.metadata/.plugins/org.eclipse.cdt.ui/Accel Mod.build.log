@@ -1,4 +1,4 @@
-13:20:06 **** Incremental Build of configuration Debug for project Accel Mod ****
+14:13:25 **** Incremental Build of configuration Debug for project Accel Mod ****
 make all 
 Building file: ../UART/uart.c
 Invoking: Cross ARM C Compiler
@@ -97,5 +97,5 @@ arm-none-eabi-size --format=berkeley "k22_testbench.elf"
 Finished building: k22_testbench.siz
  
 
-13:20:15 Build Finished (took 8s.692ms)
+14:13:34 Build Finished (took 8s.968ms)
 
