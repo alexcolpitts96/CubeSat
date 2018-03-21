@@ -27,19 +27,22 @@ void cam_cfg(struct ov2640_reg_cfg *vals){
 void camera_init(){
 	I2CWriteRegister(CAM_I2C_ADDRESS,0xff,0x01);
 	I2CWriteRegister(CAM_I2C_ADDRESS,0x12,0x80);
+//	cam_cfg(QVGA);
 	cam_cfg(JPEG_INIT); // jpeg init
 	cam_cfg(YUV_422); // yuv color select
 	cam_cfg(JPEG); // jpeg select
 	I2CWriteRegister(CAM_I2C_ADDRESS,0xff,0x01);
 	I2CWriteRegister(CAM_I2C_ADDRESS,0x15,0x00);
-	//cam_cfg(JPEG_SMALL); // 320x240 init
+	cam_cfg(JPEG_SMALL); // 320x240 init
+	for(int i=0;i<1000;i++) Pause();
 	cam_cfg(JPEG_LARGE); // 1600x1200 select
+	for(int i=0;i<1000;i++) Pause();
 	return;
 }
 
 uint8_t cam_reg_read(uint8_t regaddr){
 	uint8_t tmp;
-	SPI1_TX(regaddr<<8,0);
+	SPI1_TX(regaddr<<8);
 	tmp = SPI1_RX();
 	Pause();
 	return tmp;
@@ -64,12 +67,13 @@ void fifo_read(){
 		return; // ERROR
 	}
 	int read_count = 0;
-	uint8_t bleh;
-
+//	uint8_t *img = malloc(sizeof(uint8_t)*len);
+//	uint8_t *pos = img;
+	uint8_t pos;
 	while(read_count<len){
-		 bleh = cam_reg_read(0x3D);
+		 pos = cam_reg_read(0x3D);
+		 putty_putchar(pos);
 		 read_count++;
-		 putty_putchar(bleh);
 	}
 	return;
 }
