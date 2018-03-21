@@ -126,10 +126,11 @@ int main() {
 	//----------------------Global_Variable-------------//
 	int reset=0;
 	check_bat_flag=1;//Start the first state in the while 1 loop
-	LED();
+	int Timeout=0;
+
 	//--------------------------------------------------//
 			//Check battery start
-
+	LED();
 	while(check_bat_flag==1){
 	         	//1. Put the System into sleep
 	        	//2. Set a delay block function
@@ -143,8 +144,6 @@ int main() {
 	//-------------------------------------------------
 	while(1){
 	//init_sys_module();
-
-	check_solar();
 	//Test case
 
 	//----------------------------------------------------
@@ -173,7 +172,7 @@ int main() {
 
 		while(image_iden_flag==1&&!sleep_flag){
 			int imageI = 1;
-
+			//check_solar();
 					//Set the next flag ready
 					if (imageI){
 						image_cap_flag=1;
@@ -249,6 +248,7 @@ int main() {
 
 			 // receive with until there is no timeout
 			 while(!RFM69_RECEIVE_TIMEOUT(buffer)&&!sleep_flag){
+				 Timeout++;
 				 if(Timeout ==1000){
 					 check_bat();
 				 }
@@ -472,10 +472,11 @@ int main() {
 		check_solar();
 
 	if(sunlight){
-		if (bat<2.6)
+		if (bat<3.4)
 			sleep_flag=1;
 		else
 			{sleep_flag=0;
+			master_init();//Reinitialized the module when exiting the sleep mode
 			GPIOC_PCOR=0x01 << 1;
 				}
 
@@ -485,11 +486,10 @@ int main() {
 				sleep_flag=1;
 			else
 				{sleep_flag=0;
+				master_init();;//Reinitialized the module when exiting the sleep mode
 				GPIOC_PCOR=0x01 << 1;
 				}
 		}
-
-		//Reinitialized All the SIM module clock back
 	}
 
 	void Wait32() {

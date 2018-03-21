@@ -25,19 +25,11 @@ int main(){
 	redLED(0);
 	greenLED(0);
 	//blueLED(1);
-	enable_fifo();
-	//capture();
-	//accel_init();
-while(1){
-	GPIOB_PCOR |= 1;
 
 	camera_init();
-	//capture();
 
-	GPIOB_PSOR |= 1;
-}
-	camera_init();
-	//capture();
+	uint8_t* img;
+	capture();
 
 	return 0;
 }
