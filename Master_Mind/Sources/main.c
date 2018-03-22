@@ -68,7 +68,7 @@ int main() {
 	//uint8_t *camera = (uint8_t *) calloc(PACKET_SIZE, sizeof(uint8_t));
 
 	uint8_t buffer_arr[PACKET_SIZE];
-	uint8_t camera_arr[PACKET_SIZE];
+	//uint8_t camera_arr[PACKET_SIZE];
 	uint8_t *buffer = buffer_arr; // may need to be the address
 	//uint8_t *camera = camera_arr;
 	uint8_t *image;

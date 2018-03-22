@@ -6878,7 +6878,7 @@ LOAD /opt/Freescale/KDS_v3/toolchain/bin/../lib/gcc/arm-none-eabi/4.8.4/armv7e-m
                 0x00000001                ASSERT ((__StackLimit >= __HeapLimit), region m_data_2 overflowed with stack and heap)
 OUTPUT(FLash.elf elf32-littlearm)
 
-.debug_info     0x00000000     0xa0a6
+.debug_info     0x00000000     0xa09a
  .debug_info    0x00000000      0x75f ./Sources/main.o
  .debug_info    0x0000075f      0x544 ./SPI0/SPI0_driver.o
  .debug_info    0x00000ca3      0x56c ./SPI/spi.o
@@ -6887,22 +6887,22 @@ OUTPUT(FLash.elf elf32-littlearm)
  .debug_info    0x0000275b      0xa1a ./SDK/board/board.o
  .debug_info    0x00003175      0x114 ./SDK/board/hardware_init.o
  .debug_info    0x00003289      0x3e9 ./SDK/board/pin_mux.o
- .debug_info    0x00003672      0x2bf ./RFM69/RFM69_driver.o
- .debug_info    0x00003931      0x3a7 ./Project_Settings/Startup_Code/startup.o
- .debug_info    0x00003cd8       0x84 ./Project_Settings/Startup_Code/startup_MK22F51212.o
- .debug_info    0x00003d5c      0xab8 ./Project_Settings/Startup_Code/system_MK22F51212.o
- .debug_info    0x00004814      0x582 ./I2C/i2c.o
- .debug_info    0x00004d96      0x46d ./GPIO/gpio.o
- .debug_info    0x00005203      0x49b ./FTM/FTM_driver.o
- .debug_info    0x0000569e      0x424 ./Comms/Comms.o
- .debug_info    0x00005ac2      0x3ba ./Camera/camera.o
- .debug_info    0x00005e7c      0xf84 /home/alex/KSDK_1.3.0/lib/ksdk_platform_lib/kds/K22F51212/debug/libksdk_platform.a(fsl_uart_hal.o)
- .debug_info    0x00006e00      0xa13 /home/alex/KSDK_1.3.0/lib/ksdk_platform_lib/kds/K22F51212/debug/libksdk_platform.a(fsl_lpuart_hal.o)
- .debug_info    0x00007813     0x1808 /home/alex/KSDK_1.3.0/lib/ksdk_platform_lib/kds/K22F51212/debug/libksdk_platform.a(fsl_clock_MK22F51212.o)
- .debug_info    0x0000901b      0x42f /home/alex/KSDK_1.3.0/lib/ksdk_platform_lib/kds/K22F51212/debug/libksdk_platform.a(fsl_clock_manager_common.o)
- .debug_info    0x0000944a      0xc5c /home/alex/KSDK_1.3.0/lib/ksdk_platform_lib/kds/K22F51212/debug/libksdk_platform.a(fsl_mcg_hal.o)
+ .debug_info    0x00003672      0x2b3 ./RFM69/RFM69_driver.o
+ .debug_info    0x00003925      0x3a7 ./Project_Settings/Startup_Code/startup.o
+ .debug_info    0x00003ccc       0x84 ./Project_Settings/Startup_Code/startup_MK22F51212.o
+ .debug_info    0x00003d50      0xab8 ./Project_Settings/Startup_Code/system_MK22F51212.o
+ .debug_info    0x00004808      0x582 ./I2C/i2c.o
+ .debug_info    0x00004d8a      0x46d ./GPIO/gpio.o
+ .debug_info    0x000051f7      0x49b ./FTM/FTM_driver.o
+ .debug_info    0x00005692      0x424 ./Comms/Comms.o
+ .debug_info    0x00005ab6      0x3ba ./Camera/camera.o
+ .debug_info    0x00005e70      0xf84 /home/alex/KSDK_1.3.0/lib/ksdk_platform_lib/kds/K22F51212/debug/libksdk_platform.a(fsl_uart_hal.o)
+ .debug_info    0x00006df4      0xa13 /home/alex/KSDK_1.3.0/lib/ksdk_platform_lib/kds/K22F51212/debug/libksdk_platform.a(fsl_lpuart_hal.o)
+ .debug_info    0x00007807     0x1808 /home/alex/KSDK_1.3.0/lib/ksdk_platform_lib/kds/K22F51212/debug/libksdk_platform.a(fsl_clock_MK22F51212.o)
+ .debug_info    0x0000900f      0x42f /home/alex/KSDK_1.3.0/lib/ksdk_platform_lib/kds/K22F51212/debug/libksdk_platform.a(fsl_clock_manager_common.o)
+ .debug_info    0x0000943e      0xc5c /home/alex/KSDK_1.3.0/lib/ksdk_platform_lib/kds/K22F51212/debug/libksdk_platform.a(fsl_mcg_hal.o)
 
-.debug_abbrev   0x00000000     0x21f2
+.debug_abbrev   0x00000000     0x21e5
  .debug_abbrev  0x00000000      0x1fe ./Sources/main.o
  .debug_abbrev  0x000001fe      0x153 ./SPI0/SPI0_driver.o
  .debug_abbrev  0x00000351      0x189 ./SPI/spi.o
@@ -6911,20 +6911,20 @@ OUTPUT(FLash.elf elf32-littlearm)
  .debug_abbrev  0x00000927      0x225 ./SDK/board/board.o
  .debug_abbrev  0x00000b4c       0x8d ./SDK/board/hardware_init.o
  .debug_abbrev  0x00000bd9      0x121 ./SDK/board/pin_mux.o
- .debug_abbrev  0x00000cfa      0x193 ./RFM69/RFM69_driver.o
- .debug_abbrev  0x00000e8d       0xfa ./Project_Settings/Startup_Code/startup.o
- .debug_abbrev  0x00000f87       0x14 ./Project_Settings/Startup_Code/startup_MK22F51212.o
- .debug_abbrev  0x00000f9b      0x141 ./Project_Settings/Startup_Code/system_MK22F51212.o
- .debug_abbrev  0x000010dc      0x19c ./I2C/i2c.o
- .debug_abbrev  0x00001278      0x148 ./GPIO/gpio.o
- .debug_abbrev  0x000013c0      0x12e ./FTM/FTM_driver.o
- .debug_abbrev  0x000014ee      0x12f ./Comms/Comms.o
- .debug_abbrev  0x0000161d      0x19a ./Camera/camera.o
- .debug_abbrev  0x000017b7      0x225 /home/alex/KSDK_1.3.0/lib/ksdk_platform_lib/kds/K22F51212/debug/libksdk_platform.a(fsl_uart_hal.o)
- .debug_abbrev  0x000019dc      0x1f2 /home/alex/KSDK_1.3.0/lib/ksdk_platform_lib/kds/K22F51212/debug/libksdk_platform.a(fsl_lpuart_hal.o)
- .debug_abbrev  0x00001bce      0x2f3 /home/alex/KSDK_1.3.0/lib/ksdk_platform_lib/kds/K22F51212/debug/libksdk_platform.a(fsl_clock_MK22F51212.o)
- .debug_abbrev  0x00001ec1       0xec /home/alex/KSDK_1.3.0/lib/ksdk_platform_lib/kds/K22F51212/debug/libksdk_platform.a(fsl_clock_manager_common.o)
- .debug_abbrev  0x00001fad      0x245 /home/alex/KSDK_1.3.0/lib/ksdk_platform_lib/kds/K22F51212/debug/libksdk_platform.a(fsl_mcg_hal.o)
+ .debug_abbrev  0x00000cfa      0x186 ./RFM69/RFM69_driver.o
+ .debug_abbrev  0x00000e80       0xfa ./Project_Settings/Startup_Code/startup.o
+ .debug_abbrev  0x00000f7a       0x14 ./Project_Settings/Startup_Code/startup_MK22F51212.o
+ .debug_abbrev  0x00000f8e      0x141 ./Project_Settings/Startup_Code/system_MK22F51212.o
+ .debug_abbrev  0x000010cf      0x19c ./I2C/i2c.o
+ .debug_abbrev  0x0000126b      0x148 ./GPIO/gpio.o
+ .debug_abbrev  0x000013b3      0x12e ./FTM/FTM_driver.o
+ .debug_abbrev  0x000014e1      0x12f ./Comms/Comms.o
+ .debug_abbrev  0x00001610      0x19a ./Camera/camera.o
+ .debug_abbrev  0x000017aa      0x225 /home/alex/KSDK_1.3.0/lib/ksdk_platform_lib/kds/K22F51212/debug/libksdk_platform.a(fsl_uart_hal.o)
+ .debug_abbrev  0x000019cf      0x1f2 /home/alex/KSDK_1.3.0/lib/ksdk_platform_lib/kds/K22F51212/debug/libksdk_platform.a(fsl_lpuart_hal.o)
+ .debug_abbrev  0x00001bc1      0x2f3 /home/alex/KSDK_1.3.0/lib/ksdk_platform_lib/kds/K22F51212/debug/libksdk_platform.a(fsl_clock_MK22F51212.o)
+ .debug_abbrev  0x00001eb4       0xec /home/alex/KSDK_1.3.0/lib/ksdk_platform_lib/kds/K22F51212/debug/libksdk_platform.a(fsl_clock_manager_common.o)
+ .debug_abbrev  0x00001fa0      0x245 /home/alex/KSDK_1.3.0/lib/ksdk_platform_lib/kds/K22F51212/debug/libksdk_platform.a(fsl_mcg_hal.o)
 
 .debug_aranges  0x00000000      0xa18
  .debug_aranges
@@ -7070,7 +7070,7 @@ OUTPUT(FLash.elf elf32-littlearm)
  .debug_str     0x0011d814       0xca ./SDK/board/pin_mux.o
                              0x115e02 (size before relaxing)
  .debug_str     0x0011d8de     0x5742 ./RFM69/RFM69_driver.o
-                             0x11cc03 (size before relaxing)
+                             0x11cbfe (size before relaxing)
  .debug_str     0x00123020      0x15e ./Project_Settings/Startup_Code/startup.o
                              0x115c9d (size before relaxing)
  .debug_str     0x0012317e      0x5a3 ./Project_Settings/Startup_Code/system_MK22F51212.o

@@ -24,11 +24,11 @@ const uint8_t CONFIG[][2] = {
 	// packet mode, everything else default
 	{REG_DATAMODUL, RF_DATAMODUL_DATAMODE_PACKET | RF_DATAMODUL_MODULATIONTYPE_FSK | RF_DATAMODUL_MODULATIONSHAPING_00},
 
-	// set speed to 4800 bps (testing purposes only)
-	//{REG_BITRATEMSB, RF_BITRATEMSB_100000},
-	//{REG_BITRATELSB, RF_BITRATELSB_100000},
-	{REG_BITRATEMSB, RF_BITRATEMSB_9600},
-	{REG_BITRATELSB, RF_BITRATELSB_9600},
+	// set speed to 9600 bps (testing purposes only)
+	{REG_BITRATEMSB, RF_BITRATEMSB_55555},
+	{REG_BITRATELSB, RF_BITRATELSB_55555},
+	//{REG_BITRATEMSB, RF_BITRATEMSB_9600},
+	//{REG_BITRATELSB, RF_BITRATELSB_9600},
 
 	// fdev of 10kHz
 	{REG_FDEVMSB, RF_FDEVMSB_10000},
@@ -52,7 +52,9 @@ const uint8_t CONFIG[][2] = {
 	{REG_LNA, RF_LNA_ZIN_200},
 
 	// set to recommended default, reset values are different
-	{REG_RXBW, RF_RXBW_DCCFREQ_010 | RF_RXBW_MANT_16 | RF_RXBW_EXP_2},
+	//{REG_RXBW, RF_RXBW_DCCFREQ_010 | RF_RXBW_MANT_16 | RF_RXBW_EXP_2}, // for 9600 baud
+	//{REG_RXBW, RF_RXBW_DCCFREQ_010 | RF_RXBW_MANT_16 | RF_RXBW_EXP_2},
+	{REG_RXBW, RF_RXBW_DCCFREQ_010 | RF_RXBW_MANT_16 | RF_RXBW_EXP_2}, // for 500000 Hz BW
 
 	// DI0 setup for IRQ, best pin output
 	{REG_DIOMAPPING1, RF_DIOMAPPING1_DIO0_01},
@@ -96,18 +98,18 @@ const uint8_t CONFIG[][2] = {
 };
 
 void RFM69_TX(uint8_t REG, uint8_t tx_byte){
-	SPI1_TX(((RFM_WRITE | REG) << 8, 1) | tx_byte); // write to REG
+	SPI0_TX(((RFM_WRITE | REG) << 8) | tx_byte); // write to REG
 }
 
 uint8_t RFM69_RX(uint8_t REG){
-	SPI1_TX((RFM_READ | REG) << 8, 1); // want to read from REG
+	SPI0_TX((RFM_READ | REG) << 8); // want to read from REG
 	return SPI0_RX() & 0xFF;
 }
 
 void RFM69_Init(){
 	uint8_t i;
 
-	SPI1_txPrep(); // ensure SPI0 is ready for tx/rx
+	SPI0_Prep(); // ensure SPI0 is ready for tx/rx
 
 	// sync to the module to ensure reading and writing is working properly
 	// no need to wait for timeout, this either works or the whole system dies
@@ -169,9 +171,12 @@ void RFM69_SEND(uint8_t *buffer){
 	// DIO0 will be packet sent when put into tx mode
 	RFM69_TX(REG_DIOMAPPING1, RF_DIOMAPPING1_DIO0_00);
 
+	RFM69_CLEAR_FIFO();
+	//uint8_t test_string[] = "0123456789";
 	// read the buffer into the FIFO
 	for(i = 0; i < PACKET_SIZE; i++){
 		RFM69_TX(REG_FIFO, buffer[i]);
+		//RFM69_TX(REG_FIFO, test_string[i]);
 	}
 
 	// set to tx mode, RFM does the work
@@ -258,6 +263,7 @@ void RFM69_RECEIVE(uint8_t *buffer){
 	// set to standby once a package has been received to save power
 	RFM69_SET_MODE(RF_OPMODE_STANDBY);
 
+	//uint8_t temp;
 	for(i = 0; i < 4; i++){
 		RFM69_RX(REG_FIFO); // dummy read
 		//putty_putchar(RFM69_RX(REG_FIFO));
