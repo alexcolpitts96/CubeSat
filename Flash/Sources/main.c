@@ -50,6 +50,7 @@
 #include "../FTM/FTM_driver.h"
 #include "../UART0/UART0_driver.h"
 #include "../SPI0/SPI0_driver.h"
+#include "../SPI/spi.h"
 #include "../GPIO/gpio.h" // included in RFM69 driver
 #include "../Comms/Comms.h"
 #include "../Camera/camera.h"
@@ -60,7 +61,8 @@
 
 uint8_t DataArray[PGM_SIZE_BYTE];
 //uint8_t program_buffer[BUFFER_SIZE_BYTE];
-uint8_t program_buffer[FTFx_PSECTOR_SIZE * 6]; // fill entire flash space remaining
+//uint8_t program_buffer[FTFx_PSECTOR_SIZE * 6]; // fill entire flash space remaining
+uint8_t *program_buffer;
 uint8_t return_buffer[BUFFER_SIZE_BYTE];
 uint32_t gCallBackCnt; /* global counter in callback(). */
 //pFLASHCOMMANDSEQUENCE g_FlashLaunchCommand = (pFLASHCOMMANDSEQUENCE) 0xFFFFFFFF;
@@ -145,7 +147,7 @@ int main(void) {
 
 	// init board hardware
 	//INT_SYS_DisableIRQGlobal();
-	//hardware_init();
+	hardware_init();
 	//INT_SYS_EnableIRQGlobal();
 	master_init();
 	//disable_modules(); // ensure no modules of interest are turned on
@@ -175,6 +177,8 @@ int main(void) {
 		camera_init();
 		capture();
 		image_length = fifo_len();
+
+		program_buffer = malloc(sizeof(uint8_t) * image_length);
 
 		// read in the image
 		for (uint32_t i = 0; i < image_length; i++) {

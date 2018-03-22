@@ -37,8 +37,6 @@
 
 #include "fsl_device_registers.h"
 
-#define CAM_I2C_ADDRESS		0x60
-
 #define i2c_DisableAck()		I2C0_C1 |= I2C_C1_TXAK_MASK
 
 #define i2c_RepeatedStart()		I2C0_C1 |= I2C_C1_RSTA_MASK;
@@ -62,10 +60,10 @@
 
 void init_I2C(void);
 void IIC_StartTransmission(unsigned char SlaveID, unsigned char Mode);
-void I2CWriteRegister(unsigned char u8RegisterAddress, unsigned char u8Data);
-unsigned char I2CReadRegister(unsigned char u8RegisterAddress);
-unsigned char I2CReadMultiRegisters(unsigned char u8RegisterAddress,
-				    unsigned char bytes);
+void I2CWriteRegister(unsigned char SlaveID, unsigned char u8RegisterAddress, unsigned char u8Data);
+unsigned char I2CReadRegister(unsigned char SlaveID, unsigned char u8RegisterAddress);
+void I2CReadMultiRegisters(unsigned char SlaveID, unsigned char u8RegisterAddress, uint8_t* buf,
+									unsigned char bytes);
 void I2C0_IRQHandler();
 
 #endif		/* __I2C_H */

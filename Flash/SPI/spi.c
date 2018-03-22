@@ -38,7 +38,7 @@ void SPI1_Init(int frame_size){
 	SPI1_CTAR0 = 0;
 
 	// configure SPI1
-	SPI1_CTAR0 |= SPI_CTAR_FMSZ(frame_size-1) | SPI_CTAR_BR(0xC); // CPHA = 0, CPOL = 0, BR can be changed with parameter in brackets
+	SPI1_CTAR0 |= SPI_CTAR_FMSZ(frame_size-1) | SPI_CTAR_BR(0x9); // CPHA = 0, CPOL = 0, BR can be changed with parameter in brackets
 	SPI1_MCR |= SPI_MCR_MSTR_MASK | SPI_MCR_PCSIS_MASK; // master, CS active low
 	SPI1_MCR &= (~SPI_MCR_DIS_RXF_MASK) | (~SPI_MCR_DIS_TXF_MASK); // enable rx and tx FIFOs
 	SPI1_MCR &= (~SPI_MCR_MDIS_MASK) & (~SPI_MCR_HALT_MASK); // enable module clock and start transfers
@@ -84,12 +84,7 @@ void SPI1_TX(uint16_t tx_data){
 	// wait for tx fifo to not be full
 	while(!(SPI1_SR & SPI_SR_TFFF_MASK)); // clock timing issue not coming from wait here
 
-	//switch(cs){
-	//case 0:
-	//	SPI1_PUSHR = SPI_PUSHR_PCS(0) | tx_data; // send to chip with CS0
-	//case 1:
-		SPI1_PUSHR = SPI_PUSHR_PCS(1) | tx_data; // send to chip with CS1
-	//}
+	SPI1_PUSHR = SPI_PUSHR_PCS(1) | tx_data; // send to chip with CS0
 
 	// wait for transmission to complete flag to go to 1 (TCF)
 	while(!(SPI1_SR & SPI_SR_TCF_MASK));
@@ -102,5 +97,3 @@ uint8_t SPI1_read(uint8_t regaddr){
 	SPI1_TX(regaddr << 8);
 	return (SPI1_RX() & 0x00FF);
 }
-
-

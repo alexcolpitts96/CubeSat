@@ -70,34 +70,10 @@ int main() {
 	uint8_t buffer_arr[PACKET_SIZE];
 	uint8_t camera_arr[PACKET_SIZE];
 	uint8_t *buffer = buffer_arr; // may need to be the address
-	uint8_t *camera = camera_arr;
+	//uint8_t *camera = camera_arr;
 	uint8_t *image;
 
 	master_init();
-
-	while (mode_select == 8) {
-		int image_length;
-
-		capture();
-		image_length = fifo_len();
-
-		///*
-		// read the image into the array
-		for (int i = 0; i < image_length; i++) {
-			//image[i] = cam_reg_read(0x3D);
-		}
-
-		//*/
-
-		// transmit size of the image and wait for the start command
-		imageSize(buffer, image_length);
-
-		// transmit packets until stop command received
-		while (transmitPacket(buffer, camera, image));
-
-		// clear the camera memory
-		flush_fifo();
-	}
 
 // packetRequest test - ground station
 	while (mode_select == 9) {
@@ -126,12 +102,6 @@ int main() {
 		RFM69_SEND(buffer);
 		RFM69_SEND(buffer);
 		free(image);
-	}
-
-	uint8_t test_string[] = "0123456789";
-	while(mode_select == 10){
-		RFM69_SEND(test_string);
-
 	}
 
 	return 0;

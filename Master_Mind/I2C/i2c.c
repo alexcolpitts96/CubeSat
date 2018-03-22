@@ -39,7 +39,6 @@
 
 signed char result[20];
 unsigned char MasterTransmission;
-unsigned char SlaveID;
 
 /*
  * I2C Initialization
@@ -91,9 +90,6 @@ void IIC_StartTransmission(unsigned char SlaveID, unsigned char Mode)
 		MasterTransmission = MRSW;
 	}
 
-	/* shift ID in right position */
-	SlaveID = (unsigned char)CAM_I2C_ADDRESS;
-
 	/* Set R/W bit at end of Slave Address */
 	SlaveID |= (unsigned char)MasterTransmission;
 
@@ -111,7 +107,7 @@ void IIC_StartTransmission(unsigned char SlaveID, unsigned char Mode)
  * @param u8RegisterAddress is Register Address
  * @return Data stored in Register
  */
-unsigned char I2CReadRegister(unsigned char u8RegisterAddress)
+unsigned char I2CReadRegister(unsigned char SlaveID, unsigned char u8RegisterAddress)
 {
 	unsigned char result;
 
@@ -127,7 +123,7 @@ unsigned char I2CReadRegister(unsigned char u8RegisterAddress)
 	I2C0_C1 |= I2C_C1_RSTA_MASK;
 
 	/* Send Slave Address */
-	I2C0_D = (CAM_I2C_ADDRESS) | 0x01;	//read address
+	I2C0_D = (SlaveID) | 0x01;	//read address
 	i2c_Wait();
 
 	/* Put in Rx Mode */
@@ -154,7 +150,7 @@ unsigned char I2CReadRegister(unsigned char u8RegisterAddress)
  * @param u8RegisterAddress is Register Address
  * @param u8Data is Data to write
  */
-void I2CWriteRegister(unsigned char u8RegisterAddress, unsigned char u8Data)
+void I2CWriteRegister(unsigned char SlaveID, unsigned char u8RegisterAddress, unsigned char u8Data)
 {
 	/* send data to slave */
 	IIC_StartTransmission(SlaveID, MWSR);
@@ -172,11 +168,11 @@ void I2CWriteRegister(unsigned char u8RegisterAddress, unsigned char u8Data)
 }
 
 /*
- * Read first three registers from the MMA7660
+ * Read first three registers from the accel
  * @param u8RegisterAddress is Register Address
  * @return Data stored in Register
  */
-unsigned char I2CReadMultiRegisters(unsigned char u8RegisterAddress,
+void I2CReadMultiRegisters(unsigned char SlaveID, unsigned char u8RegisterAddress, uint8_t *buf,
 									unsigned char bytes)
 {
 	unsigned char n = bytes;
@@ -194,7 +190,7 @@ unsigned char I2CReadMultiRegisters(unsigned char u8RegisterAddress,
 	I2C0_C1 |= I2C_C1_RSTA_MASK;
 
 	/* Send Slave Address */
-	I2C0_D = (CAM_I2C_ADDRESS) | 0x01;	//read address
+	I2C0_D = (SlaveID) | 0x01;	//read address
 	i2c_Wait();
 
 	/* Put in Rx Mode */
@@ -204,28 +200,28 @@ unsigned char I2CReadMultiRegisters(unsigned char u8RegisterAddress,
 	I2C0_C1 &= ~I2C_C1_TXAK_MASK;
 
 	/* Dummy read */
-	result[0] = I2C0_D;
+	buf[0] = I2C0_D;
 	i2c_Wait();
 
 	for (i = 0; i < n - 2; i++) {
 		/* Read first byte */
-		result[i] = I2C0_D;
+		buf[i] = I2C0_D;
 		i2c_Wait();
 	}
 	/* Turn off ACK since this is second to last read */
 	I2C0_C1 |= I2C_C1_TXAK_MASK;
 
 	/* Read second byte */
-	result[i++] = I2C0_D;
+	buf[i++] = I2C0_D;
 	i2c_Wait();
 
 	/* Send stop */
 	i2c_Stop();
 
 	/* Read third byte */
-	result[i++] = I2C0_D;
+	buf[i++] = I2C0_D;
 
-	return result[0];
+	return;
 }
 
 

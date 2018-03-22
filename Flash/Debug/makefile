@@ -12,6 +12,7 @@ RM := rm -rf
 -include UART0/subdir.mk
 -include Sources/subdir.mk
 -include SPI0/subdir.mk
+-include SPI/subdir.mk
 -include SDK/platform/utilities/subdir.mk
 -include SDK/flash/C90TFS/drvsrc/source/subdir.mk
 -include SDK/flash/subdir.mk

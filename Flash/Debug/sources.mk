@@ -30,6 +30,7 @@ UART1 \
 UART0 \
 Sources \
 SPI0 \
+SPI \
 SDK/platform/utilities \
 SDK/flash \
 SDK/flash/C90TFS/drvsrc/source \
