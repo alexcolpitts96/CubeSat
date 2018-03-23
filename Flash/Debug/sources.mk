@@ -37,6 +37,7 @@ SDK/flash/C90TFS/drvsrc/source \
 SDK/board \
 RFM69 \
 Project_Settings/Startup_Code \
+OS \
 I2C \
 GPIO \
 FTM \

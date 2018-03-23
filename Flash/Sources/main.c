@@ -55,6 +55,7 @@
 #include "../Comms/Comms.h"
 #include "../Camera/camera.h"
 #include "../I2C/i2c.h"
+#include "../OS/OS.h"
 
 #define FLASH_BLOCKS 147
 
@@ -90,26 +91,11 @@ void error_trap(uint32_t ret) {
 	}
 }
 
-// disable all GPIO modules
-void disable_modules() {
-	// turn off port clocks, NOT and then masks to the register
-	SIM_SCGC5 &= ~SIM_SCGC5_PORTA_MASK;
-	SIM_SCGC5 &= ~SIM_SCGC5_PORTB_MASK;
-	SIM_SCGC5 &= ~SIM_SCGC5_PORTC_MASK;
-	SIM_SCGC5 &= ~SIM_SCGC5_PORTD_MASK;
-	SIM_SCGC5 &= ~SIM_SCGC5_PORTE_MASK;
-
-	// turn off module clocks, NOT and then mask to the register
-	SIM_SCGC4 &= ~SIM_SCGC4_I2C0_MASK;
-	SIM_SCGC6 &= ~SIM_SCGC6_SPI1_MASK;
-	SIM_SCGC6 &= ~SIM_SCGC6_SPI0_MASK;
-	SIM_SCGC6 &= ~SIM_SCGC6_FTM0_MASK;
-	SIM_SCGC6 &= ~SIM_SCGC6_FTM1_MASK;
-}
-
 void master_init() {
 	//UART0_Init();
 	//UART1_putty_init();
+	hardware_init();
+	//ADC0_Init();
 	SPI0_Init(16);
 	RFM69_DIO0_Init();
 	RFM69_Init(); // must always be after the SPI interface has been enabled
@@ -120,8 +106,21 @@ void master_init() {
 	camera_init();
 }
 
-// NOTE: for FRDMK22F There is 6 blocks of 2048 bytes to use
+// check battery and process sleeping as needed
+void sleep_handler() {
+
+	// sleep until the battery is fully charged
+	// check_bat will turn back on modules if battery voltage is acceptable
+	while (!check_bat()) {
+
+		// wait for 10 seconds to charge
+		LPTMR0_enable(10000);
+	}
+}
+
 int main(void) {
+
+	int timeout_counter;
 	uint8_t *flash_pointer;
 	uint32_t ret; /* Return code from each SSD function */
 	uint32_t destination; /* Address of the target location */
@@ -137,20 +136,25 @@ int main(void) {
 	uint8_t *buffer = buffer_arr; // may need to be the address
 
 	gCallBackCnt = 0;
-	int mode_select = 8; // S is 8, GS is 9
-	//uint8_t *temp = test_image;
+	int state = 2; // 2 = capture, 3 = terminal
 
 	//CACHE_DISABLE
 
 	// init board hardware
-	hardware_init();
+	//master_init();
+
+	// do nothing until battery is charged
+	sleep_handler();
 	master_init();
 
 	// always loop through the following
 	while (1) {
 
 		// capture information from satellite and store in flash
-		while (mode_select == 8) {
+		while (state == 2) {
+
+			sleep_handler();
+			master_init();
 
 			// init the flash memory
 			ret = FlashInit(&flashSSDConfig);
@@ -167,8 +171,15 @@ int main(void) {
 					(uint32_t) ramFunc, LAUNCH_CMD_SIZE,
 					(uint32_t) FlashCommandSequence);
 
+			// check if image capture is viable here
+			//
+			//
+			//
+			//
+			//
+			//
+
 			// take image
-			camera_init();
 			capture();
 			image_length = fifo_len();
 
@@ -227,19 +238,34 @@ int main(void) {
 				}
 			}
 
-			// change to terminal mode once image is in memory
-			mode_select = 10;
+			// change to terminal mode once image is in flash memory
+			state = 3;
 
 			// reset camera fifo
 			flush_fifo();
 		}
 
-		while (mode_select == 10) {
+		while (state == 3) {
 			uint32_t block_number;
 			uint8_t block_arr[3];
 
-			// receive with until there is no timeout
-			while (!RFM69_RECEIVE_TIMEOUT(buffer)); // rx packet now in buffer
+			// ensure there is enough battery
+			//sleep_handler();
+			//master_init();
+
+			// receive until timeout doesn't happen, check battery occasionally
+			timeout_counter = 0;
+			while (!RFM69_RECEIVE_TIMEOUT(buffer)) {
+
+				// every n*50 ms check the battery status
+				if (timeout_counter % 1000 == 0) {
+					sleep_handler();
+					master_init();
+					timeout_counter = 0;
+				}
+
+				timeout_counter++;
+			}
 
 			// if start command, send image size in bytes
 			if ((memcmp(&start_command, buffer, sizeof(uint8_t) * PACKET_SIZE)
@@ -259,13 +285,13 @@ int main(void) {
 			// if stop command erase the image
 			else if ((memcmp(&stop_command, buffer,
 					sizeof(uint8_t) * PACKET_SIZE) == 0)) {
-				mode_select = 8;
+				state = 2;
 			}
 
 			// if packet request, send the requested packet
 			else {
-				block_number = (buffer[2] << 16) | (buffer[1] << 8)	| (buffer[0]);
-				RFM69_SEND(program_buffer + (block_number * PACKET_SIZE));
+				block_number = (buffer[2] << 16) | (buffer[1] << 8) | (buffer[0]);
+				RFM69_SEND(flash_pointer + (block_number * PACKET_SIZE));
 			}
 		}
 	}

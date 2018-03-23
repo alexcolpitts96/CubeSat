@@ -1,0 +1,216 @@
+int main() {
+
+
+
+	
+	while(check_bat_flag==1){
+	         	//1. Put the System into sleep
+	        	//2. Set a delay block function
+	        	//3. Wakes up after the duration
+
+
+	        check_bat();
+	        if (!sleep_flag){
+	        	image_iden_flag=1;check_bat_flag=reset;}//If battery level is good, go to state 2
+	}
+	//-------------------------------------------------
+	while(1){
+
+
+
+	//----------------------------------------------------
+	//Sleep Mode Condition
+		while(sleep_flag==1){
+			LED();
+			//GPIOA_PSOR = 0x01 << 1;//PTA1 Red LED
+			//1. Put the System into sleep
+			//2. Set a delay block function
+			//3. Wakes up after the duration
+
+			//Check the battery once it take up from sleep
+
+			//disable module before sleep
+			disable_modules();
+			LPTMR0_enable(10000); // wait 10000 seconds and enter sleep mode
+			//
+			check_bat();
+
+			//If the battery still low put into sleep again
+		}
+
+
+	//--------------------------------------------------
+		//image identification state 1
+
+		while(image_iden_flag==1&&!sleep_flag){
+			int imageI = 1;
+			//check_solar();
+			//Set the next flag ready
+			check_solar(&sunlight);
+
+					if (imageI&&sunlight){
+						image_cap_flag=1;
+					}
+
+				//-------------------------------
+				//check_bat(); this will be removed since we dont want to lose detumbling condition
+				image_iden_flag=reset;//exit the state go to next state
+
+				}
+
+
+
+	//--------------------------------------------------
+	        //Capture Image state 2
+		while((image_cap_flag==1)&&!sleep_flag){
+
+
+		    //--------------------------------------------------------------------
+				//Capture the camera Task:
+				//GPIOC_PSOR = 0x01 << 1;//turn on Camera via MOSFET switch
+				//Capture the image
+				//GPIOC_PCOR=0x01 << 1;//turn off the Camera via MOSFET switch
+			//--------------------------------------------------------------------
+				 prep_Tx_flag=1;//Set the Next flag ready
+
+				 check_bat();
+				 image_cap_flag=reset;//exit the state go to next state
+
+	        }
+
+
+	//--------------------------------------------------
+	        //Transmit Preparation state (NO PN sequence which this state is NO GO)
+
+		while(prep_Tx_flag==1&&!sleep_flag){
+	        //bat=1;
+
+			//Transmit Preparation:
+				//Setup the Transmition in SPI module ready
+				//Check the image size or location in the flash memory
+
+			  listen_flag=1;//Set the next flag ready
+
+			  check_bat();
+			  prep_Tx_flag=reset;//exit the state go to next state
+
+	                }
+
+	//--------------------------------------------------
+	            //Listen state 3
+		while(listen_flag ==1&&!sleep_flag){
+
+	    //bat=1;
+				//Listen Mode:
+					//Listen to the ground station for packet request
+					//If (packet_request == 1){
+					  tx_flag=1;//If ground station is heard set the next flag ready
+					// }
+
+
+					check_bat();
+					listen_flag=reset;
+
+	        }
+
+	//--------------------------------------------------
+	        //Transmit state 4
+		while(tx_flag==1&&!sleep_flag){
+/*
+			 uint32_t block_number;
+			 uint8_t block_arr[3];
+
+			 // receive with until there is no timeout
+			 while(!RFM69_RECEIVE_TIMEOUT(buffer)&&!sleep_flag){
+				 Timeout++;
+				 if(Timeout ==1000){
+					 check_bat();
+				 }
+				 if(!sleep_flag){
+					 Timeout=0;//reset the counter in the timeout function
+				 }
+			 } // rx packet now in buffer
+
+					// look at received value and take proper action
+
+					// if start command, send image size in bytes
+					if ((memcmp(&start_command, buffer, sizeof(uint8_t) * PACKET_SIZE) == 0)) {
+						block_arr[0] = image_length & 0xFF;
+						block_arr[1] = (image_length >> 8) & 0xFF;
+						block_arr[2] = (image_length >> 16) & 0xFF;
+
+						// clear the buffer
+						memset(buffer, 0, sizeof(uint8_t) * PACKET_SIZE);
+						memcpy((uint8_t *) buffer, &block_arr, sizeof(uint8_t) * 3);
+
+						// send the packet
+						RFM69_SEND(buffer);
+					}
+
+					// if stop command erase the image
+					else if ((memcmp(&stop_command, buffer, sizeof(uint8_t) * PACKET_SIZE) == 0)) {
+
+                         image_iden_flag=1;
+                         tx_flag=reset;//Start again from the beginning
+
+
+					}
+
+					// if packet request, send the requested packet
+					else{
+						block_number = (buffer[2] << 16) | (buffer[1] << 8) | (buffer[0]);
+						//RFM69_SEND(buffer);
+						//RFM69_SEND(program_buffer+(block_number * PACKET_SIZE));
+
+						//RFM69_SEND(temp+(block_number * PACKET_SIZE));
+					}
+				//else {listen_flag=1;tx_flag=reset;}// go back to the listen mode again if ground station lost communication
+
+ 	 	 	 	 */
+	        	check_bat();
+				}
+
+//---------------------------------End Of Line ----------------------------------
+			}//While(1) Function
+
+		}//Main Function
+
+//---------------------------------Low Power Function ----------------------------------
+
+//---------------------------Check_bttery------------------------------
+//Don't want to mess up the sleep flag for the white check condition since its constant updating
+	void check_bat(){
+		float batraw=0;
+		float bat=0;
+		disable_modules();
+		ADC0_Init();
+		//Set the All SIM Module to default or turn off expect ADC module
+
+		//-------------------------ADC_Convert----------------------
+		batraw=ADC0_Convert();//Print the Read ADC value in the num
+		bat=(batraw*3.3f)/(65536.0f);
+		//----------------------------------------------------------
+		//Check the Battery level without the load.
+
+		check_solar(&sunlight);
+
+	if(sunlight){
+		if (bat<2.6)//3.4
+			sleep_flag=1;
+		else
+			{sleep_flag=0;
+			master_init();//Reinitialized the module when exiting the sleep mode
+			GPIOC_PCOR=0x01 << 1;
+				}
+
+			}
+	if(!sunlight){
+		if (bat<2.5)//3.2
+				sleep_flag=1;
+			else
+				{sleep_flag=0;
+				master_init();;//Reinitialized the module when exiting the sleep mode
+				GPIOC_PCOR=0x01 << 1;
+				}
+		}
+	}

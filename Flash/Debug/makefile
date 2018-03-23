@@ -19,6 +19,7 @@ RM := rm -rf
 -include SDK/board/subdir.mk
 -include RFM69/subdir.mk
 -include Project_Settings/Startup_Code/subdir.mk
+-include OS/subdir.mk
 -include I2C/subdir.mk
 -include GPIO/subdir.mk
 -include FTM/subdir.mk

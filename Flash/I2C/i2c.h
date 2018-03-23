@@ -60,10 +60,15 @@
 
 void init_I2C(void);
 void IIC_StartTransmission(unsigned char SlaveID, unsigned char Mode);
-void I2CWriteRegister(unsigned char SlaveID, unsigned char u8RegisterAddress, unsigned char u8Data);
-unsigned char I2CReadRegister(unsigned char SlaveID, unsigned char u8RegisterAddress);
-void I2CReadMultiRegisters(unsigned char SlaveID, unsigned char u8RegisterAddress, uint8_t* buf,
-									unsigned char bytes);
+
+void Pause(void);
+
+void I2CWriteRegister(unsigned char SlaveID, unsigned char u8RegisterAddress,
+		unsigned char u8Data);
+unsigned char I2CReadRegister(unsigned char SlaveID,
+		unsigned char u8RegisterAddress);
+void I2CReadMultiRegisters(unsigned char SlaveID,
+		unsigned char u8RegisterAddress, uint8_t* buf, unsigned char bytes);
 void I2C0_IRQHandler();
 
 #endif		/* __I2C_H */

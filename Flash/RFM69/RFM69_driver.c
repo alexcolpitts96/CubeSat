@@ -317,7 +317,7 @@ uint8_t RFM69_RECEIVE_TIMEOUT(uint8_t *buffer){
 		RFM69_SET_MODE(RF_OPMODE_STANDBY);
 
 		///*// dummy reads to remove trash bytes
-		for(i = 0; i < 4; i++){
+		for(i = 0; i < 5; i++){
 			RFM69_RX(REG_FIFO);
 		}
 		//*/
