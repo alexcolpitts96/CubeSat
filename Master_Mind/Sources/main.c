@@ -82,7 +82,7 @@ int main() {
 		uint32_t packet_number = (uint32_t) ceil(
 				(float) image_bytes / (float) PACKET_SIZE);
 
-		image = (uint8_t *) calloc(image_bytes, sizeof(uint8_t));
+		image = (uint8_t *) malloc(image_bytes * sizeof(uint8_t));
 
 		// retrieve all of the packets
 		for (int i = 0; i < packet_number; i++) {

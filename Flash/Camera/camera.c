@@ -35,7 +35,8 @@ void camera_init(){
 	I2CWriteRegister(CAM_I2C_ADDRESS,0x15,0x00);
 	cam_cfg(JPEG_SMALL); // 320x240 init
 	for(int i=0;i<1000;i++) Pause();
-	cam_cfg(JPEG_LARGE); // 1600x1200 select
+	//cam_cfg(JPEG_LARGE); // 1600x1200 select
+	cam_cfg(JPEG_1024);
 	for(int i=0;i<1000;i++) Pause();
 	return;
 }
