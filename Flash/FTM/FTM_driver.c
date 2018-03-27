@@ -16,7 +16,7 @@ void FTM0_init() {
 
 	// time to transmit and receive from the satellite is roughly 2.6 ms to 9.3 ms, give longer interval of 50 ms
 	//FTM0_MOD = FTM_MOD_MOD(0xF424);
-	FTM0_MOD = FTM_MOD_MOD(0xFFFF);
+	FTM0_MOD = FTM_MOD_MOD(0x5FFF);
 
 	// start counter at 0
 	FTM0_CNT = 0;

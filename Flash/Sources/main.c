@@ -183,60 +183,69 @@ int main(void) {
 			capture();
 			image_length = fifo_len();
 
-			// set destination to part way into the PFlash memory
-			destination = flashSSDConfig.PFlashBase
-					+ (flashSSDConfig.PFlashSize
-							- FLASH_BLOCKS * FTFx_PSECTOR_SIZE);
-			size = FTFx_PSECTOR_SIZE * FLASH_BLOCKS;
+			flash_pointer = (uint8_t *) malloc(sizeof(uint8_t) * image_length);
 
-			// flash pointer points to the start of the image
-			flash_pointer = (uint8_t *) destination;
-
-			// check if memory is protected
-			uint32_t protectStatus;
-			ret = PFlashGetProtection(&flashSSDConfig, &protectStatus);
-			error_trap(ret);
-
-			// erase sector of PFlash
-			INT_SYS_DisableIRQGlobal();
-			ret = FlashEraseSector(&flashSSDConfig, destination, size,
-					g_FlashLaunchCommand);
-			INT_SYS_EnableIRQGlobal();
-			error_trap(ret);
-
-			// check how many blocks are needed
-			int used_blocks = ceil(image_length / FTFx_PSECTOR_SIZE);
-
-			// for each block that needs to get read in
-			for (int j = 0; j < used_blocks; j++) {
-
-				// read in an entire sector worth of the image
-				for (uint32_t i = 0; i < FTFx_PSECTOR_SIZE; i++) {
-					program_buffer[i] = cam_reg_read(0x3D);
-				}
-
-				// set destination to j flash block
-				destination = flashSSDConfig.PFlashBase
-						+ (flashSSDConfig.PFlashSize
-								- (FLASH_BLOCKS - j) * FTFx_PSECTOR_SIZE);
-
-				// size is just a single flash block
-				size = FTFx_PSECTOR_SIZE;
-
-				// program memory with program_buffer data
-				ret = FlashProgram(&flashSSDConfig, destination, size,
-						program_buffer, g_FlashLaunchCommand);
-				error_trap(ret);
-
-				// check the data written to the memory
-				for (margin_read_level = 1; margin_read_level < 0x2;
-						margin_read_level++) {
-					ret = FlashProgramCheck(&flashSSDConfig, destination, size,
-							program_buffer, &FailAddr, margin_read_level,
-							g_FlashLaunchCommand);
-					error_trap(ret);
-				}
+			for (int i = 0; i < image_length; i++) {
+				flash_pointer[i] = cam_reg_read(0x3D);
+				//flash_pointer[i] = 0xFF & i;
 			}
+
+			/*
+			 // set destination to part way into the PFlash memory
+			 destination = flashSSDConfig.PFlashBase
+			 + (flashSSDConfig.PFlashSize
+			 - FLASH_BLOCKS * FTFx_PSECTOR_SIZE);
+			 size = FTFx_PSECTOR_SIZE * FLASH_BLOCKS;
+
+			 // flash pointer points to the start of the image
+			 flash_pointer = (uint8_t *) destination;
+
+			 // check if memory is protected
+			 uint32_t protectStatus;
+			 ret = PFlashGetProtection(&flashSSDConfig, &protectStatus);
+			 error_trap(ret);
+
+			 // erase sector of PFlash
+			 INT_SYS_DisableIRQGlobal();
+			 ret = FlashEraseSector(&flashSSDConfig, destination, size,
+			 g_FlashLaunchCommand);
+			 INT_SYS_EnableIRQGlobal();
+			 error_trap(ret);
+
+			 // check how many blocks are needed
+			 int used_blocks = ceil(image_length / FTFx_PSECTOR_SIZE);
+
+			 // for each block that needs to get read in
+			 for (int j = 0; j < used_blocks; j++) {
+
+			 // read in an entire sector worth of the image
+			 for (uint32_t i = 0; i < FTFx_PSECTOR_SIZE; i++) {
+			 program_buffer[i] = cam_reg_read(0x3D);
+			 }
+
+			 // set destination to j flash block
+			 destination = flashSSDConfig.PFlashBase
+			 + (flashSSDConfig.PFlashSize
+			 - (FLASH_BLOCKS - j) * FTFx_PSECTOR_SIZE);
+
+			 // size is just a single flash block
+			 size = FTFx_PSECTOR_SIZE;
+
+			 // program memory with program_buffer data
+			 ret = FlashProgram(&flashSSDConfig, destination, size,
+			 program_buffer, g_FlashLaunchCommand);
+			 error_trap(ret);
+
+			 // check the data written to the memory
+			 for (margin_read_level = 1; margin_read_level < 0x2;
+			 margin_read_level++) {
+			 ret = FlashProgramCheck(&flashSSDConfig, destination, size,
+			 program_buffer, &FailAddr, margin_read_level,
+			 g_FlashLaunchCommand);
+			 error_trap(ret);
+			 }
+			 }
+			 //*/
 
 			// change to terminal mode once image is in flash memory
 			state = 3;
@@ -255,10 +264,12 @@ int main(void) {
 
 			// receive until timeout doesn't happen, check battery occasionally
 			timeout_counter = 0;
+			//RFM69_RECEIVE(buffer);
+			///*
 			while (!RFM69_RECEIVE_TIMEOUT(buffer)) {
 
 				// every n*50 ms check the battery status
-				if (timeout_counter % 1000 == 0) {
+				if (timeout_counter % 100 == 0) {
 					sleep_handler();
 					master_init();
 					timeout_counter = 0;
@@ -266,6 +277,7 @@ int main(void) {
 
 				timeout_counter++;
 			}
+			//*/
 
 			// if start command, send image size in bytes
 			if ((memcmp(&start_command, buffer, sizeof(uint8_t) * PACKET_SIZE)
@@ -290,8 +302,11 @@ int main(void) {
 
 			// if packet request, send the requested packet
 			else {
-				block_number = (buffer[2] << 16) | (buffer[1] << 8) | (buffer[0]);
-				RFM69_SEND(flash_pointer + (block_number * PACKET_SIZE));
+				block_number = (buffer[2] << 16) | (buffer[1] << 8)
+						| (buffer[0]);
+				if (block_number < image_length) {
+					RFM69_SEND(flash_pointer + (block_number * PACKET_SIZE));
+				}
 			}
 		}
 	}
