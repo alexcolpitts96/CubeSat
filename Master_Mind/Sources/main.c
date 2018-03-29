@@ -71,18 +71,22 @@ int main() {
 	//uint8_t camera_arr[PACKET_SIZE];
 	uint8_t *buffer = buffer_arr; // may need to be the address
 	//uint8_t *camera = camera_arr;
-	uint8_t *image;
+	uint8_t *image = NULL;
+
+	uint32_t image_bytes;
+	uint32_t packet_number;
 
 	master_init();
 
 // packetRequest test - ground station
 	while (mode_select == 9) {
 
-		uint32_t image_bytes = txStart(buffer);
-		uint32_t packet_number = (uint32_t) ceil(
+		image_bytes = txStart(buffer);
+		packet_number = (uint32_t) ceil(
 				(float) image_bytes / (float) PACKET_SIZE);
 
-		image = (uint8_t *) malloc(image_bytes * sizeof(uint8_t));
+		image = (uint8_t *) calloc(image_bytes, sizeof(uint8_t));
+		//image = (uint8_t *) realloc(image, image_bytes * sizeof(uint8_t));
 
 		// retrieve all of the packets
 		for (int i = 0; i < packet_number; i++) {

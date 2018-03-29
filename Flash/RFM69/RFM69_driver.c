@@ -325,12 +325,12 @@ uint8_t RFM69_RECEIVE_TIMEOUT(uint8_t *buffer) {
 	//FTM0_CNT_RESET();
 
 	temp = 0;
-	while(!RFM69_DIO0_Read() && temp < 1000000){
+	while(!RFM69_DIO0_Read() && temp < 1000003){
 		Pause();
 		temp++;
 	}
 
-	if(temp == 1000000){
+	if(temp == 1000003){
 		timeout = 1;
 	}
 

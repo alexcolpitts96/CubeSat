@@ -134,6 +134,9 @@ int main(void) {
 	uint32_t image_length;
 	uint8_t buffer_arr[PACKET_SIZE];
 	uint8_t *buffer = buffer_arr; // may need to be the address
+	uint32_t packet_number;
+	uint32_t block_number;
+	uint8_t block_arr[3];
 
 	gCallBackCnt = 0;
 	int state = 2; // 2 = capture, 3 = terminal
@@ -180,10 +183,13 @@ int main(void) {
 			//
 
 			// take image
+			image_length = 0;
 			capture();
 			image_length = fifo_len();
+			packet_number = (uint32_t) ceil(
+					(float) image_length / (float) PACKET_SIZE);
 
-			flash_pointer = (uint8_t *) malloc(sizeof(uint8_t) * image_length);
+			flash_pointer = (uint8_t *) calloc(image_length, sizeof(uint8_t));
 
 			for (int i = 0; i < image_length; i++) {
 				flash_pointer[i] = cam_reg_read(0x3D);
@@ -255,8 +261,6 @@ int main(void) {
 		}
 
 		while (state == 3) {
-			uint32_t block_number;
-			uint8_t block_arr[3];
 
 			// ensure there is enough battery
 			//sleep_handler();
@@ -297,6 +301,11 @@ int main(void) {
 			// if stop command erase the image
 			else if ((memcmp(&stop_command, buffer,
 					sizeof(uint8_t) * PACKET_SIZE) == 0)) {
+				free(flash_pointer);
+
+				// soft reset system
+				NVIC_SystemReset();
+
 				state = 2;
 			}
 
@@ -304,7 +313,7 @@ int main(void) {
 			else {
 				block_number = (buffer[2] << 16) | (buffer[1] << 8)
 						| (buffer[0]);
-				if (block_number < image_length) {
+				if (block_number < packet_number) {
 					RFM69_SEND(flash_pointer + (block_number * PACKET_SIZE));
 				}
 			}
@@ -322,6 +331,7 @@ void callback(void) {
 	 * the bus error will be triggered.
 	 */
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 // EOF
 ////////////////////////////////////////////////////////////////////////////////
