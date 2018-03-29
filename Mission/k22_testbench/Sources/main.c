@@ -13,6 +13,7 @@
 #include "../I2C/i2c.h"
 #include "../ACCEL/accel.h"
 #include "../SPI/spi.h"
+#include "../WHEEL/wheel.h"
 #include <stdio.h>
 
 int main(){
@@ -26,10 +27,27 @@ int main(){
 	greenLED(0);
 	//blueLED(1);
 
-	camera_init();
+	motor_init();
 
-	uint8_t* img;
-	capture();
+	MPU_init();
+
+	struct sensor_dat mydat;
+	mydat.dat_X = 0;
+	mydat.dat_Y = 0;
+	mydat.dat_Z = 0;
+	int tmbl = 0;
+
+	while(1){
+		MPU_gyro_read(&mydat);
+		tmbl = check_tumble();
+		char buf[80];
+		sprintf(buf, "\033c x: %d \n\r y: %d \n\r z: %d \n\r tumbling: %d \n\r",mydat.dat_X,mydat.dat_Y,mydat.dat_Z,tmbl);
+		putty_putstr(buf);
+		//for(int i=0;i<1000;i++){
+		//	Pause();
+		//}
+	}
+
 
 	return 0;
 }

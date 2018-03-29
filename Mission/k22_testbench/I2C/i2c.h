@@ -65,5 +65,6 @@ unsigned char I2CReadRegister(unsigned char SlaveID, unsigned char u8RegisterAdd
 void I2CReadMultiRegisters(unsigned char SlaveID, unsigned char u8RegisterAddress, uint8_t* buf,
 									unsigned char bytes);
 void I2C0_IRQHandler();
+void Pause();
 
 #endif		/* __I2C_H */
