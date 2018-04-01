@@ -305,7 +305,7 @@ uint8_t RFM69_RECEIVE_TIMEOUT(uint8_t *buffer) {
 	uint8_t i, timeout = 0; // no timeout initially
 	uint8_t fifo_arr[MAX_PACKET_SIZE];
 	uint8_t end, pos;
-	int temp;
+	int temp, read;
 
 	// may not be needed
 	RFM69_SET_MODE(RF_OPMODE_STANDBY);
@@ -325,12 +325,16 @@ uint8_t RFM69_RECEIVE_TIMEOUT(uint8_t *buffer) {
 	//FTM0_CNT_RESET();
 
 	temp = 0;
-	while(!RFM69_DIO0_Read() && temp < 1000003){
+	read = 0;
+	Pause();
+	read = RFM69_DIO0_Read();
+	while(!read && temp < 2000003){
 		Pause();
+		read = RFM69_DIO0_Read();
 		temp++;
 	}
 
-	if(temp == 1000003){
+	if(temp == 2000003){
 		timeout = 1;
 	}
 
@@ -347,24 +351,11 @@ uint8_t RFM69_RECEIVE_TIMEOUT(uint8_t *buffer) {
 		// set to standby once a package has been received to save power
 		RFM69_SET_MODE(RF_OPMODE_STANDBY);
 
-		/*// dummy reads to remove trash bytes
-		 for(i = 0; i < 5; i++){
-		 RFM69_RX(REG_FIFO);
-		 }
-
-		 i = 0;
-		 // read packet from fifo into the buffer
-		 while(i < PACKET_SIZE && !RFM69_DIO0_Read()){
-		 buffer[i] = RFM69_RX(REG_FIFO);
-		 i++;
-		 }
-		 //*/
-
 		i = 0;
 
 		// read rfm multiple time
-		for(int k = 0; k < 10; k++){
-			temp = RFM69_RX(REG_IRQFLAGS2) & RF_IRQFLAGS2_FIFONOTEMPTY;
+		for(int k = 0; k < 100; k++){
+			//temp = RFM69_RX(REG_IRQFLAGS2) & RF_IRQFLAGS2_FIFONOTEMPTY;
 			Pause();
 		}
 

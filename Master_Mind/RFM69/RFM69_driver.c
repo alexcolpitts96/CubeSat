@@ -5,6 +5,7 @@
 #include "../GPIO/gpio.h"
 #include "../FTM/FTM_driver.h" // needed for timeout capability
 #include "../RFM69/RFM69_driver.h"
+#include "../I2C/i2c.c"
 
 // need access to memset and standard commands
 #include <stdio.h>

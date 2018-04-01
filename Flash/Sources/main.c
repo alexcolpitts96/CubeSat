@@ -111,7 +111,7 @@ void sleep_handler() {
 
 	// sleep until the battery is fully charged
 	// check_bat will turn back on modules if battery voltage is acceptable
-	while (!check_bat()) {
+	while (check_bat()) {
 
 		// wait for 10 seconds to charge
 		LPTMR0_enable(10000);
