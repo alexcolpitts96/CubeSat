@@ -191,6 +191,12 @@ int main(void) {
 
 			flash_pointer = (uint8_t *) calloc(image_length, sizeof(uint8_t));
 
+			// ensure memory has been set to zeros? -----------------------------------------------
+			// this would only be for consecutive image transmissions
+			for(int i = 0; i < image_length; i++){
+				flash_pointer[i] = 0;
+			}
+
 			for (int i = 0; i < image_length; i++) {
 				flash_pointer[i] = cam_reg_read(0x3D);
 				//flash_pointer[i] = 0xFF & i;
