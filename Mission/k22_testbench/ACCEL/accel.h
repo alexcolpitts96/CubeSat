@@ -8,6 +8,8 @@
 #ifndef ACCEL_ACCEL_H_
 #define ACCEL_ACCEL_H_
 
+#define TUMBLE_THRESH 10000
+
 // FXOS8700CQ I2C address
 #define ACCEL_SLAVE_ADDRESS 0x38 // 0x1C<<1
 #define MPU_SLAVE_ADDRESS 0x68<<1
@@ -35,6 +37,11 @@
 #define MPU_OUT_Z_MSB 0x47
 #define MPU_OUT_Z_LSB 0x48
 #define MPU_PWR_MGMT2 0x6C
+#define MPU_PWR_MGMT1 0x6B
+#define MPU_CFG 0x1A
+#define MPU_SMPLRT 0x19
+#define MPU_GYRO_CFG 0x1B
+#define MPU_INT_ENABLE 0x38
 
 
 typedef struct sensor_dat{
@@ -47,8 +54,8 @@ void accel_init();
 
 void sensor_read(struct sensor_dat *data);
 
-//void MPU_init();
-//
-//void MPU_gyro_read();
+void MPU_init();
+
+void MPU_gyro_read();
 
 #endif /* ACCEL_ACCEL_H_ */
