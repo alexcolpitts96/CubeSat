@@ -25,6 +25,7 @@ RM := rm -rf
 -include FTM/subdir.mk
 -include Comms/subdir.mk
 -include Camera/subdir.mk
+-include ACCEL/subdir.mk
 -include subdir.mk
 -include objects.mk
 

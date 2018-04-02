@@ -53,7 +53,7 @@ const uint8_t CONFIG[][2] =
 				{ REG_OCP, RF_OCP_ON | RF_OCP_TRIM_95 },
 
 				// set to 200 ohm impedance since it isn't matched
-				{ REG_LNA, RF_LNA_ZIN_200 },
+				{ REG_LNA, RF_LNA_ZIN_50 },
 
 				// set to recommended default, reset values are different
 				//{REG_RXBW, RF_RXBW_DCCFREQ_010 | RF_RXBW_MANT_16 | RF_RXBW_EXP_2}, // for 9600 baud
@@ -68,7 +68,7 @@ const uint8_t CONFIG[][2] =
 				{ REG_DIOMAPPING2, RF_DIOMAPPING2_CLKOUT_OFF },
 
 				// RSSI Threshold setting, set to -100 dBm (-value/2 in dBm)
-				{ REG_RSSITHRESH, 200 },
+				{ REG_RSSITHRESH, 220 },
 
 				// preamble bytes, standard values
 				{ REG_PREAMBLEMSB, 0 }, { REG_PREAMBLELSB, 3 },

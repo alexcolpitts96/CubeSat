@@ -43,4 +43,5 @@ GPIO \
 FTM \
 Comms \
 Camera \
+ACCEL \
 

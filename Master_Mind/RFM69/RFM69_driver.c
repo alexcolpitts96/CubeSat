@@ -50,10 +50,10 @@ const uint8_t CONFIG[][2] =
 						| RF_PALEVEL_PA2_OFF | RF_PALEVEL_OUTPUTPOWER_11111 },
 
 				// over current protection, max draw of 95 mA
-				{ REG_OCP, RF_OCP_ON | RF_OCP_TRIM_95 },
+				{ REG_OCP, RF_OCP_ON | RF_OCP_TRIM_120 },
 
 				// set to 200 ohm impedance since it isn't matched
-				{ REG_LNA, RF_LNA_ZIN_200 },
+				{ REG_LNA, RF_LNA_ZIN_50 },
 
 				// set to recommended default, reset values are different
 				//{REG_RXBW, RF_RXBW_DCCFREQ_010 | RF_RXBW_MANT_16 | RF_RXBW_EXP_2}, // for 9600 baud
@@ -68,7 +68,7 @@ const uint8_t CONFIG[][2] =
 				{ REG_DIOMAPPING2, RF_DIOMAPPING2_CLKOUT_OFF },
 
 				// RSSI Threshold setting, set to -100 dBm (-value/2 in dBm)
-				{ REG_RSSITHRESH, 200 },
+				{ REG_RSSITHRESH, 220 },
 
 				// preamble bytes, standard values
 				{ REG_PREAMBLEMSB, 0 }, { REG_PREAMBLELSB, 3 },
@@ -320,12 +320,12 @@ uint8_t RFM69_RECEIVE_TIMEOUT(uint8_t *buffer) {
 	//FTM0_CNT_RESET();
 
 	temp = 0;
-	while (!RFM69_DIO0_Read() && temp < 13331) {
+	while (!RFM69_DIO0_Read() && temp < 2*13331) {
 		Pause();
 		temp++;
 	}
 
-	if (temp == 13331) {
+	if (temp == 2*13331) {
 		timeout = 1;
 	}
 

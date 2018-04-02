@@ -32,7 +32,7 @@ Sources/main.o: ../Sources/main.c \
  ../Sources/../SPI/spi.h ../Sources/../GPIO/gpio.h \
  ../Sources/../Comms/Comms.h ../Sources/../Comms/../RFM69/RFM69_driver.h \
  ../Sources/../Camera/camera.h ../Sources/../I2C/i2c.h \
- ../Sources/../OS/OS.h
+ ../Sources/../OS/OS.h ../Sources/../ACCEL/accel.h
 
 /home/alex/GitHub/CubeSat/Flash/SDK/board/board.h:
 
@@ -115,3 +115,5 @@ Sources/main.o: ../Sources/main.c \
 ../Sources/../I2C/i2c.h:
 
 ../Sources/../OS/OS.h:
+
+../Sources/../ACCEL/accel.h:

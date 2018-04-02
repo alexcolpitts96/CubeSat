@@ -93,7 +93,7 @@ int main() {
 			packetRequest(buffer, i, image);
 		}
 
-		for(int i = 0; i < image_bytes; i++){
+		for (int i = 0; i < image_bytes; i++) {
 			putty_putchar(image[i]);
 		}
 

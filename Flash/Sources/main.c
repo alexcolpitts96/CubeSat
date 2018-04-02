@@ -56,6 +56,7 @@
 #include "../Camera/camera.h"
 #include "../I2C/i2c.h"
 #include "../OS/OS.h"
+#include "../ACCEL/accel.h"
 
 #define FLASH_BLOCKS 147
 
@@ -104,6 +105,7 @@ void master_init() {
 	init_I2C();
 	SPI1_Init(16);
 	camera_init();
+	accel_init();
 }
 
 // check battery and process sleeping as needed
@@ -174,13 +176,10 @@ int main(void) {
 					(uint32_t) ramFunc, LAUNCH_CMD_SIZE,
 					(uint32_t) FlashCommandSequence);
 
-			// check if image capture is viable here
-			//
-			//
-			//
-			//
-			//
-			//
+			// check if image capture is viable here, wait until not tumbling
+			while(check_tumble()){
+				Pause(); // wait briefly
+			}
 
 			// take image
 			image_length = 0;
