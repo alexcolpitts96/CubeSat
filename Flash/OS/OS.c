@@ -11,6 +11,26 @@
 
 #define V_REF 3.3
 
+void MOSFET_ON_Cam(){
+	PORTC_PCR3 |= PORT_PCR_MUX(1) | PORT_PCR_DSE_MASK;
+    GPIOC_PDDR = 0x01 << 3; //PTC3
+    GPIOC_PSOR = 0x01 << 3;//turn ON Camera via MOSFET switch
+}	
+
+void MOSFET_OFF_Cam(){
+	GPIOC_PCOR = 0x01 << 3;//turn OFF Camera via MOSFET switch
+}	
+
+void MOSFET_ON_RF(){
+	PORTC_PCR6 |= PORT_PCR_MUX(1) | PORT_PCR_DSE_MASK;
+    GPIOC_PDDR = 0x01 << 6; //PTC6
+    GPIOC_PSOR = 0x01 << 6;//turn ON RF via MOSFET switch
+}	
+
+void MOSFET_OFF_RF(){
+	GPIOC_PCOR = 0x01 << 6;//turn OFF RF via MOSFET switch
+}	
+
 void disable_modules() {
 	// turn off port clocks, NOT and then masks to the register
 	SIM_SCGC5 &= ~SIM_SCGC5_PORTA_MASK;
