@@ -24,6 +24,8 @@
 	void WDT_int();
 	void Refresh_Dog();
 	void Unleash_Dog();
-
-
+    void MOSFET_ON_Cam();
+    void MOSFET_OFF_Cam();
+	void MOSFET_ON_RF();
+	void MOSFET_OFF_RF();
 #endif /* SOURCES_OS_FUNCTION_H_ */
