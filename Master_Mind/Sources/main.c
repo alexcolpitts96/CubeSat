@@ -86,7 +86,6 @@ int main() {
 				(float) image_bytes / (float) PACKET_SIZE);
 
 		image = (uint8_t *) calloc(image_bytes, sizeof(uint8_t));
-		//image = (uint8_t *) realloc(image, image_bytes * sizeof(uint8_t));
 
 		// retrieve all of the packets
 		for (int i = 0; i < packet_number; i++) {
@@ -96,11 +95,11 @@ int main() {
 		// send the stop command once image received
 		memset(buffer, '\0', sizeof(uint8_t) * PACKET_SIZE);
 		memcpy((uint8_t *) buffer, &stop_command, sizeof(stop_command));
-		RFM69_SEND(buffer);
-		RFM69_SEND(buffer);
-		RFM69_SEND(buffer);
-		RFM69_SEND(buffer);
-		RFM69_SEND(buffer);
+
+		for(int i = 0; i < 500; i++){
+			RFM69_SEND(buffer);
+		}
+
 		free(image);
 	}
 

@@ -243,15 +243,15 @@ void LED() {
 	//PTD5 Blue LED
 	SIM_SCGC5 |= SIM_SCGC5_PORTC_MASK;
 	PORTC_PCR1 |= PORT_PCR_MUX(1); // | PORT_PCR_DSE_MASK;
-	GPIOC_PDDR = 0x01 << 1; //PTC1
-	GPIOC_PSOR = 0x01 << 1; //turn on Camera via MOSFET switch
+	GPIOC_PDDR |= 0x01 << 1; //PTC1
+	GPIOC_PSOR |= 0x01 << 1; //turn on Camera via MOSFET switch
 }
 
 void LED1() {
 	SIM_SCGC5 |= SIM_SCGC5_PORTC_MASK;
 	PORTC_PCR2 |= PORT_PCR_MUX(1); // | PORT_PCR_DSE_MASK;
-	GPIOC_PDDR = 0x01 << 2; //PTC2
-	GPIOC_PSOR = 0x01 << 2; //turn on Camera via MOSFET switch
+	GPIOC_PDDR |= 0x01 << 2; //PTC2
+	GPIOC_PSOR |= 0x01 << 2; //turn on Camera via MOSFET switch
 
 }
 

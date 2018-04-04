@@ -123,8 +123,10 @@ void sleep_handler() {
 	// check_bat will turn back on modules if battery voltage is acceptable
 	while (check_bat()) {
 
+		break;
+
 		// wait for 10 seconds to charge
-		LPTMR0_enable(10000);
+		//LPTMR0_enable(10000);
 	}
 }
 
@@ -162,6 +164,20 @@ int main(void) {
 	sleep_handler();
 	master_init();
 
+	// init the flash memory
+	ret = FlashInit(&flashSSDConfig);
+	error_trap(ret);
+
+	// move flash command sequence from flash to RAM
+	flashSSDConfig.CallBack = (PCALLBACK) RelocateFunction(
+			(uint32_t) __ram_for_callback, CALLBACK_SIZE, (uint32_t) callback);
+	pFLASHCOMMANDSEQUENCE g_FlashLaunchCommand =
+			(pFLASHCOMMANDSEQUENCE) 0xFFFFFFFF;
+
+	g_FlashLaunchCommand = (pFLASHCOMMANDSEQUENCE) RelocateFunction(
+			(uint32_t) ramFunc, LAUNCH_CMD_SIZE,
+			(uint32_t) FlashCommandSequence);
+
 	// always loop through the following
 	while (1) {
 
@@ -171,43 +187,27 @@ int main(void) {
 			sleep_handler();
 			master_init();
 
-			// init the flash memory
-			ret = FlashInit(&flashSSDConfig);
-			error_trap(ret);
-
-			// move flash command sequence from flash to RAM
-			flashSSDConfig.CallBack = (PCALLBACK) RelocateFunction(
-					(uint32_t) __ram_for_callback, CALLBACK_SIZE,
-					(uint32_t) callback);
-			pFLASHCOMMANDSEQUENCE g_FlashLaunchCommand =
-					(pFLASHCOMMANDSEQUENCE) 0xFFFFFFFF;
-
-			g_FlashLaunchCommand = (pFLASHCOMMANDSEQUENCE) RelocateFunction(
-					(uint32_t) ramFunc, LAUNCH_CMD_SIZE,
-					(uint32_t) FlashCommandSequence);
-
 			// check if image capture is viable here, wait until not tumbling
 			light_level = 0;
-			//while (light_level) {
-			while(!light_level){
-				tumble_counter = 0;
-				while (check_tumble() && tumble_counter < 400) {
-					tumble_counter++;
-					Pause(); // wait briefly
-				}
 
-				// check if system is tumbling too much
-				if (tumble_counter == 400) {
-					// set image resolution to small
-					cam_cfg(JPEG_SMALL);
-				}
+			// wait until we are in sunlight to capture image
+			while (!QUICK_SOLAR_CHECK());
 
-				// take image
-				image_length = 0;
-				capture();
-				light_level = QUICK_SOLAR_CHECK();
+			// select large or small image size depending on tumbling
+			tumble_counter = 0;
+			while (check_tumble() && tumble_counter < 400) {
+				tumble_counter++;
+				QUICK_SOLAR_CHECK();
+				Pause(); // wait briefly
 			}
 
+			// check if system is tumbling too much
+			if (tumble_counter == 400) {
+				// set image resolution to small
+				cam_cfg(JPEG_SMALL);
+			}
+
+			// take image and store in SRAM
 			capture();
 			image_length = fifo_len();
 			packet_number = (uint32_t) ceil(
@@ -218,10 +218,9 @@ int main(void) {
 			for (int i = 0; i < image_length; i++) {
 				flash_pointer[i] = cam_reg_read(0x3D);
 				OPERATION_LED(1);
-				//flash_pointer[i] = 0xFF & i;
 			}
 
-			// turn LED on to indicate image captured
+			// turn LED off to indicate image is in SRAM
 			OPERATION_LED(0);
 
 			/*
@@ -290,13 +289,9 @@ int main(void) {
 
 		while (state == 3) {
 
-			// ensure there is enough battery
-			//sleep_handler();
-			//master_init();
-
 			// receive until timeout doesn't happen, check battery occasionally
 			timeout_counter = 0;
-			//RFM69_RECEIVE(buffer);
+
 			///*
 			while (!RFM69_RECEIVE_TIMEOUT(buffer)) {
 
@@ -312,10 +307,6 @@ int main(void) {
 			}
 			//*/
 			QUICK_SOLAR_CHECK();
-
-			//for(int q = 0; q < 100; q++){
-				//Pause();
-			//}
 
 			// if start command, send image size in bytes
 			if ((memcmp(&start_command, buffer, sizeof(uint8_t) * PACKET_SIZE)
@@ -333,17 +324,19 @@ int main(void) {
 			}
 
 			// if stop command erase the image
-			else if ((memcmp(&stop_command, buffer,
-					sizeof(uint8_t) * PACKET_SIZE) == 0)) {
+			else if ((memcmp(&stop_command, buffer,	sizeof(uint8_t) * PACKET_SIZE) == 0)) {
+
 				free(flash_pointer);
 
 				// turn off LED to indicate ready for next image
 				OPERATION_LED(0);
+				SUNLIGHT_LED(0);
+
+				state = 2;
 
 				// soft reset system
 				NVIC_SystemReset();
 
-				state = 2;
 			}
 
 			// if packet request, send the requested packet
@@ -362,11 +355,7 @@ int main(void) {
 }
 
 void callback(void) {
-	/* Should not use global variable for functions which need to be
-	 * relocated such as callback function. If used, some compiler
-	 * such as KEIL will be failed in all flash functions and
-	 * the bus error will be triggered.
-	 */
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
