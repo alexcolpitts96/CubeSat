@@ -8,7 +8,8 @@
 #ifndef ACCEL_ACCEL_H_
 #define ACCEL_ACCEL_H_
 
-#define TUMBLE_THRESH 10000
+//#define TUMBLE_THRESH 10000
+#define TUMBLE_THRESH 5000
 
 // FXOS8700CQ I2C address
 #define ACCEL_SLAVE_ADDRESS 0x38 // 0x1C<<1

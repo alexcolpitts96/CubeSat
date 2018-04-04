@@ -96,6 +96,8 @@ void master_init() {
 	//UART0_Init();
 	//UART1_putty_init();
 	hardware_init();
+	MOSFET_ON_Cam();
+	MOSFET_ON_RF();
 	//ADC0_Init();
 	SPI0_Init(16);
 	RFM69_DIO0_Init();
@@ -106,6 +108,12 @@ void master_init() {
 	SPI1_Init(16);
 	camera_init();
 	accel_init();
+
+	// turn on normal operation indicator
+	//OPERATION_LED();
+	//SUNLIGHT_LED();
+	//OPERATION_LED();
+	//SUNLIGHT_LED();
 }
 
 // check battery and process sleeping as needed
@@ -139,6 +147,8 @@ int main(void) {
 	uint32_t packet_number;
 	uint32_t block_number;
 	uint8_t block_arr[3];
+	int tumble_counter;
+	int light_level;
 
 	gCallBackCnt = 0;
 	int state = 2; // 2 = capture, 3 = terminal
@@ -177,12 +187,27 @@ int main(void) {
 					(uint32_t) FlashCommandSequence);
 
 			// check if image capture is viable here, wait until not tumbling
-			while(check_tumble()){
-				Pause(); // wait briefly
+			light_level = 0;
+			//while (light_level) {
+			while(!light_level){
+				tumble_counter = 0;
+				while (check_tumble() && tumble_counter < 400) {
+					tumble_counter++;
+					Pause(); // wait briefly
+				}
+
+				// check if system is tumbling too much
+				if (tumble_counter == 400) {
+					// set image resolution to small
+					cam_cfg(JPEG_SMALL);
+				}
+
+				// take image
+				image_length = 0;
+				capture();
+				light_level = QUICK_SOLAR_CHECK();
 			}
 
-			// take image
-			image_length = 0;
 			capture();
 			image_length = fifo_len();
 			packet_number = (uint32_t) ceil(
@@ -190,16 +215,14 @@ int main(void) {
 
 			flash_pointer = (uint8_t *) calloc(image_length, sizeof(uint8_t));
 
-			// ensure memory has been set to zeros? -----------------------------------------------
-			// this would only be for consecutive image transmissions
-			for(int i = 0; i < image_length; i++){
-				flash_pointer[i] = 0;
-			}
-
 			for (int i = 0; i < image_length; i++) {
 				flash_pointer[i] = cam_reg_read(0x3D);
+				OPERATION_LED(1);
 				//flash_pointer[i] = 0xFF & i;
 			}
+
+			// turn LED on to indicate image captured
+			OPERATION_LED(0);
 
 			/*
 			 // set destination to part way into the PFlash memory
@@ -278,15 +301,21 @@ int main(void) {
 			while (!RFM69_RECEIVE_TIMEOUT(buffer)) {
 
 				// every n*50 ms check the battery status
-				if (timeout_counter % 100 == 0) {
+				if (timeout_counter % 10 == 0) {
 					sleep_handler();
 					master_init();
 					timeout_counter = 0;
 				}
 
+				QUICK_SOLAR_CHECK();
 				timeout_counter++;
 			}
 			//*/
+			QUICK_SOLAR_CHECK();
+
+			//for(int q = 0; q < 100; q++){
+				//Pause();
+			//}
 
 			// if start command, send image size in bytes
 			if ((memcmp(&start_command, buffer, sizeof(uint8_t) * PACKET_SIZE)
@@ -307,6 +336,9 @@ int main(void) {
 			else if ((memcmp(&stop_command, buffer,
 					sizeof(uint8_t) * PACKET_SIZE) == 0)) {
 				free(flash_pointer);
+
+				// turn off LED to indicate ready for next image
+				OPERATION_LED(0);
 
 				// soft reset system
 				NVIC_SystemReset();

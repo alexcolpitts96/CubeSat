@@ -28,5 +28,8 @@ void MOSFET_ON_Cam();
 void MOSFET_OFF_Cam();
 void MOSFET_ON_RF();
 void MOSFET_OFF_RF();
+void SUNLIGHT_LED(int on_off);
+void OPERATION_LED(int on_off);
+int QUICK_SOLAR_CHECK();
 
 #endif /* SOURCES_OS_FUNCTION_H_ */

@@ -93,10 +93,6 @@ int main() {
 			packetRequest(buffer, i, image);
 		}
 
-		for (int i = 0; i < image_bytes; i++) {
-			putty_putchar(image[i]);
-		}
-
 		// send the stop command once image received
 		memset(buffer, '\0', sizeof(uint8_t) * PACKET_SIZE);
 		memcpy((uint8_t *) buffer, &stop_command, sizeof(stop_command));

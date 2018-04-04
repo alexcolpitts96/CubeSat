@@ -11,27 +11,38 @@
 
 #define V_REF 3.3
 
-void MOSFET_ON_Cam(){
-	PORTC_PCR3 |= PORT_PCR_MUX(1) | PORT_PCR_DSE_MASK;
-    GPIOC_PDDR = 0x01 << 3; //PTC3
-    GPIOC_PSOR = 0x01 << 3;//turn ON Camera via MOSFET switch
-}	
+void MOSFET_OFF_Cam() {
+	SIM_SCGC5 |= SIM_SCGC5_PORTC_MASK;
+	PORTC_PCR3 |= PORT_PCR_MUX(1); // | PORT_PCR_DSE_MASK;
+	GPIOC_PDDR |= 0x01 << 3; //PTC3
+	GPIOC_PSOR |= 0x01 << 3; //turn ON Camera via MOSFET switch
+}
 
-void MOSFET_OFF_Cam(){
-	GPIOC_PCOR = 0x01 << 3;//turn OFF Camera via MOSFET switch
-}	
+void MOSFET_ON_Cam() {
+	SIM_SCGC5 |= SIM_SCGC5_PORTC_MASK;
+	PORTC_PCR3 |= PORT_PCR_MUX(1);
+	GPIOC_PDDR |= 0x01 << 3; //PTC3
+	GPIOC_PCOR |= 0x01 << 3; //turn OFF Camera via MOSFET switch
+}
 
-void MOSFET_ON_RF(){
-	PORTC_PCR6 |= PORT_PCR_MUX(1) | PORT_PCR_DSE_MASK;
-    GPIOC_PDDR = 0x01 << 6; //PTC6
-    GPIOC_PSOR = 0x01 << 6;//turn ON RF via MOSFET switch
-}	
+void MOSFET_OFF_RF() {
+	SIM_SCGC5 |= SIM_SCGC5_PORTC_MASK;
+	PORTC_PCR6 |= PORT_PCR_MUX(1); // | PORT_PCR_DSE_MASK;
+	GPIOC_PDDR |= 0x01 << 6; //PTC6
+	GPIOC_PSOR |= 0x01 << 6; //turn ON RF via MOSFET switch
+}
 
-void MOSFET_OFF_RF(){
-	GPIOC_PCOR = 0x01 << 6;//turn OFF RF via MOSFET switch
-}	
+void MOSFET_ON_RF() {
+	SIM_SCGC5 |= SIM_SCGC5_PORTC_MASK;
+	PORTC_PCR6 |= PORT_PCR_MUX(1);
+	GPIOC_PDDR |= 0x01 << 6;
+	GPIOC_PCOR |= 0x01 << 6;
+}
 
 void disable_modules() {
+	MOSFET_OFF_Cam();
+	MOSFET_OFF_RF();
+
 	// turn off port clocks, NOT and then masks to the register
 	SIM_SCGC5 &= ~SIM_SCGC5_PORTA_MASK;
 	SIM_SCGC5 &= ~SIM_SCGC5_PORTB_MASK;
@@ -65,7 +76,7 @@ void LPTMR0_enable(int miliseconds) {
 	SIM_SOPT1 |= 0xC0000;  // setting 1khz internal clock to LPTMR
 	LPTMR0_CMR = LPTMR_CMR_COMPARE(miliseconds);  //Set compare value
 	LPTMR0_PSR |= 0x45; //Prescaler Register, Prescale disabled, 1 count = 1 milisecond
-	LPTMR0_CSR = LPTMR_CSR_TIE_MASK;  //Enable interrupt
+	LPTMR0_CSR |= LPTMR_CSR_TIE_MASK;  //Enable interrupt
 	LPTMR0_CSR |= LPTMR_CSR_TEN_MASK; //Turn on LPTMR and start counting
 
 	// Enable Low Power Mode
@@ -94,7 +105,7 @@ void ADC0_Init() {
 
 	SIM_SCGC6 |= SIM_SCGC6_ADC0_MASK; //0x08000000
 	SIM_SCGC5 |= SIM_SCGC5_PORTB_MASK;
-	PORTB_PCR0 |= PORT_PCR_MUX(0) | PORT_PCR_DSE_MASK;
+	PORTB_PCR0 |= PORT_PCR_MUX(0); // | PORT_PCR_DSE_MASK;
 
 	ADC0_SC1A = 0b0001000;
 	//ADC0_SC1A = 0b0001111; //Mask the ADCH selection ADC0_SE14
@@ -126,7 +137,7 @@ void ADC1_Init() {
 	//Pick Port ADC0_DP3 for the testing
 	//PTB1/ADC0_SE9/ADC1_SE9
 	SIM_SCGC5 |= SIM_SCGC5_PORTB_MASK;
-	PORTB_PCR1 |= PORT_PCR_MUX(0) | PORT_PCR_DSE_MASK;
+	PORTB_PCR1 |= PORT_PCR_MUX(0); // | PORT_PCR_DSE_MASK;
 
 	SIM_SCGC6 |= SIM_SCGC6_ADC1_MASK;		//0x08000000
 	ADC1_SC1A = 0b0001001; //Mask the ADCH selection
@@ -166,6 +177,7 @@ uint8_t check_bat() {
 	bat = (batraw * V_REF) / (65536.0f);
 
 	// if the system is in sunlight
+	//if (1) {
 	if (check_solar()) {
 
 		// sleep if the battery voltage is too low
@@ -190,7 +202,7 @@ uint8_t check_bat() {
 			//sleep_flag = 1;
 			return 1;
 
-		// stay awake
+			// stay awake
 		} else {
 			//sleep_flag = 0;
 			master_init(); // init the modules when exiting check
@@ -206,7 +218,7 @@ uint8_t check_solar() {
 	float sol = 0;
 
 	// turn off all modules except ADC1
-	disable_modules();
+	//disable_modules();
 	ADC1_Init();
 
 	// read ADC and convert to voltage
@@ -214,9 +226,11 @@ uint8_t check_solar() {
 	sol = (solraw * 3.3f) / (65536.0f);
 
 	if (sol > 2.4) {
+		SUNLIGHT_LED(1);
 		return 1;
 		//LED1();
 	} else {
+		SUNLIGHT_LED(0);
 		return 0;
 		//GPIOC_PCOR = 0x01 << 2;
 	}
@@ -228,14 +242,14 @@ void LED() {
 	//PTA1 Red LED
 	//PTD5 Blue LED
 	SIM_SCGC5 |= SIM_SCGC5_PORTC_MASK;
-	PORTC_PCR1 |= PORT_PCR_MUX(1) | PORT_PCR_DSE_MASK;
+	PORTC_PCR1 |= PORT_PCR_MUX(1); // | PORT_PCR_DSE_MASK;
 	GPIOC_PDDR = 0x01 << 1; //PTC1
 	GPIOC_PSOR = 0x01 << 1; //turn on Camera via MOSFET switch
 }
 
 void LED1() {
 	SIM_SCGC5 |= SIM_SCGC5_PORTC_MASK;
-	PORTC_PCR2 |= PORT_PCR_MUX(1) | PORT_PCR_DSE_MASK;
+	PORTC_PCR2 |= PORT_PCR_MUX(1); // | PORT_PCR_DSE_MASK;
 	GPIOC_PDDR = 0x01 << 2; //PTC2
 	GPIOC_PSOR = 0x01 << 2; //turn on Camera via MOSFET switch
 
@@ -285,5 +299,54 @@ void delay() {
 	for (c = 1; c < 50; c++)
 		for (d = 1; d <= 50; d++) {
 		}
+}
+
+// charge LED is c1
+// on LED is c2
+
+void SUNLIGHT_LED(int on_off) {
+	SIM_SCGC5 |= SIM_SCGC5_PORTC_MASK;
+	PORTC_PCR1 |= PORT_PCR_MUX(1); // | PORT_PCR_DSE_MASK;
+	GPIOC_PDDR |= 0x01 << 1; //PTC1
+
+	if (on_off) {
+		GPIOC_PSOR |= 0x01 << 1;
+	} else {
+		GPIOC_PCOR |= 0x01 << 1;
+	}
+
+}
+
+void OPERATION_LED(int on_off) {
+	SIM_SCGC5 |= SIM_SCGC5_PORTC_MASK;
+	PORTC_PCR2 |= PORT_PCR_MUX(1); // | PORT_PCR_DSE_MASK;
+	GPIOC_PDDR |= 0x01 << 2; //PTC2
+
+	// turn LED on if 1
+	if (on_off) {
+		GPIOC_PSOR |= 0x01 << 2;
+	} else {
+		GPIOC_PCOR |= 0x01 << 2;
+	}
+}
+
+int QUICK_SOLAR_CHECK() {
+	float solraw = 0;
+	float sol = 0;
+
+	ADC1_Init();
+
+	// read ADC and convert to voltage
+	solraw = ADC1_Convert();
+	sol = (solraw * 3.3f) / (65536.0f);
+
+	if (sol > 2.4) {
+		SUNLIGHT_LED(1);
+		return 1;
+	} else {
+		SUNLIGHT_LED(0);
+		return 0;
+	}
+
 }
 

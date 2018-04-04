@@ -328,13 +328,14 @@ uint8_t RFM69_RECEIVE_TIMEOUT(uint8_t *buffer) {
 	read = 0;
 	Pause();
 	read = RFM69_DIO0_Read();
-	while(!read && temp < 2000003){
+	while(!read && temp < 2000003*13){
+		QUICK_SOLAR_CHECK();
 		Pause();
 		read = RFM69_DIO0_Read();
 		temp++;
 	}
 
-	if(temp == 2000003){
+	if(temp == 2000003*13){
 		timeout = 1;
 	}
 
