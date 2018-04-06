@@ -123,10 +123,10 @@ void sleep_handler() {
 	// check_bat will turn back on modules if battery voltage is acceptable
 	while (check_bat()) {
 
-		break;
+		//break;
 
 		// wait for 10 seconds to charge
-		//LPTMR0_enable(10000);
+		LPTMR0_enable(10000);
 	}
 }
 
@@ -291,6 +291,7 @@ int main(void) {
 
 			// receive until timeout doesn't happen, check battery occasionally
 			timeout_counter = 0;
+			master_init();
 
 			///*
 			while (!RFM69_RECEIVE_TIMEOUT(buffer)) {
